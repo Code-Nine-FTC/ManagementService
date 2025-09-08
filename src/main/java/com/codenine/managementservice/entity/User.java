@@ -4,6 +4,7 @@ import com.codenine.managementservice.dto.Role;
 import jakarta.persistence.*;
 import lombok.Data;
 
+import java.time.Instant;
 import java.util.Date;
 
 @Data
@@ -25,7 +26,7 @@ public class User {
 
     private Date createdAt;
 
-    private Long lastUpdate;
+    private Instant lastUpdate;
 
     private Boolean isActive;
 
