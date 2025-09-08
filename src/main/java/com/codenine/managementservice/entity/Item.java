@@ -1,8 +1,6 @@
 package com.codenine.managementservice.entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.Data;
 
 import java.time.Instant;
@@ -11,7 +9,9 @@ import java.time.Instant;
 @Entity
 @Table(name = "items")
 public class Item {
-    @GeneratedValue
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     private String name;
@@ -20,5 +20,11 @@ public class Item {
 
     private Instant expireDate;
 
-    private
+    private String qrCode;
+
+    @ManyToOne
+    private Supplier supplier;
+
+    @ManyToOne
+    private Section section;
 }

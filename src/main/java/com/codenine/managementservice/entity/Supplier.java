@@ -7,18 +7,21 @@ import java.util.List;
 
 @Data
 @Entity
-@Table(name = "sections")
-public class Section {
-
+@Table(name = "suppliers")
+public class Supplier {
+    @GeneratedValue
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-
     private Long id;
 
-    private String title;
+    private String name;
 
-    @OneToMany
-    private List<User> users;
+    private String url;
+
+    private String email;
+
+    private String phoneNumber;
+
+    private String cnpj;
 
     @OneToMany
     private List<Item> items;

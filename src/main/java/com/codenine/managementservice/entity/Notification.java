@@ -3,23 +3,19 @@ package com.codenine.managementservice.entity;
 import jakarta.persistence.*;
 import lombok.Data;
 
-import java.util.List;
+import java.time.Instant;
 
 @Data
 @Entity
-@Table(name = "sections")
-public class Section {
+@Table(name = "notifications")
+public class Notification {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-
     private Long id;
 
-    private String title;
+    private String text;
 
-    @OneToMany
-    private List<User> users;
+    private Instant unixTimeStamp;
 
-    @OneToMany
-    private List<Item> items;
 }
