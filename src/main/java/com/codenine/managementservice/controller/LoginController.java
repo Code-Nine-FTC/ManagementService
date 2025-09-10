@@ -35,26 +35,22 @@ public class LoginController {
         Optional<User> userEmail = userRepository.findByEmail(email);
         if (userEmail.isPresent()) {
             User user = userEmail.get();
-            if (user.getPassword().equals(password)) {
-                authenticationManager.authenticate(
-                        new UsernamePasswordAuthenticationToken(email, password)
-                );
+            authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(email, password)
+            );
+            String token = jwtUtil.generateToken(email, user.getRole(), user.getSection().getId());
 
-                String token = jwtUtil.generateToken(email, user.getRole(), user.getSection().getId());
-
-                return ResponseEntity.status(200).body(
-                        new LoginResponseDto(
-                                token,
-                                email,
-                                user.getRole().toString(),
-                                user.getSection().getId(),
-                                user.getSection().getTitle()
-                        )
-                );
-            } else {
-                return ResponseEntity.status(401).body("Credenciais inválidas");
-            }
+            return ResponseEntity.status(200).body(
+                    new LoginResponseDto(
+                            token,
+                            email,
+                            user.getRole().toString(),
+                            user.getSection().getId(),
+                            user.getSection().getTitle()
+                    )
+            );
+        } else {
+            return ResponseEntity.status(404).body("Usuário não encontrado");
         }
-        return ResponseEntity.status(404).body("Usuário não encontrado");
     }
 }
