@@ -50,8 +50,8 @@ public class Item {
     @ManyToOne
     private Section section;
 
-    @OneToMany
-    private List<ItemLoss> itemLoss;
+    @ManyToOne
+    private TypeItem typeItem;
 
     
 }
