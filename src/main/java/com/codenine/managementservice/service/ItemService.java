@@ -14,6 +14,7 @@ import com.codenine.managementservice.mapper.ItemMapper;
 import com.codenine.managementservice.repository.ItemRepository;
 import com.codenine.managementservice.repository.UserRepository;
 
+import java.time.LocalDateTime;
 
 @Service
 public class ItemService {
@@ -60,7 +61,15 @@ public class ItemService {
         item.setIsActive(false);
         itemRepository.save(item);
     }
-    
+
+    // arrumar last user
+    public void archiveItem(Long id) {
+        Item item = getItemById(id);
+        item.setIsArchived(true);
+        item.setLastUpdate(LocalDateTime.now());
+        itemRepository.save(item);
+    }
+
     private Item getItemById(Long id) {
         return itemRepository.findById(id).orElseThrow(() -> new NullPointerException("Item not found with id: " + id));
     }

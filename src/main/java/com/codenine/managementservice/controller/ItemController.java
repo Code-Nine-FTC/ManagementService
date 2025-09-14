@@ -86,6 +86,18 @@ public class ItemController {
         }
     }
 
+    @PatchMapping("/archive/{id}")
+    public ResponseEntity<?> archiveItem(@PathVariable Long id) {
+        try {
+            itemService.archiveItem(id);
+            return ResponseEntity.ok("Item archived successfully");
+        } catch (NullPointerException e) {
+            return ResponseEntity.status(404).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Error archiving item: " + e.getMessage());
+        }
+    }
+
     @PostMapping("/loss")
     public ResponseEntity<?> createItemLoss(@RequestBody ItemLossRequest request) {
         try {
