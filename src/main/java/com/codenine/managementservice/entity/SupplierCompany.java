@@ -2,40 +2,42 @@ package com.codenine.managementservice.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;
+
+import java.util.List;
 import java.time.LocalDateTime;
 
 @Data
 @Entity
-@Table(name = "unit_destinations")
-public class UnitDestination {
-
+@Table(name = "suppliers_companies")
+public class SupplierCompany {
+    @GeneratedValue
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(nullable = false)
     private String name;
 
     @Column(nullable = false)
-    private String street;
+    private String url;
 
     @Column(nullable = false)
-    private String number;
+    private String email;
 
     @Column(nullable = false)
-    private String city;
-
-    @Column(nullable = false)
-    private String state;
-
-    @Column(nullable = false)
-    private String zipCode;
-
     private String phoneNumber;
+
+    @Column(nullable = false)
+    private String cnpj;
+
+    @Column(nullable = false)
+    private Boolean isActive = true;
 
     @Column(nullable = false)
     private LocalDateTime lastUpdate = LocalDateTime.now();
 
     @ManyToOne
     private User lastUser;
+
+    @OneToMany
+    private List<Item> items;
 }

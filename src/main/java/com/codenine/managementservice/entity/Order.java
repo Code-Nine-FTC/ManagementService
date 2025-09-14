@@ -3,8 +3,8 @@ package com.codenine.managementservice.entity;
 import jakarta.persistence.*;
 import lombok.Data;
 
-import java.util.Date;
-import java.util.List;
+import java.time.Instant;
+import java.time.LocalDateTime;
 
 @Data
 @Entity
@@ -14,17 +14,28 @@ public class Order {
     @Id
     private Long id;
 
-    private Date createdAt;
-
-    private Date lastDay;
-
-    private Date withdrawDay;
+    private long withdrawDay;
 
     private String status;
+
+    @Column(nullable = false)
+    private long createdAt = Instant.now().getEpochSecond();
+
+    @Column(nullable = false)
+    private long lastDay = Instant.now().getEpochSecond();
+
+    @Column(nullable = false)
+    private LocalDateTime lastUpdate = LocalDateTime.now();
+
+    @ManyToOne
+    private User createdBy;
+
+    @ManyToOne
+    private User lastUser;
 
     @ManyToOne
     private Item item;
 
     @ManyToOne
-    private Supplier supplier;
+    private SupplierCompany supplier;
 }

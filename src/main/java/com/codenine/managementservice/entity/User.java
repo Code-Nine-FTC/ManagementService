@@ -7,9 +7,9 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import java.time.Instant;
+
+import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.Collection;
 import java.util.List;
 
@@ -22,20 +22,27 @@ public class User implements UserDetails {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false)
     private String name;
 
+    @Column(nullable = false)
     private String email;
-
+    
+    @Column(nullable = false)
     private String password;
 
     @Enumerated(EnumType.STRING)
-    private Role role;
+    @Column(nullable = false)
+    private Role role = Role.ASSISTANT;
 
-    private Date createdAt;
+    @Column(nullable = false)
+    private LocalDateTime createdAt = LocalDateTime.now();
 
-    private Instant lastUpdate;
+    @Column(nullable = false)
+    private LocalDateTime lastUpdate = LocalDateTime.now();
 
-    private Boolean isActive;
+    @Column(nullable = false)
+    private Boolean isActive = true;
 
     @ManyToOne
     private Section section;

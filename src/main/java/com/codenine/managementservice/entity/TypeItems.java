@@ -1,14 +1,15 @@
 package com.codenine.managementservice.entity;
 
-import jakarta.persistence.*;
 import lombok.Data;
+import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import java.util.List;
+
 
 @Data
 @Entity
-@Table(name = "unit_destinations")
-public class UnitDestination {
-
+@Table(name = "type_items")
+public class TypeItems {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -17,25 +18,17 @@ public class UnitDestination {
     private String name;
 
     @Column(nullable = false)
-    private String street;
-
-    @Column(nullable = false)
-    private String number;
-
-    @Column(nullable = false)
-    private String city;
-
-    @Column(nullable = false)
-    private String state;
-
-    @Column(nullable = false)
-    private String zipCode;
-
-    private String phoneNumber;
+    private Boolean isActive = true;
 
     @Column(nullable = false)
     private LocalDateTime lastUpdate = LocalDateTime.now();
 
     @ManyToOne
     private User lastUser;
+
+    @ManyToOne
+    private Section section;
+
+    @OneToMany
+    private List<Item> items;
 }

@@ -1,13 +1,10 @@
 package com.codenine.managementservice.entity;
 
 import jakarta.persistence.*;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
 import lombok.Data;
 
-import java.time.Instant;
+import java.time.LocalDateTime;
+
 
 @Data
 @Entity
@@ -18,17 +15,36 @@ public class Item {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false)
     private String name;
 
+    @Column(nullable = false)
     private String measure;
 
-    private Instant expireDate;
+    private LocalDateTime expireDate;
+
+    @Column(nullable = false)
+    private Integer currentStock = 0;
+
+    @Column(nullable = false)
+    private Integer minimumStock = 0;
 
     private String qrCode;
 
+    @Column(nullable = false)
+    private Boolean isActive = true;
+
+    @Column(nullable = false)
+    private LocalDateTime lastUpdate = LocalDateTime.now();
+
     @ManyToOne
-    private Supplier supplier;
+    private User lastUser;
+
+    @ManyToOne
+    private SupplierCompany supplier;
 
     @ManyToOne
     private Section section;
+
+    
 }
