@@ -13,8 +13,8 @@ public class Transfer {
     private Long id;
 
     private String status;
-    
-    private long deliveryDate;
+
+    private LocalDateTime deliveryDate;
 
     @Column(nullable = false)
     private LocalDateTime createdAt = LocalDateTime.now();

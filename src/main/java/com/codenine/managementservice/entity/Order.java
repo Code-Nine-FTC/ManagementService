@@ -14,15 +14,15 @@ public class Order {
     @Id
     private Long id;
 
-    private long withdrawDay;
+    private LocalDateTime withdrawDay;
 
     private String status;
 
     @Column(nullable = false)
-    private long createdAt = Instant.now().getEpochSecond();
+    private LocalDateTime createdAt = LocalDateTime.now();
 
     @Column(nullable = false)
-    private long lastDay = Instant.now().getEpochSecond();
+    private LocalDateTime lastDay = LocalDateTime.now();
 
     @Column(nullable = false)
     private LocalDateTime lastUpdate = LocalDateTime.now();

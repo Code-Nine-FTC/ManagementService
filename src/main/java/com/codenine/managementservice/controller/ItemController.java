@@ -3,7 +3,9 @@ package com.codenine.managementservice.controller;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.codenine.managementservice.dto.ItemFilterCriteria;
+import com.codenine.managementservice.dto.ItemLossRequest;
 import com.codenine.managementservice.dto.ItemRequest;
+import com.codenine.managementservice.service.ItemLossService;
 import com.codenine.managementservice.service.ItemService;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,6 +26,8 @@ public class ItemController {
     @Autowired
     private ItemService itemService;
 
+    @Autowired
+    private ItemLossService itemLossService;
 
     @PostMapping("/")
     public ResponseEntity<String> createItem(@RequestBody ItemRequest entity) {
@@ -36,7 +40,7 @@ public class ItemController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<?> getItem(@PathVariable Integer id) {
+    public ResponseEntity<?> getItem(@PathVariable Long id) {
         try {
             var item = itemService.getItem(id);
             return ResponseEntity.ok(item);
@@ -58,7 +62,7 @@ public class ItemController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> updateItem(@PathVariable Integer id, @RequestBody ItemRequest entity) {
+    public ResponseEntity<?> updateItem(@PathVariable Long id, @RequestBody ItemRequest entity) {
         try {
             itemService.updateItem(id, entity);
             return ResponseEntity.ok("Item updated successfully");
@@ -71,7 +75,7 @@ public class ItemController {
     }
 
     @PatchMapping("/disable/{id}")
-    public ResponseEntity<?> disableItem(@PathVariable Integer id) {
+    public ResponseEntity<?> disableItem(@PathVariable Long id) {
         try {
             itemService.disableItem(id);
             return ResponseEntity.ok("Item disabled successfully");
@@ -79,6 +83,28 @@ public class ItemController {
             return ResponseEntity.status(404).body(e.getMessage());
         } catch (Exception e) {
             return ResponseEntity.status(500).body("Error disabling item: " + e.getMessage());
+        }
+    }
+
+    @PostMapping("/loss")
+    public ResponseEntity<?> createItemLoss(@RequestBody ItemLossRequest request) {
+        try {
+            itemLossService.createItemLoss(request);
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Error creating item loss: " + e.getMessage());
+        }
+        return ResponseEntity.status(201).body("Item loss created successfully");
+    }
+
+    @PutMapping("/loss/{id}")
+    public ResponseEntity<?> updateItemLoss(@PathVariable Long id, @RequestBody ItemLossRequest request) {
+        try {
+            itemLossService.updateItemLoss(id, request);
+            return ResponseEntity.ok("Item loss updated successfully");
+        } catch (NullPointerException e) {
+            return ResponseEntity.status(404).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Error updating item loss: " + e.getMessage());
         }
     }
 

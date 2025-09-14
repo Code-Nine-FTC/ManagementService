@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.Data;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 
 @Data
@@ -37,6 +38,9 @@ public class Item {
     @Column(nullable = false)
     private LocalDateTime lastUpdate = LocalDateTime.now();
 
+    @Column(nullable = false)
+    private Boolean isArchived = false;
+
     @ManyToOne
     private User lastUser;
 
@@ -45,6 +49,9 @@ public class Item {
 
     @ManyToOne
     private Section section;
+
+    @OneToMany
+    private List<ItemLoss> itemLoss;
 
     
 }

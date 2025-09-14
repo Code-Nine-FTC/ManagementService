@@ -18,5 +18,5 @@ public class Notification {
     private String text;
 
     @Column(nullable = false)
-    private long createdAt = Instant.now().getEpochSecond();
+    private Long createdAt = Instant.now().getEpochSecond();
 }

@@ -7,7 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import com.codenine.managementservice.dto.ItemResponse;
 import com.codenine.managementservice.entity.Item;
 
-public interface ItemRepository  extends JpaRepository<Item, Integer> {
+public interface ItemRepository  extends JpaRepository<Item, Long> {
     @Query(value = """
         SELECT
             i.id AS itemId,
@@ -39,12 +39,12 @@ public interface ItemRepository  extends JpaRepository<Item, Integer> {
         and (:itemId IS NULL OR i.id = :itemId)
         """, nativeQuery = true)
         List<ItemResponse> findAllItemResponses(
-            Integer supplierId,
-            Integer sectionId,
-            Integer typeItemId,
-            Integer lastUserId,
+            Long supplierId,
+            Long sectionId,
+            Long typeItemId,
+            Long lastUserId,
             Boolean isActive,
-            Integer itemId
+            Long itemId
         );
 
         

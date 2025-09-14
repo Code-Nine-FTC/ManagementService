@@ -9,8 +9,10 @@ import com.codenine.managementservice.dto.ItemFilterCriteria;
 import com.codenine.managementservice.dto.ItemRequest;
 import com.codenine.managementservice.dto.ItemResponse;
 import com.codenine.managementservice.entity.Item;
+import com.codenine.managementservice.entity.User;
 import com.codenine.managementservice.mapper.ItemMapper;
 import com.codenine.managementservice.repository.ItemRepository;
+import com.codenine.managementservice.repository.UserRepository;
 
 
 @Service
@@ -18,13 +20,17 @@ public class ItemService {
     @Autowired
     private ItemRepository itemRepository;
 
+    @Autowired
+    private UserRepository userRepository;
+
     public void createItem(ItemRequest itemRequest) {
-        Item newItem = ItemMapper.toEntity(itemRequest);
+        User user = userRepository.findById(itemRequest.lastUserId())
+                .orElseThrow(() -> new NullPointerException("User not found with id: " + itemRequest.lastUserId()));
+        Item newItem = ItemMapper.toEntity(itemRequest, user, null, null);
         itemRepository.save(newItem);
     }
 
-    public ItemResponse getItem(Integer id) {
-        if (getItemById(id) == null) throw new NullPointerException("Item not found with id: " + id);
+    public ItemResponse getItem(Long id) {
         ItemResponse item = itemRepository.findAllItemResponses(null, null, null, null, null, id
         ).stream().findFirst().orElse(null);
         return item;
@@ -41,21 +47,21 @@ public class ItemService {
         );
     }
 
-    public void updateItem(Integer id, ItemRequest itemRequest) {
+    public void updateItem(Long id, ItemRequest itemRequest) {
         Item item = getItemById(id);
-        if (item == null) throw new NullPointerException("Item not found with id: " + id);
-        ItemMapper.updateEntity(item, itemRequest);
+        User lastUser = userRepository.findById(itemRequest.lastUserId())
+                .orElseThrow(() -> new NullPointerException("User not found with id: " + itemRequest.lastUserId()));
+        ItemMapper.updateEntity(item, itemRequest, lastUser, null, null);
         itemRepository.save(item);
     }
 
-    public void disableItem(Integer id) {
+    public void disableItem(Long id) {
         Item item = getItemById(id);
-        if (item == null) throw new NullPointerException("Item not found with id: " + id);
         item.setIsActive(false);
         itemRepository.save(item);
     }
     
-    private Item getItemById(Integer id) {
-        return itemRepository.findById(id).orElse(null);
+    private Item getItemById(Long id) {
+        return itemRepository.findById(id).orElseThrow(() -> new NullPointerException("Item not found with id: " + id));
     }
 }

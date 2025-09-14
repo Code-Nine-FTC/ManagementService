@@ -2,10 +2,10 @@ package com.codenine.managementservice.dto;
 
 
 public record ItemFilterCriteria(
-    Integer supplierId,
-    Integer sectionId,
-    Integer typeItemId,
-    Integer lastUserId,
+    Long supplierId,
+    Long sectionId,
+    Long typeItemId,
+    Long lastUserId,
     Boolean isActive,
-    Integer itemId
+    Long itemId
 ) {}
