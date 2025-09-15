@@ -62,7 +62,7 @@ public class ItemService {
         return itemRepository.findAllItemResponses(
             filterCriteria.supplierId(),
             filterCriteria.sectionId(),
-            filterCriteria.typeItemId(),
+            filterCriteria.itemTypeId(),
             filterCriteria.lastUserId(),
             filterCriteria.isActive(),
             filterCriteria.itemId()

@@ -23,6 +23,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 @RequestMapping("/items")
 public class ItemController {
     
+    
     @Autowired
     private ItemService itemService;
 
@@ -86,26 +87,26 @@ public class ItemController {
         }
     }
 
-    @PostMapping("/loss")
-    public ResponseEntity<?> createItemLoss(@RequestBody ItemLossRequest request) {
-        try {
-            itemLossService.createItemLoss(request);
-        } catch (Exception e) {
-            return ResponseEntity.status(500).body("Error creating item loss: " + e.getMessage());
-        }
-        return ResponseEntity.status(201).body("Item loss created successfully");
-    }
+    // @PostMapping("/loss")
+    // public ResponseEntity<?> createItemLoss(@RequestBody ItemLossRequest request) {
+    //     try {
+    //         itemLossService.createItemLoss(request);
+    //     } catch (Exception e) {
+    //         return ResponseEntity.status(500).body("Error creating item loss: " + e.getMessage());
+    //     }
+    //     return ResponseEntity.status(201).body("Item loss created successfully");
+    // }
 
-    @PutMapping("/loss/{id}")
-    public ResponseEntity<?> updateItemLoss(@PathVariable Long id, @RequestBody ItemLossRequest request) {
-        try {
-            itemLossService.updateItemLoss(id, request);
-            return ResponseEntity.ok("Item loss updated successfully");
-        } catch (NullPointerException e) {
-            return ResponseEntity.status(404).body(e.getMessage());
-        } catch (Exception e) {
-            return ResponseEntity.status(500).body("Error updating item loss: " + e.getMessage());
-        }
-    }
+    // @PutMapping("/loss/{id}")
+    // public ResponseEntity<?> updateItemLoss(@PathVariable Long id, @RequestBody ItemLossRequest request) {
+    //     try {
+    //         itemLossService.updateItemLoss(id, request);
+    //         return ResponseEntity.ok("Item loss updated successfully");
+    //     } catch (NullPointerException e) {
+    //         return ResponseEntity.status(404).body(e.getMessage());
+    //     } catch (Exception e) {
+    //         return ResponseEntity.status(500).body("Error updating item loss: " + e.getMessage());
+    //     }
+    // }
 
 }

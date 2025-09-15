@@ -3,24 +3,26 @@ package com.codenine.managementservice.service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.codenine.managementservice.entity.ItemType;
 import com.codenine.managementservice.entity.TypeItem;
 import com.codenine.managementservice.entity.User;
+import com.codenine.managementservice.repository.ItemTypeRepository;
 import com.codenine.managementservice.repository.TypeItemRepository;
 import com.codenine.managementservice.repository.UserRepository;
 
 @Service
-public class TypeItemService {
+public class ItemTypeService {
     @Autowired
-    private TypeItemRepository typeItemRepository;
+    private ItemTypeRepository itemTypeRepository;
 
     @Autowired
     private UserRepository userRepository;
 
     // Implementar CRUD
 
-    private TypeItem getTypeItemById(Long id) {
-        return typeItemRepository.findById(id)
-                .orElseThrow(() -> new NullPointerException("TypeItem not found with id: " + id));
+    private ItemType getItemTypeById(Long id) {
+        return itemTypeRepository.findById(id)
+                .orElseThrow(() -> new NullPointerException("ItemType not found with id: " + id));
     }
 
     private User getLastUserById(Long id) {
