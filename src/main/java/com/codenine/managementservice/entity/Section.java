@@ -16,16 +16,12 @@ public class Section {
     @Column(nullable = false)
     private String title;
 
-    @Column(nullable = false)
     private Integer roleAccess;
 
-    @Column(nullable = false)
     private Boolean isActive = true;
 
-    @Column(nullable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 
-    @Column(nullable = false)
     private LocalDateTime lastUpdate = LocalDateTime.now();
 
     @ManyToOne

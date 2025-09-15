@@ -33,7 +33,6 @@ public class UnitDestination {
 
     private String phoneNumber;
 
-    @Column(nullable = false)
     private LocalDateTime lastUpdate = LocalDateTime.now();
 
     @ManyToOne

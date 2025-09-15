@@ -3,13 +3,13 @@ package com.codenine.managementservice.mapper;
 
 import com.codenine.managementservice.dto.ItemRequest;
 import com.codenine.managementservice.entity.Item;
+import com.codenine.managementservice.entity.ItemType;
 import com.codenine.managementservice.entity.Section;
 import com.codenine.managementservice.entity.SupplierCompany;
-import com.codenine.managementservice.entity.TypeItem;
 import com.codenine.managementservice.entity.User;
 
 public class ItemMapper {
-    public static Item toEntity(ItemRequest dto, User lastUser, SupplierCompany supplier, Section section, TypeItem typeItem) {
+    public static Item toEntity(ItemRequest dto, User lastUser, SupplierCompany supplier, Section section, ItemType itemType) {
         Item item = new Item();
         item.setName(dto.name());
         item.setCurrentStock(dto.currentStock());
@@ -20,7 +20,7 @@ public class ItemMapper {
         item.setLastUser(lastUser);
         item.setSupplier(supplier);
         item.setSection(section);
-        item.setTypeItem(typeItem);
+        item.setItemType(itemType);
         return item;
     }
     

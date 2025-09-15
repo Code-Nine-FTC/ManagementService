@@ -18,13 +18,10 @@ public class Order {
 
     private String status;
 
-    @Column(nullable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 
-    @Column(nullable = false)
     private LocalDateTime lastDay = LocalDateTime.now();
 
-    @Column(nullable = false)
     private LocalDateTime lastUpdate = LocalDateTime.now();
 
     @ManyToOne

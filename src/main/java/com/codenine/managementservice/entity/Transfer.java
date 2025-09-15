@@ -16,10 +16,8 @@ public class Transfer {
 
     private LocalDateTime deliveryDate;
 
-    @Column(nullable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 
-    @Column(nullable = false)
     private LocalDateTime lastUpdate = LocalDateTime.now();
 
     @ManyToOne

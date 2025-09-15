@@ -1,4 +1,10 @@
+import os
 import random
+
+# Caminho desejado para salvar o arquivo
+output_dir = "src/main/resources"
+output_file = os.path.join(output_dir, "data.sql")
+os.makedirs(output_dir, exist_ok=True)
 
 item_type_names = [f"Tipo Militar {i}" for i in range(1, 51)] + [f"Tipo Farmácia {i}" for i in range(1, 51)]
 
@@ -35,32 +41,33 @@ NUM_SECTIONS = len(section_names)
 NUM_ALMOXARIFADO = 7000
 NUM_FARMACIA = 3000
 
-with open("data.sql", "w", encoding="utf-8") as f:
+with open(output_file, "w", encoding="utf-8") as f:
+    # Section
+    for i, name in enumerate(section_names, 1):
+        f.write(f"INSERT INTO sections (id, title, is_active) VALUES ({i}, '{name}', true);\n")
+    f.write("COMMIT;\n")
     # ItemType
     for i, name in enumerate(item_type_names, 1):
-        f.write(f"INSERT INTO item_type (id, name) VALUES ({i}, '{name}');\n")
+        f.write(f"INSERT INTO items_type (id, name ) VALUES ({i}, '{name}');\n")
     f.write("COMMIT;\n")
 
     # SupplierCompany
     for i, name in enumerate(supplier_names, 1):
-        f.write(f"INSERT INTO supplier_company (id, name) VALUES ({i}, '{name}');\n")
+        f.write(f"INSERT INTO suppliers_companies (id, name, is_active) VALUES ({i}, '{name}', true);\n")
     f.write("COMMIT;\n")
 
-    # Section
-    for i, name in enumerate(section_names, 1):
-        f.write(f"INSERT INTO section (id, title) VALUES ({i}, '{name}');\n")
-    f.write("COMMIT;\n")
 
     # User
     for i, name in enumerate(user_names, 1):
         email = f"{name.lower().replace(' ','.')}@exercito.mil.br"
+        section_id = (i % NUM_SECTIONS) + 1
         if "Capitão" in name:
             role = "ADMIN"
         elif "Tenente" in name or "Major" in name:
             role = "MANAGER"
         else:
             role = "ASSISTANT"
-        f.write(f"INSERT INTO user (id, name, email, password, role) VALUES ({i}, '{name}', '{email}', '{{noop}}senha{i}', '{role}');\n")
+        f.write(f"INSERT INTO users (id, name, email, password, role, is_active, section_id) VALUES ({i}, '{name}', '{email}', '{{noop}}senha{i}', '{role}', true, {section_id});\n")
     f.write("COMMIT;\n")
 
     # Itens Almoxarifado
@@ -77,7 +84,7 @@ with open("data.sql", "w", encoding="utf-8") as f:
         max_stock = random.randint(min_stock + 10, min_stock + 200)
         current_stock = random.randint(min_stock, max_stock)
         f.write(
-            f"INSERT INTO item (id, name, measure, expire_date, current_stock, minimum_stock, maximum_stock, qr_code, is_active, last_user_id, supplier_company_id, section_id, item_type_id) "
+            f"INSERT INTO items (id, name, measure, expire_date, current_stock, minimum_stock, maximum_stock, qr_code, is_active, last_user_id, supplier_company_id, section_id, item_type_id) "
             f"VALUES ({i}, '{nome}', 'unidade', '2026-12-31', {current_stock}, {min_stock}, {max_stock}, 'QR{i:05d}', true, {user_id}, {supplier_id}, {section_id}, {item_type_id});\n"
         )
         if i % 1000 == 0:
@@ -96,7 +103,7 @@ with open("data.sql", "w", encoding="utf-8") as f:
         max_stock = random.randint(min_stock + 10, min_stock + 200)
         current_stock = random.randint(min_stock, max_stock)
         f.write(
-            f"INSERT INTO item (id, name, measure, expire_date, current_stock, minimum_stock, maximum_stock, qr_code, is_active, last_user_id, supplier_company_id, section_id, item_type_id) "
+            f"INSERT INTO items (id, name, measure, expire_date, current_stock, minimum_stock, maximum_stock, qr_code, is_active, last_user_id, supplier_company_id, section_id, item_type_id) "
             f"VALUES ({i}, '{nome}', 'unidade', '2026-12-31', {current_stock}, {min_stock}, {max_stock}, 'QR{i:05d}', true, {user_id}, {supplier_id}, {section_id}, {item_type_id});\n"
         )
         if (i - NUM_ALMOXARIFADO) % 1000 == 0:

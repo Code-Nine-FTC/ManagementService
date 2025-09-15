@@ -3,9 +3,9 @@ package com.codenine.managementservice.controller;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.codenine.managementservice.dto.ItemFilterCriteria;
-import com.codenine.managementservice.dto.ItemLossRequest;
+// import com.codenine.managementservice.dto.ItemLossRequest;
 import com.codenine.managementservice.dto.ItemRequest;
-import com.codenine.managementservice.service.ItemLossService;
+// import com.codenine.managementservice.service.ItemLossService;
 import com.codenine.managementservice.service.ItemService;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,8 +27,8 @@ public class ItemController {
     @Autowired
     private ItemService itemService;
 
-    @Autowired
-    private ItemLossService itemLossService;
+    // @Autowired
+    // private ItemLossService itemLossService;
 
     @PostMapping("/")
     public ResponseEntity<String> createItem(@RequestBody ItemRequest entity) {

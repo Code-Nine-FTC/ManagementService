@@ -1,6 +1,5 @@
 package com.codenine.managementservice.service;
 
-import java.lang.reflect.Type;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,15 +9,16 @@ import com.codenine.managementservice.dto.ItemFilterCriteria;
 import com.codenine.managementservice.dto.ItemRequest;
 import com.codenine.managementservice.dto.ItemResponse;
 import com.codenine.managementservice.entity.Item;
+import com.codenine.managementservice.entity.ItemType;
 import com.codenine.managementservice.entity.Section;
 import com.codenine.managementservice.entity.SupplierCompany;
-import com.codenine.managementservice.entity.TypeItem;
+
 import com.codenine.managementservice.entity.User;
 import com.codenine.managementservice.mapper.ItemMapper;
 import com.codenine.managementservice.repository.ItemRepository;
+import com.codenine.managementservice.repository.ItemTypeRepository;
 import com.codenine.managementservice.repository.SectionRepository;
 import com.codenine.managementservice.repository.SupplierCompanyRepository;
-import com.codenine.managementservice.repository.TypeItemRepository;
 import com.codenine.managementservice.repository.UserRepository;
 
 
@@ -34,20 +34,20 @@ public class ItemService {
     private SectionRepository sectionRepository;
 
     @Autowired
-    private TypeItemRepository typeItemRepository;
+    private ItemTypeRepository itemTypeRepository;
 
     @Autowired
     private SupplierCompanyRepository supplierCompanyRepository;
     public void createItem(ItemRequest itemRequest) {
         User user = userRepository.findById(itemRequest.lastUserId())
                 .orElseThrow(() -> new NullPointerException("User not found with id: " + itemRequest.lastUserId()));
-        TypeItem typeItem = typeItemRepository.findById(itemRequest.typeItemId())
-                .orElseThrow(() -> new NullPointerException("TypeItem not found with id: " + itemRequest.typeItemId()));
+        ItemType itemType = itemTypeRepository.findById(itemRequest.typeItemId())
+                .orElseThrow(() -> new NullPointerException("ItemType not found with id: " + itemRequest.typeItemId()));
         Section section = sectionRepository.findById(itemRequest.sectionId())
                 .orElseThrow(() -> new NullPointerException("Section not found with id: " + itemRequest.sectionId()));
         SupplierCompany supplier = supplierCompanyRepository.findById(itemRequest.supplierId())
                 .orElseThrow(() -> new NullPointerException("SupplierCompany not found with id: " + itemRequest.supplierId()));
-        Item newItem = ItemMapper.toEntity(itemRequest, user, supplier, section, typeItem);
+        Item newItem = ItemMapper.toEntity(itemRequest, user, supplier, section, itemType);
         itemRepository.save(newItem);
     }
 

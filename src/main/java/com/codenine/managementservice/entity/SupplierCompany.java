@@ -29,10 +29,8 @@ public class SupplierCompany {
     @Column(nullable = false)
     private String cnpj;
 
-    @Column(nullable = false)
     private Boolean isActive = true;
 
-    @Column(nullable = false)
     private LocalDateTime lastUpdate = LocalDateTime.now();
 
     @ManyToOne

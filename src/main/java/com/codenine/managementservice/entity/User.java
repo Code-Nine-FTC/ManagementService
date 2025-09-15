@@ -32,16 +32,12 @@ public class User implements UserDetails {
     private String password;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
     private Role role = Role.ASSISTANT;
 
-    @Column(nullable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 
-    @Column(nullable = false)
     private LocalDateTime lastUpdate = LocalDateTime.now();
 
-    @Column(nullable = false)
     private Boolean isActive = true;
 
     @ManyToOne

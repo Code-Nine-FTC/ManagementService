@@ -17,10 +17,8 @@ public class ItemType {
     @Column(nullable = false)
     private String name;
 
-    @Column(nullable = false)
     private Boolean isActive = true;
 
-    @Column(nullable = false)
     private LocalDateTime lastUpdate = LocalDateTime.now();
 
     @ManyToOne

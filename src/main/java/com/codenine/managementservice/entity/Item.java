@@ -23,21 +23,16 @@ public class Item {
 
     private LocalDateTime expireDate;
 
-    @Column(nullable = false)
     private Integer currentStock = 0;
 
-    @Column(nullable = false)
     private Integer minimumStock = 0;
 
     private String qrCode;
 
-    @Column(nullable = false)
     private Boolean isActive = true;
 
-    @Column(nullable = false)
     private LocalDateTime lastUpdate = LocalDateTime.now();
 
-    @Column(nullable = false)
     private Boolean isArchived = false;
 
     @ManyToOne
