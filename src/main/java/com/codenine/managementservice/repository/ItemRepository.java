@@ -19,21 +19,20 @@ public interface ItemRepository  extends JpaRepository<Item, Long> {
             sc.name AS supplierName,
             s.id AS sectionId,
             s.title AS sectionName,
-            ti.id AS typeItemId,
-            ti.name AS typeItemName,
+            it.id AS typeItemId,
+            it.name AS typeItemName,
             i.minimum_stock AS minimumStock,
             i.qr_code AS qrCode,
             u.name AS lastUserName,
             i.last_update AS lastUpdate
         FROM items i
         JOIN suppliers_companies sc ON i.supplier_id = sc.id
-        JOIN type_items_items tii ON tii.items_id = i.id
-        JOIN type_items ti ON ti.id = tii.type_items_id
-        JOIN sections s ON s.id = ti.section_id
+        JOIN items_type it ON i.item_type_id = it.id
+        JOIN sections s ON i.section_id = s.id
         JOIN users u ON i.last_user_id = u.id
         WHERE (:supplierId IS NULL OR sc.id = :supplierId)
         and (:sectionId IS NULL OR s.id = :sectionId)
-        and (:typeItemId IS NULL OR ti.id = :typeItemId)
+        and (:typeItemId IS NULL OR it.id = :typeItemId)
         and (:lastUserId IS NULL OR u.id = :lastUserId)
         and (:isActive IS NULL OR i.is_active = :isActive)
         and (:itemId IS NULL OR i.id = :itemId)
