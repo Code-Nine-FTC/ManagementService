@@ -3,6 +3,7 @@ package com.codenine.managementservice.entity;
 import jakarta.persistence.*;
 import lombok.Data;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @Entity
@@ -23,8 +24,8 @@ public class Transfer {
     @ManyToOne
     private User lastUser;
 
-    @ManyToOne
-    private Item item;
+    @ManyToMany
+    private List<User> users;
 
     @ManyToOne
     private UnitDestination unitDestination;

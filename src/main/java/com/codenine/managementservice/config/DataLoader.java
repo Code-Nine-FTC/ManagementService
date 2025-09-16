@@ -73,6 +73,8 @@ public class DataLoader implements CommandLineRunner {
         Section almoxarifado = new Section();
         almoxarifado.setTitle("Almoxarifado");
         almoxarifado.setIsActive(true);
+        almoxarifado.setCreatedAt(LocalDateTime.now());
+        almoxarifado.setLastUpdate(LocalDateTime.now());
         
         Section farmacia = new Section();
         farmacia.setTitle("Farmácia");
@@ -120,12 +122,6 @@ public class DataLoader implements CommandLineRunner {
             "44.555.666/0001-77"
         };
         
-        String[] urls = {
-            "https://www.imb.mil.br",
-            "https://www.fmc.mil.br",
-            "https://www.hmr.mil.br", 
-            "https://www.omm.mil.br"
-        };
         
         String[] emails = {
             "contato@imb.mil.br",
@@ -145,7 +141,6 @@ public class DataLoader implements CommandLineRunner {
             SupplierCompany supplier = new SupplierCompany();
             supplier.setName(supplierNames[i]);
             supplier.setCnpj(cnpjs[i]);
-            supplier.setUrl(urls[i]);
             supplier.setEmail(emails[i]);
             supplier.setPhoneNumber(phones[i]);
             supplier.setIsActive(true);

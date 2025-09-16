@@ -19,8 +19,8 @@ public interface ItemRepository  extends JpaRepository<Item, Long> {
             sc.name AS supplierName,
             s.id AS sectionId,
             s.title AS sectionName,
-            it.id AS typeItemId,
-            it.name AS typeItemName,
+            it.id AS itemTypeId,
+            it.name AS itemTypeName,
             i.minimum_stock AS minimumStock,
             i.qr_code AS qrCode,
             u.name AS lastUserName,
@@ -32,7 +32,7 @@ public interface ItemRepository  extends JpaRepository<Item, Long> {
         JOIN users u ON i.last_user_id = u.id
         WHERE (:supplierId IS NULL OR sc.id = :supplierId)
         and (:sectionId IS NULL OR s.id = :sectionId)
-        and (:typeItemId IS NULL OR it.id = :typeItemId)
+        and (:itemTypeId IS NULL OR it.id = :itemTypeId)
         and (:lastUserId IS NULL OR u.id = :lastUserId)
         and (:isActive IS NULL OR i.is_active = :isActive)
         and (:itemId IS NULL OR i.id = :itemId)
@@ -40,7 +40,7 @@ public interface ItemRepository  extends JpaRepository<Item, Long> {
         List<ItemResponse> findAllItemResponses(
             Long supplierId,
             Long sectionId,
-            Long typeItemId,
+            Long itemTypeId,
             Long lastUserId,
             Boolean isActive,
             Long itemId

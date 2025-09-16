@@ -18,9 +18,6 @@ public class SupplierCompany {
     private String name;
 
     @Column(nullable = false)
-    private String url;
-
-    @Column(nullable = false)
     private String email;
 
     @Column(nullable = false)
@@ -30,6 +27,8 @@ public class SupplierCompany {
     private String cnpj;
 
     private Boolean isActive = true;
+
+    private Integer rating = 0;
 
     private LocalDateTime lastUpdate = LocalDateTime.now();
 
