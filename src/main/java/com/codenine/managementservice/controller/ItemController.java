@@ -1,5 +1,6 @@
 package com.codenine.managementservice.controller;
 
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.codenine.managementservice.dto.ItemFilterCriteria;
@@ -22,14 +23,14 @@ import org.springframework.web.bind.annotation.PutMapping;
 @RestController
 @RequestMapping("/items")
 public class ItemController {
-    
-    
+
     @Autowired
     private ItemService itemService;
 
     // @Autowired
     // private ItemLossService itemLossService;
 
+    @PreAuthorize("@itemSecurity.hasItemManagementPermission(authentication, #entity.typeItemId())")
     @PostMapping("/")
     public ResponseEntity<String> createItem(@RequestBody ItemRequest entity) {
         try {
@@ -52,7 +53,7 @@ public class ItemController {
         }
     }
 
-    @GetMapping("/all")
+    @GetMapping("")
     public ResponseEntity<?> getAllItems(@RequestBody ItemFilterCriteria filters) {
         try {
             var items = itemService.getItemsByFilter(filters);
@@ -62,6 +63,7 @@ public class ItemController {
         }
     }
 
+    @PreAuthorize("@itemSecurity.hasItemManagementPermission(authentication, #entity.typeItemId())")
     @PutMapping("/{id}")
     public ResponseEntity<?> updateItem(@PathVariable Long id, @RequestBody ItemRequest entity) {
         try {
@@ -74,6 +76,8 @@ public class ItemController {
             return ResponseEntity.status(500).body("Error updating item: " + e.getMessage());
         }
     }
+
+    @PreAuthorize("@itemSecurity.hasItemManagementPermission(authentication, #entity.typeItemId())")
 
     @PatchMapping("/disable/{id}")
     public ResponseEntity<?> disableItem(@PathVariable Long id) {

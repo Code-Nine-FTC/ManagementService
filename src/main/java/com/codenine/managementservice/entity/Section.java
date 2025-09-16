@@ -16,8 +16,6 @@ public class Section {
     @Column(nullable = false)
     private String title;
 
-    private Integer roleAccess;
-
     private Boolean isActive = true;
 
     private LocalDateTime createdAt = LocalDateTime.now();

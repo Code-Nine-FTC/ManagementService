@@ -42,9 +42,6 @@ public class Item {
     private SupplierCompany supplier;
 
     @ManyToOne
-    private Section section;
-
-    @ManyToOne
     private ItemType itemType;
     
 }

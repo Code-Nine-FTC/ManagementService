@@ -41,13 +41,11 @@ public class ItemService {
     public void createItem(ItemRequest itemRequest) {
         User user = userRepository.findById(itemRequest.lastUserId())
                 .orElseThrow(() -> new NullPointerException("User not found with id: " + itemRequest.lastUserId()));
-        ItemType itemType = itemTypeRepository.findById(itemRequest.typeItemId())
-                .orElseThrow(() -> new NullPointerException("ItemType not found with id: " + itemRequest.typeItemId()));
-        Section section = sectionRepository.findById(itemRequest.sectionId())
-                .orElseThrow(() -> new NullPointerException("Section not found with id: " + itemRequest.sectionId()));
+        ItemType itemType = itemTypeRepository.findById(itemRequest.itemTypeId())
+                .orElseThrow(() -> new NullPointerException("ItemType not found with id: " + itemRequest.itemTypeId()));
         SupplierCompany supplier = supplierCompanyRepository.findById(itemRequest.supplierId())
                 .orElseThrow(() -> new NullPointerException("SupplierCompany not found with id: " + itemRequest.supplierId()));
-        Item newItem = ItemMapper.toEntity(itemRequest, user, supplier, section, itemType);
+        Item newItem = ItemMapper.toEntity(itemRequest, user, supplier, itemType);
         itemRepository.save(newItem);
     }
 
@@ -73,7 +71,7 @@ public class ItemService {
         Item item = getItemById(id);
         User lastUser = userRepository.findById(itemRequest.lastUserId())
                 .orElseThrow(() -> new NullPointerException("User not found with id: " + itemRequest.lastUserId()));
-        ItemMapper.updateEntity(item, itemRequest, lastUser, null, null);
+        ItemMapper.updateEntity(item, itemRequest, lastUser, null);
         itemRepository.save(item);
     }
 

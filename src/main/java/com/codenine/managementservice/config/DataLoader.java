@@ -214,7 +214,6 @@ public class DataLoader implements CommandLineRunner {
             item.setQrCode("QR" + String.format("%05d", i));
             item.setIsActive(true);
             item.setLastUser(users.get(random.nextInt(users.size())));
-            item.setSection(almoxarifado);
             item.setItemType(itemTypes.get((i - 1) % 50)); // Tipos militares (0-49)
             item.setSupplier(suppliers.get(random.nextInt(suppliers.size())));
 
@@ -243,7 +242,6 @@ public class DataLoader implements CommandLineRunner {
             item.setQrCode("QR" + String.format("%05d", i));
             item.setIsActive(true);
             item.setLastUser(users.get(random.nextInt(users.size())));
-            item.setSection(farmacia);
             item.setItemType(itemTypes.get(50 + ((i - 7001) % 50))); // Tipos farmácia (50-99)
             item.setSupplier(suppliers.get(random.nextInt(suppliers.size())));
 
