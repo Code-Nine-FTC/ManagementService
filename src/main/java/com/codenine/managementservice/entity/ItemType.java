@@ -25,8 +25,13 @@ public class ItemType {
     private User lastUser;
 
     @ManyToOne
+    @JoinTable(
+        name = "itemtype_section",
+        joinColumns = @JoinColumn(name = "item_type_id"),
+        inverseJoinColumns = @JoinColumn(name = "section_id")
+    )
     private Section section;
 
-    @OneToMany
+    @OneToMany(mappedBy = "itemType")
     private List<Item> items;
 }

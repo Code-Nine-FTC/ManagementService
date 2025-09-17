@@ -31,8 +31,18 @@ public class Order {
     private User lastUser;
 
     @ManyToOne
-    private Item item;
+    @JoinTable(
+        name = "order_item",
+        joinColumns = @JoinColumn(name = "order_id"),
+        inverseJoinColumns = @JoinColumn(name = "item_id")
+    )
+    private List<Item> items;
 
-    @ManyToOne
-    private SupplierCompany supplier;
+    @ManyToMany
+    @JoinTable(
+        name = "supplier_order",
+        joinColumns = @JoinColumn(name = "order_id"),
+        inverseJoinColumns = @JoinColumn(name = "supplier_id")
+    )
+    private List<SupplierCompany> suppliers;
 }

@@ -23,10 +23,4 @@ public class Transfer {
 
     @ManyToOne
     private User lastUser;
-
-    @ManyToMany
-    private List<User> users;
-
-    @ManyToOne
-    private UnitDestination unitDestination;
 }

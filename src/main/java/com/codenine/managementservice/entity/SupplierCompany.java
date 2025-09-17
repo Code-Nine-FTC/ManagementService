@@ -37,4 +37,7 @@ public class SupplierCompany {
 
     @OneToMany
     private List<Item> items;
+
+    @ManyToMany(mappedBy = "suppliers")
+    private List<Order> orders;
 }

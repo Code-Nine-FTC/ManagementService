@@ -177,6 +177,7 @@ public class DataLoader implements CommandLineRunner {
         }
 
         return userRepository.saveAll(users);
+
     }
 
     private void createItemsInBatches(List<User> users, List<Section> sections, List<ItemType> itemTypes, List<SupplierCompany> suppliers) {

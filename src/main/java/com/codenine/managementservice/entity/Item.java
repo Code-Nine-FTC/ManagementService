@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.Data;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 
 @Data
@@ -23,9 +24,11 @@ public class Item {
 
     private LocalDateTime expireDate;
 
+    private Integer maximumStock;
+
     private Integer currentStock = 0;
 
-    private Integer minimumStock = 0;
+    private Integer minimumStock;
 
     private String qrCode;
 
@@ -42,6 +45,14 @@ public class Item {
     private SupplierCompany supplier;
 
     @ManyToOne
+    @JoinTable(
+        name = "item_item_type",
+        joinColumns = @JoinColumn(name = "item_id"),
+        inverseJoinColumns = @JoinColumn(name = "item_type_id")
+    )
     private ItemType itemType;
+
+    @ManyToMany(mappedBy = "items")
+    private List<Order> orders;
     
 }

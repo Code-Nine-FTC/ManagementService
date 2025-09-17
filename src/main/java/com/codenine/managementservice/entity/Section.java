@@ -24,8 +24,8 @@ public class Section {
 
     @ManyToOne
     private User lastUser;
-
-    @OneToMany(mappedBy = "section")
+    
+    @ManyToMany(mappedBy = "sections")
     private List<User> users;
 
     @OneToMany(mappedBy = "section")

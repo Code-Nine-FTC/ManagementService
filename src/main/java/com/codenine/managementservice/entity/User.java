@@ -40,18 +40,23 @@ public class User implements UserDetails {
 
     private Boolean isActive = true;
 
-    @ManyToOne
-    private Section section;
+    @ManyToMany
+    @JoinTable(
+    name = "user_section",
+    joinColumns = @JoinColumn(name = "user_id"),
+    inverseJoinColumns = @JoinColumn(name = "section_id")
+)
+    private List<Section> sections;
 
-    @Override
-    public Collection<? extends GrantedAuthority> getAuthorities() {
-        List<GrantedAuthority> authorities = new ArrayList<>();
-        authorities.add(new SimpleGrantedAuthority("ROLE_" + role.name()));
-        if (section != null) {
-            authorities.add(new SimpleGrantedAuthority("SECTION_" + section.getId()));
-        }
-        return authorities;
-    }
+    // @Override
+    // public Collection<? extends GrantedAuthority> getAuthorities() {
+    //     List<GrantedAuthority> authorities = new ArrayList<>();
+    //     authorities.add(new SimpleGrantedAuthority("ROLE_" + role.name()));
+    //     if (section != null) {
+    //         authorities.add(new SimpleGrantedAuthority("SECTION_" + section.getId()));
+    //     }
+    //     return authorities;
+    // }
 
     @Override
     public String getUsername() {

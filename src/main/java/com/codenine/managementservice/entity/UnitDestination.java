@@ -39,6 +39,6 @@ public class UnitDestination {
     @ManyToOne
     private User lastUser;
 
-    @OneToMany
-    private List<Transfer> transfer;
+    @OneToOne
+    private Transfer transfer;
 }
