@@ -28,7 +28,7 @@ public interface ItemRepository  extends JpaRepository<Item, Long> {
         FROM items i
         JOIN suppliers_companies sc ON i.supplier_id = sc.id
         JOIN items_type it ON i.item_type_id = it.id
-        JOIN sections s ON i.section_id = s.id
+        JOIN sections s ON it.section_id = s.id
         JOIN users u ON i.last_user_id = u.id
         WHERE (:supplierId IS NULL OR sc.id = :supplierId)
         and (:sectionId IS NULL OR s.id = :sectionId)

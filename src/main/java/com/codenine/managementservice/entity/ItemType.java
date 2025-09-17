@@ -24,7 +24,7 @@ public class ItemType {
     @ManyToOne
     private User lastUser;
 
-    @OneToOne
+    @ManyToOne
     private Section section;
 
     @OneToMany

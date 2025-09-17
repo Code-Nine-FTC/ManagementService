@@ -1,7 +1,7 @@
 package com.codenine.managementservice.controller;
 
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import com.codenine.managementservice.dto.ItemFilterCriteria;
 // import com.codenine.managementservice.dto.ItemLossRequest;
@@ -11,13 +11,6 @@ import com.codenine.managementservice.service.ItemService;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.PutMapping;
 
 
 @RestController
@@ -53,9 +46,19 @@ public class ItemController {
         }
     }
 
-    @GetMapping("")
-    public ResponseEntity<?> getAllItems(@RequestBody ItemFilterCriteria filters) {
+    @GetMapping("/")
+    public ResponseEntity<?> getAllItems(
+            @RequestParam(required = false) Long supplierId,
+            @RequestParam(required = false) Long sectionId,
+            @RequestParam(required = false) Long itemTypeId,
+            @RequestParam(required = false) Long lastUserId,
+            @RequestParam(required = false) Boolean isActive,
+            @RequestParam(required = false) Long itemId
+    ) {
         try {
+            ItemFilterCriteria filters = new ItemFilterCriteria(
+                    supplierId, sectionId, itemTypeId, lastUserId, isActive, itemId
+            );
             var items = itemService.getItemsByFilter(filters);
             return ResponseEntity.ok(items);
         } catch (Exception e) {
@@ -78,7 +81,6 @@ public class ItemController {
     }
 
     @PreAuthorize("@itemSecurity.hasItemManagementPermission(authentication, #entity.typeItemId())")
-
     @PatchMapping("/disable/{id}")
     public ResponseEntity<?> disableItem(@PathVariable Long id) {
         try {

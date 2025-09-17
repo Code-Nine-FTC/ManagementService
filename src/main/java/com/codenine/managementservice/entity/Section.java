@@ -25,9 +25,9 @@ public class Section {
     @ManyToOne
     private User lastUser;
 
-    @OneToMany
+    @OneToMany(mappedBy = "section")
     private List<User> users;
 
-    @OneToMany
-    private List<Item> items;
+    @OneToMany(mappedBy = "section")
+    private List<ItemType> itemTypes;
 }
