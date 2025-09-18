@@ -8,8 +8,8 @@ import java.util.List;
 
 @Data
 @Entity
-@Table(name = "type_items")
-public class TypeItems {
+@Table(name = "items_type")
+public class ItemType {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -17,18 +17,21 @@ public class TypeItems {
     @Column(nullable = false)
     private String name;
 
-    @Column(nullable = false)
     private Boolean isActive = true;
 
-    @Column(nullable = false)
     private LocalDateTime lastUpdate = LocalDateTime.now();
 
     @ManyToOne
     private User lastUser;
 
     @ManyToOne
+    @JoinTable(
+        name = "itemtype_section",
+        joinColumns = @JoinColumn(name = "item_type_id"),
+        inverseJoinColumns = @JoinColumn(name = "section_id")
+    )
     private Section section;
 
-    @OneToMany
+    @OneToMany(mappedBy = "itemType")
     private List<Item> items;
 }

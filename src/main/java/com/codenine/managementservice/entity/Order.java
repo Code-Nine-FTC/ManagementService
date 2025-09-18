@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.Data;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @Entity
@@ -17,13 +18,10 @@ public class Order {
 
     private String status;
 
-    @Column(nullable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 
-    @Column(nullable = false)
     private LocalDateTime lastDay = LocalDateTime.now();
 
-    @Column(nullable = false)
     private LocalDateTime lastUpdate = LocalDateTime.now();
 
     @ManyToOne
@@ -32,9 +30,19 @@ public class Order {
     @ManyToOne
     private User lastUser;
 
-    @ManyToOne
-    private Item item;
+    @ManyToMany
+    @JoinTable(
+        name = "order_item",
+        joinColumns = @JoinColumn(name = "order_id"),
+        inverseJoinColumns = @JoinColumn(name = "item_id")
+    )
+    private List<Item> items;
 
-    @ManyToOne
-    private SupplierCompany supplier;
+    @ManyToMany
+    @JoinTable(
+        name = "supplier_order",
+        joinColumns = @JoinColumn(name = "order_id"),
+        inverseJoinColumns = @JoinColumn(name = "supplier_id")
+    )
+    private List<SupplierCompany> suppliers;
 }

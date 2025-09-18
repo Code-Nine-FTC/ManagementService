@@ -1,52 +1,50 @@
 package com.codenine.managementservice.repository;
 import java.util.List;
 
+import com.codenine.managementservice.dto.ItemResponse;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
-import com.codenine.managementservice.dto.ItemResponse;
 import com.codenine.managementservice.entity.Item;
+import org.springframework.data.repository.query.Param;
 
 public interface ItemRepository  extends JpaRepository<Item, Long> {
-    @Query(value = """
-        SELECT
-            i.id AS itemId,
-            i.name,
-            i.current_stock AS currentStock,
-            i.measure,
-            i.expire_date AS expireDate,
-            sc.id AS supplierId,
-            sc.name AS supplierName,
-            s.id AS sectionId,
-            s.title AS sectionName,
-            ti.id AS typeItemId,
-            ti.name AS typeItemName,
-            i.minimum_stock AS minimumStock,
-            i.qr_code AS qrCode,
-            u.name AS lastUserName,
-            i.last_update AS lastUpdate
-        FROM items i
-        JOIN suppliers_companies sc ON i.supplier_id = sc.id
-        JOIN type_items_items tii ON tii.items_id = i.id
-        JOIN type_items ti ON ti.id = tii.type_items_id
-        JOIN sections s ON s.id = ti.section_id
-        JOIN users u ON i.last_user_id = u.id
-        WHERE (:supplierId IS NULL OR sc.id = :supplierId)
-        and (:sectionId IS NULL OR s.id = :sectionId)
-        and (:typeItemId IS NULL OR ti.id = :typeItemId)
-        and (:lastUserId IS NULL OR u.id = :lastUserId)
-        and (:isActive IS NULL OR i.is_active = :isActive)
-        and (:itemId IS NULL OR i.id = :itemId)
-        """, nativeQuery = true)
-        List<ItemResponse> findAllItemResponses(
-            Long supplierId,
-            Long sectionId,
-            Long typeItemId,
-            Long lastUserId,
-            Boolean isActive,
-            Long itemId
-        );
-
-        
-
+@Query("""
+    SELECT new com.codenine.managementservice.dto.ItemResponse(
+        i.id,
+        i.name,
+        i.currentStock,
+        i.measure,
+        i.expireDate,
+        sc.id,
+        sc.name,
+        s.id,
+        s.title,
+        it.id,
+        it.name,
+        i.minimumStock,
+        i.qrCode,
+        u.name,
+        i.lastUpdate
+    )
+    FROM Item i
+    JOIN i.supplier sc
+    JOIN i.itemType it
+    JOIN it.section s
+    JOIN i.lastUser u
+    WHERE (:supplierId IS NULL OR sc.id = :supplierId)
+      AND (:sectionId IS NULL OR s.id = :sectionId)
+      AND (:itemTypeId IS NULL OR it.id = :itemTypeId)
+      AND (:lastUserId IS NULL OR u.id = :lastUserId)
+      AND (:isActive IS NULL OR i.isActive = :isActive)
+      AND (:itemId IS NULL OR i.id = :itemId)
+""")
+    List<ItemResponse> findAllItemResponses(
+        @Param("supplierId") Long supplierId,
+        @Param("sectionId") Long sectionId,
+        @Param("itemTypeId") Long itemTypeId,
+        @Param("lastUserId") Long lastUserId,
+        @Param("isActive") Boolean isActive,
+        @Param("itemId") Long itemId
+    );
 }

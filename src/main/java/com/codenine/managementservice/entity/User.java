@@ -32,30 +32,33 @@ public class User implements UserDetails {
     private String password;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
     private Role role = Role.ASSISTANT;
 
-    @Column(nullable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 
-    @Column(nullable = false)
     private LocalDateTime lastUpdate = LocalDateTime.now();
 
-    @Column(nullable = false)
     private Boolean isActive = true;
 
-    @ManyToOne
-    private Section section;
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(
+    name = "user_section",
+    joinColumns = @JoinColumn(name = "user_id"),
+    inverseJoinColumns = @JoinColumn(name = "section_id")
+)
+    private List<Section> sections;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         List<GrantedAuthority> authorities = new ArrayList<>();
-        authorities.add(new SimpleGrantedAuthority("ROLE_" + role.name()));
-        if (section != null) {
-            authorities.add(new SimpleGrantedAuthority("SECTION_" + section.getId()));
-        }
-        return authorities;
-    }
+         authorities.add(new SimpleGrantedAuthority("ROLE_" + role.name()));
+         if (sections != null) {
+             for (Section section : sections) {
+                authorities.add(new SimpleGrantedAuthority("SECTION_" + section.getId()));
+             }
+         }
+         return authorities;
+     }
 
     @Override
     public String getUsername() {

@@ -3,6 +3,7 @@ package com.codenine.managementservice.entity;
 import jakarta.persistence.*;
 import lombok.Data;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @Entity
@@ -33,9 +34,11 @@ public class UnitDestination {
 
     private String phoneNumber;
 
-    @Column(nullable = false)
     private LocalDateTime lastUpdate = LocalDateTime.now();
 
     @ManyToOne
     private User lastUser;
+
+    @OneToOne
+    private Transfer transfer;
 }

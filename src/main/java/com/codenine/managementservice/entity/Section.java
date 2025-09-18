@@ -16,24 +16,18 @@ public class Section {
     @Column(nullable = false)
     private String title;
 
-    @Column(nullable = false)
-    private Integer roleAccess;
-
-    @Column(nullable = false)
     private Boolean isActive = true;
 
-    @Column(nullable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 
-    @Column(nullable = false)
     private LocalDateTime lastUpdate = LocalDateTime.now();
 
     @ManyToOne
     private User lastUser;
-
-    @OneToMany
+    
+    @ManyToMany(mappedBy = "sections")
     private List<User> users;
 
-    @OneToMany
-    private List<Item> items;
+    @OneToMany(mappedBy = "section")
+    private List<ItemType> itemTypes;
 }

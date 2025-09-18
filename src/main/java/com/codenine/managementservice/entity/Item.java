@@ -24,21 +24,18 @@ public class Item {
 
     private LocalDateTime expireDate;
 
-    @Column(nullable = false)
+    private Integer maximumStock;
+
     private Integer currentStock = 0;
 
-    @Column(nullable = false)
-    private Integer minimumStock = 0;
+    private Integer minimumStock;
 
     private String qrCode;
 
-    @Column(nullable = false)
     private Boolean isActive = true;
 
-    @Column(nullable = false)
     private LocalDateTime lastUpdate = LocalDateTime.now();
 
-    @Column(nullable = false)
     private Boolean isArchived = false;
 
     @ManyToOne
@@ -48,10 +45,14 @@ public class Item {
     private SupplierCompany supplier;
 
     @ManyToOne
-    private Section section;
+    @JoinTable(
+        name = "item_item_type",
+        joinColumns = @JoinColumn(name = "item_id"),
+        inverseJoinColumns = @JoinColumn(name = "item_type_id")
+    )
+    private ItemType itemType;
 
-    @OneToMany
-    private List<ItemLoss> itemLoss;
-
+    @ManyToMany(mappedBy = "items")
+    private List<Order> orders;
     
 }

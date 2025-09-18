@@ -2,6 +2,7 @@ package com.codenine.managementservice.controller;
 
 import com.codenine.managementservice.dto.LoginDto;
 import com.codenine.managementservice.dto.LoginResponseDto;
+import com.codenine.managementservice.entity.Section;
 import com.codenine.managementservice.entity.User;
 import com.codenine.managementservice.repository.UserRepository;
 import com.codenine.managementservice.security.JwtUtil;
@@ -11,6 +12,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -38,15 +40,19 @@ public class LoginController {
             authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(email, password)
             );
-            String token = jwtUtil.generateToken(email, user.getRole(), user.getSection().getId());
+
+            List<Long> sectionIds = user.getSections().stream()
+                    .map(Section::getId)
+                    .toList();
+
+            String token = jwtUtil.generateToken(email, user.getRole(), sectionIds);
 
             return ResponseEntity.status(200).body(
                     new LoginResponseDto(
                             token,
                             email,
                             user.getRole().toString(),
-                            user.getSection().getId(),
-                            user.getSection().getTitle()
+                            sectionIds
                     )
             );
         } else {

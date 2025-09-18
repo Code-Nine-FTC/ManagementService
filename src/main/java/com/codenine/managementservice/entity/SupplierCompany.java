@@ -18,9 +18,6 @@ public class SupplierCompany {
     private String name;
 
     @Column(nullable = false)
-    private String url;
-
-    @Column(nullable = false)
     private String email;
 
     @Column(nullable = false)
@@ -29,10 +26,10 @@ public class SupplierCompany {
     @Column(nullable = false)
     private String cnpj;
 
-    @Column(nullable = false)
     private Boolean isActive = true;
 
-    @Column(nullable = false)
+    private Integer rating = 0;
+
     private LocalDateTime lastUpdate = LocalDateTime.now();
 
     @ManyToOne
@@ -40,4 +37,7 @@ public class SupplierCompany {
 
     @OneToMany
     private List<Item> items;
+
+    @ManyToMany(mappedBy = "suppliers")
+    private List<Order> orders;
 }

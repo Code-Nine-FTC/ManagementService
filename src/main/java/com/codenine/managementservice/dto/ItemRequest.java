@@ -10,10 +10,9 @@ public record ItemRequest(
     String measure,
     LocalDateTime expireDate,
     Long supplierId, 
-    Long sectionId, 
-    Long typeItemId, 
+    Long itemTypeId,
     Integer minimumStock,
-    String qrCode,
-    Long lastUserId
+    Integer maximumStock,
+    Boolean isActive
 ) {
 }
