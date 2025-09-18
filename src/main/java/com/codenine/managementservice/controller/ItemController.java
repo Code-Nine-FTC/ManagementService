@@ -2,15 +2,19 @@ package com.codenine.managementservice.controller;
 
 import com.codenine.managementservice.exception.UserSectionMismatchException;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import com.codenine.managementservice.dto.ItemFilterCriteria;
 // import com.codenine.managementservice.dto.ItemLossRequest;
 import com.codenine.managementservice.dto.ItemRequest;
+import com.codenine.managementservice.entity.User;
 // import com.codenine.managementservice.service.ItemLossService;
 import com.codenine.managementservice.service.ItemService;
 
+import org.apache.tomcat.util.http.parser.Authorization;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.couchbase.CouchbaseProperties.Authentication;
 import org.springframework.http.ResponseEntity;
 
 
@@ -26,9 +30,10 @@ public class ItemController {
 
     @PreAuthorize("@itemSecurity.hasItemManagementPermission(authentication, #entity.itemTypeId())")
     @PostMapping("/")
-    public ResponseEntity<String> createItem(@RequestBody ItemRequest entity) {
+    public ResponseEntity<String> createItem(@RequestBody ItemRequest entity, Authentication authentication) {
         try {
-            itemService.createItem(entity);
+            User lastUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+            itemService.createItem(entity, lastUser);
         } catch (Exception e) {
             return ResponseEntity.status(500).body("Error creating item: " + e.getMessage());
         }
@@ -67,11 +72,12 @@ public class ItemController {
         }
     }
 
-    @PreAuthorize("@itemSecurity.hasItemManagementPermission(authentication, #entity.typeItemId())")
+    @PreAuthorize("@itemSecurity.hasItemManagementPermission(authentication, #id)")
     @PutMapping("/{id}")
-    public ResponseEntity<?> updateItem(@PathVariable Long id, @RequestBody ItemRequest entity) {
+    public ResponseEntity<?> updateItem(@PathVariable Long id, @RequestBody ItemRequest entity, Authorization authentication) {
         try {
-            itemService.updateItem(id, entity);
+            User lastUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+            itemService.updateItem(id, entity, lastUser);
             return ResponseEntity.ok("Item updated successfully");
         }catch (NullPointerException e) {
             return ResponseEntity.status(404).body(e.getMessage());
@@ -81,11 +87,12 @@ public class ItemController {
         }
     }
 
-    @PreAuthorize("@itemSecurity.hasItemManagementPermission(authentication, #entity.typeItemId())")
+    @PreAuthorize("@itemSecurity.hasItemManagementPermission(authentication, #id)")
     @PatchMapping("/disable/{id}")
-    public ResponseEntity<?> disableItem(@PathVariable Long id) {
+    public ResponseEntity<?> disableItem(@PathVariable Long id, Authorization authentication) {
         try {
-            itemService.disableItem(id);
+            User lastUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+            itemService.disableItem(id, lastUser);
             return ResponseEntity.ok("Item disabled successfully");
         } catch (NullPointerException e) {
             return ResponseEntity.status(404).body(e.getMessage());

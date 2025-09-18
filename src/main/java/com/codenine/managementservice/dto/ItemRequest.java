@@ -12,6 +12,7 @@ public record ItemRequest(
     Long supplierId, 
     Long itemTypeId,
     Integer minimumStock,
-    Long lastUserId
+    Integer maximumStock,
+    Boolean isActive
 ) {
 }

@@ -33,29 +33,23 @@ public class ItemService {
     private UserRepository userRepository;
 
     @Autowired
-    private SectionRepository sectionRepository;
-
-    @Autowired
     private ItemTypeRepository itemTypeRepository;
 
     @Autowired
     private SupplierCompanyRepository supplierCompanyRepository;
-    public void createItem(ItemRequest itemRequest) {
-        User user = userRepository.findById(itemRequest.lastUserId())
-                .orElseThrow(() -> new NullPointerException("User not found with id: " + itemRequest.lastUserId()));
+    public void createItem(ItemRequest itemRequest, User lastUser) {
         ItemType itemType = itemTypeRepository.findById(itemRequest.itemTypeId())
                 .orElseThrow(() -> new NullPointerException("ItemType not found with id: " + itemRequest.itemTypeId()));
         SupplierCompany supplier = supplierCompanyRepository.findById(itemRequest.supplierId())
                 .orElseThrow(() -> new NullPointerException("SupplierCompany not found with id: " + itemRequest.supplierId()));
-        Item newItem = ItemMapper.toEntity(itemRequest, user, supplier, itemType);
+        Item newItem = ItemMapper.toEntity(itemRequest, lastUser, supplier, itemType);
         itemRepository.save(newItem);
     }
 
     public ItemResponse getItem(Long id) {
         getItemById(id);
-        ItemResponseProjection projection = itemRepository.findAllItemResponses(null, null, null, null, null, id
+        return itemRepository.findAllItemResponses(null, null, null, null, null, id
         ).stream().findFirst().orElse(null);
-        return projection == null ? null : toItemResponse(projection);
     }
 
     public List<ItemResponse> getItemsByFilter(ItemFilterCriteria filterCriteria) {
@@ -66,22 +60,30 @@ public class ItemService {
             filterCriteria.lastUserId(),
             filterCriteria.isActive(),
             filterCriteria.itemId()
-        ).stream()
-        .map(this::toItemResponse)
-        .collect(Collectors.toList());
+        );
     }
 
-    public void updateItem(Long id, ItemRequest itemRequest) {
+    public void updateItem(Long id, ItemRequest itemRequest, User lastUser) {
         Item item = getItemById(id);
-        User lastUser = userRepository.findById(itemRequest.lastUserId())
-                .orElseThrow(() -> new NullPointerException("User not found with id: " + itemRequest.lastUserId()));
-        ItemMapper.updateEntity(item, itemRequest, lastUser, null);
+        ItemType itemType = null;
+        SupplierCompany supplier = null;
+        if (itemRequest.itemTypeId() != null) {
+            itemType = itemTypeRepository.findById(itemRequest.itemTypeId())
+                .orElseThrow(() -> new NullPointerException("ItemType not found with id: " + itemRequest.itemTypeId()));
+        }
+        if (itemRequest.supplierId() != null) {
+            supplier = supplierCompanyRepository.findById(itemRequest.supplierId())
+                .orElseThrow(() -> new NullPointerException("SupplierCompany not found with id: " + itemRequest.supplierId()));
+        }
+        ItemMapper.updateEntity(item, itemRequest, lastUser, supplier, itemType);
         itemRepository.save(item);
     }
 
-    public void disableItem(Long id) {
+    public void disableItem(Long id, User lastUser) {
         Item item = getItemById(id);
         item.setIsActive(false);
+        item.setLastUpdate(java.time.LocalDateTime.now());
+        item.setLastUser(lastUser);
         itemRepository.save(item);
     }
     
@@ -89,23 +91,4 @@ public class ItemService {
         return itemRepository.findById(id).orElseThrow(() -> new NullPointerException("Item not found with id: " + id));
     }
 
-    private ItemResponse toItemResponse(ItemResponseProjection p) {
-        return new ItemResponse (
-                p.getItemId(),
-                p.getName(),
-                p.getCurrentStock(),
-                p.getMeasure(),
-                p.getExpireDate() != null ? p.getExpireDate().toLocalDateTime() : null,
-                p.getSupplierId(),
-                p.getSupplierName(),
-                p.getSectionId(),
-                p.getSectionName(),
-                p.getItemTypeId(),
-                p.getItemTypeName(),
-                p.getMinimumStock(),
-                p.getQrCode(),
-                p.getLastUserName(),
-                p.getLastUpdate() != null ? p.getLastUpdate().toLocalDateTime() : null
-        );
-    }
 }
