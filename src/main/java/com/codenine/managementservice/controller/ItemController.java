@@ -5,6 +5,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import com.codenine.managementservice.dto.ArchiveItem;
 import com.codenine.managementservice.dto.ItemFilterCriteria;
 // import com.codenine.managementservice.dto.ItemLossRequest;
 import com.codenine.managementservice.dto.ItemRequest;
@@ -102,9 +103,10 @@ public class ItemController {
     }
 
     @PatchMapping("/archive/{id}")
-    public ResponseEntity<?> archiveItem(@PathVariable Long id) {
+    public ResponseEntity<?> archiveItem(@PathVariable Long id, @RequestBody ArchiveItem archiveItem, Authorization authentication) {
         try {
-            itemService.archiveItem(id);
+            User lastUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+            itemService.archiveItem(id, archiveItem, lastUser);
             return ResponseEntity.ok("Item archived successfully");
         } catch (NullPointerException e) {
             return ResponseEntity.status(404).body(e.getMessage());

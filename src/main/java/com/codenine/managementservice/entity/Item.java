@@ -36,7 +36,8 @@ public class Item {
 
     private LocalDateTime lastUpdate = LocalDateTime.now();
 
-    private Boolean isArchived = false;
+    @Column(columnDefinition = "TEXT")
+    private String archiveInfo;
 
     @ManyToOne
     private User lastUser;

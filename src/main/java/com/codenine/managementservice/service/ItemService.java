@@ -7,6 +7,7 @@ import com.codenine.managementservice.dto.ItemResponseProjection;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.codenine.managementservice.dto.ArchiveItem;
 import com.codenine.managementservice.dto.ItemFilterCriteria;
 import com.codenine.managementservice.dto.ItemRequest;
 import com.codenine.managementservice.dto.ItemResponse;
@@ -88,11 +89,11 @@ public class ItemService {
         itemRepository.save(item);
     }
 
-    // arrumar last user
-    public void archiveItem(Long id) {
+    public void archiveItem(Long id, ArchiveItem archiveItem, User lastUser) {
         Item item = getItemById(id);
-        item.setIsArchived(true);
+        item.setArchiveInfo("{\"status\": true, \"reason\": \"" + archiveItem.reason() + "\"}");
         item.setLastUpdate(LocalDateTime.now());
+        item.setLastUser(lastUser);
         itemRepository.save(item);
     }
 
