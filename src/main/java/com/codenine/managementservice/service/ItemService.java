@@ -1,7 +1,9 @@
 package com.codenine.managementservice.service;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
+import com.codenine.managementservice.dto.ItemResponseProjection;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -51,9 +53,9 @@ public class ItemService {
 
     public ItemResponse getItem(Long id) {
         getItemById(id);
-        ItemResponse item = itemRepository.findAllItemResponses(null, null, null, null, null, id
+        ItemResponseProjection projection = itemRepository.findAllItemResponses(null, null, null, null, null, id
         ).stream().findFirst().orElse(null);
-        return item;
+        return projection == null ? null : toItemResponse(projection);
     }
 
     public List<ItemResponse> getItemsByFilter(ItemFilterCriteria filterCriteria) {
@@ -64,7 +66,9 @@ public class ItemService {
             filterCriteria.lastUserId(),
             filterCriteria.isActive(),
             filterCriteria.itemId()
-        );
+        ).stream()
+        .map(this::toItemResponse)
+        .collect(Collectors.toList());
     }
 
     public void updateItem(Long id, ItemRequest itemRequest) {
@@ -83,5 +87,25 @@ public class ItemService {
     
     private Item getItemById(Long id) {
         return itemRepository.findById(id).orElseThrow(() -> new NullPointerException("Item not found with id: " + id));
+    }
+
+    private ItemResponse toItemResponse(ItemResponseProjection p) {
+        return new ItemResponse (
+                p.getItemId(),
+                p.getName(),
+                p.getCurrentStock(),
+                p.getMeasure(),
+                p.getExpireDate() != null ? p.getExpireDate().toLocalDateTime() : null,
+                p.getSupplierId(),
+                p.getSupplierName(),
+                p.getSectionId(),
+                p.getSectionName(),
+                p.getItemTypeId(),
+                p.getItemTypeName(),
+                p.getMinimumStock(),
+                p.getQrCode(),
+                p.getLastUserName(),
+                p.getLastUpdate() != null ? p.getLastUpdate().toLocalDateTime() : null
+        );
     }
 }

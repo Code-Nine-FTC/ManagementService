@@ -30,7 +30,7 @@ public class Order {
     @ManyToOne
     private User lastUser;
 
-    @ManyToOne
+    @ManyToMany
     @JoinTable(
         name = "order_item",
         joinColumns = @JoinColumn(name = "order_id"),

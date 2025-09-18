@@ -1,5 +1,6 @@
 package com.codenine.managementservice.controller;
 
+import com.codenine.managementservice.exception.UserSectionMismatchException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -23,7 +24,7 @@ public class ItemController {
     // @Autowired
     // private ItemLossService itemLossService;
 
-    @PreAuthorize("@itemSecurity.hasItemManagementPermission(authentication, #entity.typeItemId())")
+    @PreAuthorize("@itemSecurity.hasItemManagementPermission(authentication, #entity.itemTypeId())")
     @PostMapping("/")
     public ResponseEntity<String> createItem(@RequestBody ItemRequest entity) {
         try {

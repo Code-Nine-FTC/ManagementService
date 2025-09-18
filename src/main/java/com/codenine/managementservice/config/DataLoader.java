@@ -6,6 +6,7 @@ import com.codenine.managementservice.dto.Role;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Profile;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,6 +34,9 @@ public class DataLoader implements CommandLineRunner {
     @Autowired
     private SupplierCompanyRepository supplierCompanyRepository;
 
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
     private final Random random = new Random();
 
     @Override
@@ -50,7 +54,7 @@ public class DataLoader implements CommandLineRunner {
         System.out.println("Sections criadas: " + sections.size());
         
         // Criar item types
-        List<ItemType> itemTypes = createItemTypes();
+        List<ItemType> itemTypes = createItemTypes(sections.get(0), sections.get(1));
         System.out.println("ItemTypes criados: " + itemTypes.size());
         
         // Criar suppliers
@@ -86,13 +90,14 @@ public class DataLoader implements CommandLineRunner {
         return sectionRepository.saveAll(sections);
     }
 
-    private List<ItemType> createItemTypes() {
+    private List<ItemType> createItemTypes(Section almoxarifado, Section farmacia) {
         List<ItemType> itemTypes = new ArrayList<>();
-        
+
         // Tipos militares
         for (int i = 1; i <= 50; i++) {
             ItemType itemType = new ItemType();
             itemType.setName("Tipo Militar " + i);
+            itemType.setSection(almoxarifado);
             itemTypes.add(itemType);
         }
         
@@ -100,6 +105,7 @@ public class DataLoader implements CommandLineRunner {
         for (int i = 1; i <= 50; i++) {
             ItemType itemType = new ItemType();
             itemType.setName("Tipo Farmácia " + i);
+            itemType.setSection(farmacia);
             itemTypes.add(itemType);
         }
         
@@ -161,7 +167,7 @@ public class DataLoader implements CommandLineRunner {
             User user = new User();
             user.setName(names[i]);
             user.setEmail(names[i].toLowerCase().replace(" ", ".") + "@exercito.mil.br");
-            user.setPassword("{noop}senha" + (i + 1));
+            user.setPassword(passwordEncoder.encode("senha" + (i + 1)));
             
             if (names[i].contains("Capitão")) {
                 user.setRole(Role.ADMIN);
@@ -170,9 +176,11 @@ public class DataLoader implements CommandLineRunner {
             } else {
                 user.setRole(Role.ASSISTANT);
             }
-            
-            user.setIsActive(true);
-            user.setSection(sections.get(i % sections.size()));
+
+            List<Section> userSections = new ArrayList<>();
+            userSections.add(sections.get(i % sections.size()));
+            user.setSections(userSections);
+
             users.add(user);
         }
 

@@ -23,7 +23,7 @@ public class AuthTestController {
         return Map.of(
                 "email", user.getEmail(),
                 "role", user.getRole().name(),
-                "section", user.getSection() != null ? user.getSection().getTitle() : null
+                "sections", user.getSections().stream().map(section -> section.getId()).toList()
         );
     }
 }

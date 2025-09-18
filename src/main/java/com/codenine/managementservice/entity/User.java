@@ -40,7 +40,7 @@ public class User implements UserDetails {
 
     private Boolean isActive = true;
 
-    @ManyToMany
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
     name = "user_section",
     joinColumns = @JoinColumn(name = "user_id"),
@@ -48,15 +48,17 @@ public class User implements UserDetails {
 )
     private List<Section> sections;
 
-    // @Override
-    // public Collection<? extends GrantedAuthority> getAuthorities() {
-    //     List<GrantedAuthority> authorities = new ArrayList<>();
-    //     authorities.add(new SimpleGrantedAuthority("ROLE_" + role.name()));
-    //     if (section != null) {
-    //         authorities.add(new SimpleGrantedAuthority("SECTION_" + section.getId()));
-    //     }
-    //     return authorities;
-    // }
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        List<GrantedAuthority> authorities = new ArrayList<>();
+         authorities.add(new SimpleGrantedAuthority("ROLE_" + role.name()));
+         if (sections != null) {
+             for (Section section : sections) {
+                authorities.add(new SimpleGrantedAuthority("SECTION_" + section.getId()));
+             }
+         }
+         return authorities;
+     }
 
     @Override
     public String getUsername() {
