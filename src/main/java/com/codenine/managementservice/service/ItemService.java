@@ -21,27 +21,26 @@ import com.codenine.managementservice.utils.mapper.ItemMapper;
 
 @Service
 public class ItemService {
-  @Autowired private ItemRepository itemRepository;
+  @Autowired
+  private ItemRepository itemRepository;
 
-  @Autowired private ItemTypeRepository itemTypeRepository;
+  @Autowired
+  private ItemTypeRepository itemTypeRepository;
 
-  @Autowired private SupplierCompanyRepository supplierCompanyRepository;
+  @Autowired
+  private SupplierCompanyRepository supplierCompanyRepository;
 
   public void createItem(ItemRequest itemRequest, User lastUser) {
-    ItemType itemType =
-        itemTypeRepository
-            .findById(itemRequest.itemTypeId())
-            .orElseThrow(
-                () ->
-                    new NullPointerException(
-                        "ItemType not found with id: " + itemRequest.itemTypeId()));
-    SupplierCompany supplier =
-        supplierCompanyRepository
-            .findById(itemRequest.supplierId())
-            .orElseThrow(
-                () ->
-                    new NullPointerException(
-                        "SupplierCompany not found with id: " + itemRequest.supplierId()));
+    ItemType itemType = itemTypeRepository
+        .findById(itemRequest.itemTypeId())
+        .orElseThrow(
+            () -> new NullPointerException(
+                "ItemType not found with id: " + itemRequest.itemTypeId()));
+    SupplierCompany supplier = supplierCompanyRepository
+        .findById(itemRequest.supplierId())
+        .orElseThrow(
+            () -> new NullPointerException(
+                "SupplierCompany not found with id: " + itemRequest.supplierId()));
     Item newItem = ItemMapper.toEntity(itemRequest, lastUser, supplier, itemType);
     itemRepository.save(newItem);
   }
@@ -68,22 +67,18 @@ public class ItemService {
     ItemType itemType = null;
     SupplierCompany supplier = null;
     if (itemRequest.itemTypeId() != null) {
-      itemType =
-          itemTypeRepository
-              .findById(itemRequest.itemTypeId())
-              .orElseThrow(
-                  () ->
-                      new NullPointerException(
-                          "ItemType not found with id: " + itemRequest.itemTypeId()));
+      itemType = itemTypeRepository
+          .findById(itemRequest.itemTypeId())
+          .orElseThrow(
+              () -> new NullPointerException(
+                  "ItemType not found with id: " + itemRequest.itemTypeId()));
     }
     if (itemRequest.supplierId() != null) {
-      supplier =
-          supplierCompanyRepository
-              .findById(itemRequest.supplierId())
-              .orElseThrow(
-                  () ->
-                      new NullPointerException(
-                          "SupplierCompany not found with id: " + itemRequest.supplierId()));
+      supplier = supplierCompanyRepository
+          .findById(itemRequest.supplierId())
+          .orElseThrow(
+              () -> new NullPointerException(
+                  "SupplierCompany not found with id: " + itemRequest.supplierId()));
     }
     ItemMapper.updateEntity(item, itemRequest, lastUser, supplier, itemType);
     itemRepository.save(item);
@@ -92,7 +87,7 @@ public class ItemService {
   public void disableItem(Long id, User lastUser) {
     Item item = getItemById(id);
     item.setIsActive(false);
-    item.setLastUpdate(java.time.LocalDateTime.now());
+    item.setLastUpdate(LocalDateTime.now());
     item.setLastUser(lastUser);
     itemRepository.save(item);
   }
