@@ -103,3 +103,29 @@ Boas práticas rápidas:
 - Ajuste `shared_buffers`/`effective_cache_size` conforme memória disponível no host.
 - Em produção, considere usar um arquivo `postgresql.conf` versionado ou uma solução de tuning mais avançada.
 
+## Linter (Spotless)
+
+Este projeto utiliza o [Spotless](https://github.com/diffplug/spotless) para garantir a formatação do código Java.
+
+### Como rodar o linter
+
+**Corrigir automaticamente o código:**
+```bash
+./mvnw spotless:apply
+```
+Ou, se estiver usando Maven instalado:
+```bash
+mvn spotless:apply
+```
+
+**Verificar se o código está formatado:**
+```bash
+./mvnw spotless:check
+```
+Ou:
+```bash
+mvn spotless:check
+```
+
+Se houver problemas de formatação, o comando `spotless:check` irá falhar.  
+Use `spotless:apply` para corrigir automaticamente.

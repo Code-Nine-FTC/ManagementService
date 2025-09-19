@@ -1,54 +1,54 @@
 package com.codenine.managementservice.entity;
 
-import jakarta.persistence.*;
-import lombok.Data;
-
 import java.time.LocalDateTime;
 import java.util.List;
+
+import jakarta.persistence.*;
+import lombok.Data;
 
 @Data
 @Entity
 @Table(name = "items")
 public class Item {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  private Long id;
 
-    @Column(nullable = false)
-    private String name;
+  @Column(nullable = false)
+  private String name;
 
-    @Column(nullable = false)
-    private String measure;
+  @Column(nullable = false)
+  private String measure;
 
-    private LocalDateTime expireDate;
+  private LocalDateTime expireDate;
 
-    private Integer maximumStock;
+  private Integer maximumStock;
 
-    private Integer currentStock = 0;
+  private Integer currentStock = 0;
 
-    private Integer minimumStock;
+  private Integer minimumStock;
 
-    private String qrCode;
+  private String qrCode;
 
-    private Boolean isActive = true;
+  private Boolean isActive = true;
 
-    private LocalDateTime lastUpdate = LocalDateTime.now();
+  private LocalDateTime lastUpdate = LocalDateTime.now();
 
-    @Column(columnDefinition = "TEXT")
-    private String archiveInfo;
+  @Column(columnDefinition = "TEXT")
+  private String archiveInfo;
 
-    @ManyToOne
-    private User lastUser;
+  @ManyToOne private User lastUser;
 
-    @ManyToOne
-    private SupplierCompany supplier;
+  @ManyToOne private SupplierCompany supplier;
 
-    @ManyToOne
-    @JoinTable(name = "item_item_type", joinColumns = @JoinColumn(name = "item_id"), inverseJoinColumns = @JoinColumn(name = "item_type_id"))
-    private ItemType itemType;
+  @ManyToOne
+  @JoinTable(
+      name = "item_item_type",
+      joinColumns = @JoinColumn(name = "item_id"),
+      inverseJoinColumns = @JoinColumn(name = "item_type_id"))
+  private ItemType itemType;
 
-    @ManyToMany(mappedBy = "items")
-    private List<Order> orders;
-
+  @ManyToMany(mappedBy = "items")
+  private List<Order> orders;
 }

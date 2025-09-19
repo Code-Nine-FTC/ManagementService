@@ -11,13 +11,13 @@ import com.codenine.managementservice.entity.ItemType;
 
 public interface ItemTypeRepository extends JpaRepository<ItemType, Long> {
 
-    @Query("""
-            Select
-            new com.codenine.managementservice.dto.ItemTypeResponse(
+  @Query(
+      """
+            Select new com.codenine.managementservice.dto.itemType.ItemTypeResponse(
             it.id,
             it.name,
             s.id,
-            s.name,
+            s.title as sectionName,
             u.id,
             u.name,
             it.lastUpdate
@@ -29,9 +29,8 @@ public interface ItemTypeRepository extends JpaRepository<ItemType, Long> {
             and (:sectionId IS NULL OR s.id = :sectionId)
             and (:lastUserId IS NULL OR u.id = :lastUserId)
             """)
-    List<ItemTypeResponse> findAllItemTypeResponses(
-            @Param("itemTypeId") Long itemTypeId,
-            @Param("sectionId") Long sectionId,
-            @Param("lastUserId") Long lastUserId);
-
+  List<ItemTypeResponse> findAllItemTypeResponses(
+      @Param("itemTypeId") Long itemTypeId,
+      @Param("sectionId") Long sectionId,
+      @Param("lastUserId") Long lastUserId);
 }
