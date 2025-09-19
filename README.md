@@ -103,3 +103,57 @@ Boas práticas rápidas:
 - Ajuste `shared_buffers`/`effective_cache_size` conforme memória disponível no host.
 - Em produção, considere usar um arquivo `postgresql.conf` versionado ou uma solução de tuning mais avançada.
 
+## Linter (PMD)
+
+Este projeto utiliza o [PMD](https://pmd.github.io/) para análise estática de código Java e detecção de más práticas.
+
+### Como rodar o PMD
+
+**Verificar problemas de boas práticas:**
+```bash
+./mvnw pmd:check
+```
+Ou:
+```bash
+mvn pmd:check
+```
+
+**Gerar relatório HTML:**
+```bash
+./mvnw pmd:pmd
+```
+Ou:
+```bash
+mvn pmd:pmd
+```
+
+O relatório estará em `target/site/pmd.html`.  
+Abra esse arquivo no navegador para visualizar os detalhes das violações encontradas.
+
+
+## Linter (Spotless)
+
+Este projeto utiliza o [Spotless](https://github.com/diffplug/spotless) para garantir a formatação do código Java.
+
+### Como rodar o linter
+
+**Corrigir automaticamente o código:**
+```bash
+./mvnw spotless:apply
+```
+Ou, se estiver usando Maven instalado:
+```bash
+mvn spotless:apply
+```
+
+**Verificar se o código está formatado:**
+```bash
+./mvnw spotless:check
+```
+Ou:
+```bash
+mvn spotless:check
+```
+
+Se houver problemas de formatação, o comando `spotless:check` irá falhar.  
+Use `spotless:apply` para corrigir automaticamente.

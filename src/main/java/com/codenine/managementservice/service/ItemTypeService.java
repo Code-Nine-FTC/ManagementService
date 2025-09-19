@@ -17,59 +17,63 @@ import com.codenine.managementservice.utils.mapper.ItemTypeMapper;
 
 @Service
 public class ItemTypeService {
-    @Autowired
-    private ItemTypeRepository itemTypeRepository;
+  @Autowired private ItemTypeRepository itemTypeRepository;
 
-    @Autowired
-    private SectionRepository sectionRepository;
+  @Autowired private SectionRepository sectionRepository;
 
-    public void createItemType(ItemTypeRequest newItemType, User lastUser) {
-        if (newItemType.sectionId() == null) {
-            throw new NullPointerException("Section ID is required to create an ItemType.");
-        }
-        Section section = sectionRepository.findById(newItemType.sectionId())
-                .orElseThrow(() -> new NullPointerException("Section not found with id: " + newItemType.sectionId()));
-        ItemType itemType = ItemTypeMapper.toEntity(newItemType, section, lastUser);
-        itemTypeRepository.save(itemType);
+  public void createItemType(ItemTypeRequest newItemType, User lastUser) {
+    if (newItemType.sectionId() == null) {
+      throw new NullPointerException("Section ID is required to create an ItemType.");
     }
+    Section section =
+        sectionRepository
+            .findById(newItemType.sectionId())
+            .orElseThrow(
+                () ->
+                    new NullPointerException(
+                        "Section not found with id: " + newItemType.sectionId()));
+    ItemType itemType = ItemTypeMapper.toEntity(newItemType, section, lastUser);
+    itemTypeRepository.save(itemType);
+  }
 
-    public void updateItemType(Long id, ItemTypeRequest updatedItemType, User lastUser) {
-        ItemType itemType = getItemTypeById(id);
-        Section section = null;
-        if (updatedItemType.sectionId() != null) {
-            section = sectionRepository.findById(updatedItemType.sectionId())
-                    .orElseThrow(() -> new NullPointerException(
-                            "Section not found with id: " + updatedItemType.sectionId()));
-        }
-        ItemTypeMapper.updateEntity(itemType, updatedItemType, section, lastUser);
-        itemTypeRepository.save(itemType);
+  public void updateItemType(Long id, ItemTypeRequest updatedItemType, User lastUser) {
+    ItemType itemType = getItemTypeById(id);
+    Section section = null;
+    if (updatedItemType.sectionId() != null) {
+      section =
+          sectionRepository
+              .findById(updatedItemType.sectionId())
+              .orElseThrow(
+                  () ->
+                      new NullPointerException(
+                          "Section not found with id: " + updatedItemType.sectionId()));
     }
+    ItemTypeMapper.updateEntity(itemType, updatedItemType, section, lastUser);
+    itemTypeRepository.save(itemType);
+  }
 
-    public ItemTypeResponse getItemType(Long id) {
-        return itemTypeRepository.findAllItemTypeResponses(id, null, null)
-                .stream()
-                .findFirst()
-                .orElseThrow(() -> new NullPointerException("ItemType not found with id: " + id));
-    }
+  public ItemTypeResponse getItemType(Long id) {
+    return itemTypeRepository.findAllItemTypeResponses(id, null, null).stream()
+        .findFirst()
+        .orElseThrow(() -> new NullPointerException("ItemType not found with id: " + id));
+  }
 
-    public List<ItemTypeResponse> getItemTypesByFilter(ItemTypeFilterCriteria filterCriteria) {
-        return itemTypeRepository.findAllItemTypeResponses(
-                filterCriteria.itemTypeId(),
-                filterCriteria.sectionId(),
-                filterCriteria.lastUserId());
-    }
+  public List<ItemTypeResponse> getItemTypesByFilter(ItemTypeFilterCriteria filterCriteria) {
+    return itemTypeRepository.findAllItemTypeResponses(
+        filterCriteria.itemTypeId(), filterCriteria.sectionId(), filterCriteria.lastUserId());
+  }
 
-    public void disableItemType(Long id, User lastUser) {
-        ItemType itemType = getItemTypeById(id);
-        itemType.setIsActive(false);
-        itemType.setLastUser(lastUser);
-        itemType.setLastUpdate(java.time.LocalDateTime.now());
-        itemTypeRepository.save(itemType);
-    }
+  public void disableItemType(Long id, User lastUser) {
+    ItemType itemType = getItemTypeById(id);
+    itemType.setIsActive(false);
+    itemType.setLastUser(lastUser);
+    itemType.setLastUpdate(java.time.LocalDateTime.now());
+    itemTypeRepository.save(itemType);
+  }
 
-    private ItemType getItemTypeById(Long id) {
-        return itemTypeRepository.findById(id)
-                .orElseThrow(() -> new NullPointerException("ItemType not found with id: " + id));
-    }
-
+  private ItemType getItemTypeById(Long id) {
+    return itemTypeRepository
+        .findById(id)
+        .orElseThrow(() -> new NullPointerException("ItemType not found with id: " + id));
+  }
 }

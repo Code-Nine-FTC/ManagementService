@@ -9,14 +9,13 @@ import com.codenine.managementservice.repository.SectionRepository;
 @Service
 public class SectionService {
 
-    @Autowired
-    private SectionRepository sectionRepository;
+  @Autowired private SectionRepository sectionRepository;
 
-    // Implementar CRUD
+  // Implementar CRUD
 
-    private Section getSectionById(Long id) {
-        return sectionRepository.findById(id)
-                .orElseThrow(() -> new NullPointerException("Section not found with id: " + id));
-    }
-
+  private Section getSectionById(Long id) {
+    return sectionRepository
+        .findById(id)
+        .orElseThrow(() -> new NullPointerException("Section not found with id: " + id));
+  }
 }
