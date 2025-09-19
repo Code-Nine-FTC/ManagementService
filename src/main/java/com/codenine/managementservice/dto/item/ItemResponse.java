@@ -1,4 +1,4 @@
-package com.codenine.managementservice.dto;
+package com.codenine.managementservice.dto.item;
 
 import java.time.LocalDateTime;
 

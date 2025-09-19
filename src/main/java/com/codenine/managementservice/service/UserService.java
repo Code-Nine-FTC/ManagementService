@@ -15,9 +15,7 @@ public class UserService {
     public void printUserSections(String email) {
         userRepository.findByEmail(email).ifPresent(user -> {
             System.out.println("User: " + user.getUsername());
-            user.getSections().forEach(section ->
-                System.out.println("Section: " + section.getTitle())
-            );
+            user.getSections().forEach(section -> System.out.println("Section: " + section.getTitle()));
         });
     }
 }

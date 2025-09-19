@@ -1,6 +1,5 @@
 package com.codenine.managementservice.controller;
 
-import com.codenine.managementservice.dto.Role;
 import com.codenine.managementservice.entity.User;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -23,7 +22,6 @@ public class AuthTestController {
         return Map.of(
                 "email", user.getEmail(),
                 "role", user.getRole().name(),
-                "sections", user.getSections().stream().map(section -> section.getId()).toList()
-        );
+                "sections", user.getSections().stream().map(section -> section.getId()).toList());
     }
 }

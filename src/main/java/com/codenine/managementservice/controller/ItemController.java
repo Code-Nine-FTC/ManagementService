@@ -1,14 +1,13 @@
 package com.codenine.managementservice.controller;
 
-import com.codenine.managementservice.exception.UserSectionMismatchException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
-import com.codenine.managementservice.dto.ArchiveItem;
-import com.codenine.managementservice.dto.ItemFilterCriteria;
-import com.codenine.managementservice.dto.ItemLossRequest;
-import com.codenine.managementservice.dto.ItemRequest;
+import com.codenine.managementservice.dto.item.ArchiveItem;
+import com.codenine.managementservice.dto.item.ItemFilterCriteria;
+import com.codenine.managementservice.dto.item.ItemRequest;
+import com.codenine.managementservice.dto.itemLoss.ItemLossRequest;
 import com.codenine.managementservice.entity.User;
 import com.codenine.managementservice.service.ItemLossService;
 import com.codenine.managementservice.service.ItemService;
@@ -17,7 +16,6 @@ import org.apache.tomcat.util.http.parser.Authorization;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.couchbase.CouchbaseProperties.Authentication;
 import org.springframework.http.ResponseEntity;
-
 
 @RestController
 @RequestMapping("/items")
@@ -60,13 +58,10 @@ public class ItemController {
             @RequestParam(required = false) Long itemTypeId,
             @RequestParam(required = false) Long lastUserId,
             @RequestParam(required = false) Boolean isActive,
-            @RequestParam(required = false) Long itemId
-    ) {
+            @RequestParam(required = false) Long itemId) {
         try {
-            ItemFilterCriteria filters = new ItemFilterCriteria(
-                    supplierId, sectionId, itemTypeId, lastUserId, isActive, itemId
-            );
-            var items = itemService.getItemsByFilter(filters);
+            var items = itemService.getItemsByFilter(new ItemFilterCriteria(
+                    supplierId, sectionId, itemTypeId, lastUserId, isActive, itemId));
             return ResponseEntity.ok(items);
         } catch (Exception e) {
             return ResponseEntity.status(500).body("Error retrieving items: " + e.getMessage());
@@ -75,15 +70,15 @@ public class ItemController {
 
     @PreAuthorize("@itemSecurity.hasItemManagementPermission(authentication, #id)")
     @PutMapping("/{id}")
-    public ResponseEntity<?> updateItem(@PathVariable Long id, @RequestBody ItemRequest entity, Authorization authentication) {
+    public ResponseEntity<?> updateItem(@PathVariable Long id, @RequestBody ItemRequest entity,
+            Authorization authentication) {
         try {
             User lastUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
             itemService.updateItem(id, entity, lastUser);
             return ResponseEntity.ok("Item updated successfully");
-        }catch (NullPointerException e) {
+        } catch (NullPointerException e) {
             return ResponseEntity.status(404).body(e.getMessage());
-        }
-         catch (Exception e) {
+        } catch (Exception e) {
             return ResponseEntity.status(500).body("Error updating item: " + e.getMessage());
         }
     }
@@ -103,7 +98,8 @@ public class ItemController {
     }
 
     @PatchMapping("/archive/{id}")
-    public ResponseEntity<?> archiveItem(@PathVariable Long id, @RequestBody ArchiveItem archiveItem, Authorization authentication) {
+    public ResponseEntity<?> archiveItem(@PathVariable Long id, @RequestBody ArchiveItem archiveItem,
+            Authorization authentication) {
         try {
             User lastUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
             itemService.archiveItem(id, archiveItem, lastUser);
@@ -127,7 +123,8 @@ public class ItemController {
     }
 
     @PutMapping("/loss/{id}")
-    public ResponseEntity<?> updateItemLoss(@PathVariable Long id, @RequestBody ItemLossRequest request, Authorization authentication) {
+    public ResponseEntity<?> updateItemLoss(@PathVariable Long id, @RequestBody ItemLossRequest request,
+            Authorization authentication) {
         try {
             User lastUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
             itemLossService.updateItemLoss(id, request, lastUser);
