@@ -7,9 +7,9 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import java.time.Instant;
+
+import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.Collection;
 import java.util.List;
 
@@ -22,33 +22,43 @@ public class User implements UserDetails {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false)
     private String name;
 
+    @Column(nullable = false)
     private String email;
-
+    
+    @Column(nullable = false)
     private String password;
 
     @Enumerated(EnumType.STRING)
-    private Role role;
+    private Role role = Role.ASSISTANT;
 
-    private Date createdAt;
+    private LocalDateTime createdAt = LocalDateTime.now();
 
-    private Instant lastUpdate;
+    private LocalDateTime lastUpdate = LocalDateTime.now();
 
-    private Boolean isActive;
+    private Boolean isActive = true;
 
-    @ManyToOne
-    private Section section;
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(
+    name = "user_section",
+    joinColumns = @JoinColumn(name = "user_id"),
+    inverseJoinColumns = @JoinColumn(name = "section_id")
+)
+    private List<Section> sections;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         List<GrantedAuthority> authorities = new ArrayList<>();
-        authorities.add(new SimpleGrantedAuthority("ROLE_" + role.name()));
-        if (section != null) {
-            authorities.add(new SimpleGrantedAuthority("SECTION_" + section.getId()));
-        }
-        return authorities;
-    }
+         authorities.add(new SimpleGrantedAuthority("ROLE_" + role.name()));
+         if (sections != null) {
+             for (Section section : sections) {
+                authorities.add(new SimpleGrantedAuthority("SECTION_" + section.getId()));
+             }
+         }
+         return authorities;
+     }
 
     @Override
     public String getUsername() {

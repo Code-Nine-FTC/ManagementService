@@ -3,7 +3,7 @@ package com.codenine.managementservice.entity;
 import jakarta.persistence.*;
 import lombok.Data;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Data
@@ -14,17 +14,35 @@ public class Order {
     @Id
     private Long id;
 
-    private Date createdAt;
-
-    private Date lastDay;
-
-    private Date withdrawDay;
+    private LocalDateTime withdrawDay;
 
     private String status;
 
-    @ManyToOne
-    private Item item;
+    private LocalDateTime createdAt = LocalDateTime.now();
+
+    private LocalDateTime lastDay = LocalDateTime.now();
+
+    private LocalDateTime lastUpdate = LocalDateTime.now();
 
     @ManyToOne
-    private Supplier supplier;
+    private User createdBy;
+
+    @ManyToOne
+    private User lastUser;
+
+    @ManyToMany
+    @JoinTable(
+        name = "order_item",
+        joinColumns = @JoinColumn(name = "order_id"),
+        inverseJoinColumns = @JoinColumn(name = "item_id")
+    )
+    private List<Item> items;
+
+    @ManyToMany
+    @JoinTable(
+        name = "supplier_order",
+        joinColumns = @JoinColumn(name = "order_id"),
+        inverseJoinColumns = @JoinColumn(name = "supplier_id")
+    )
+    private List<SupplierCompany> suppliers;
 }

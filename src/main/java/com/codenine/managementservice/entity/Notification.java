@@ -14,8 +14,8 @@ public class Notification {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false)
     private String text;
-
-    private Instant unixTimeStamp;
-
+    
+    private Long createdAt = Instant.now().getEpochSecond();
 }

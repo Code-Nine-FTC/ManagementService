@@ -1,4 +1,4 @@
-package com.codenine.managementservice.security;
+package com.codenine.managementservice.service;
 
 import com.codenine.managementservice.repository.UserRepository;
 import org.springframework.security.core.userdetails.UserDetails;
