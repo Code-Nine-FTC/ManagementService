@@ -3,8 +3,9 @@ package com.codenine.managementservice.security;
 import com.codenine.managementservice.dto.user.Role;
 import com.codenine.managementservice.entity.ItemType;
 import com.codenine.managementservice.entity.User;
-import com.codenine.managementservice.exception.UserSectionMismatchException;
 import com.codenine.managementservice.repository.ItemTypeRepository;
+import com.codenine.managementservice.utils.exception.UserSectionMismatchException;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
