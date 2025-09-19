@@ -27,13 +27,12 @@ public class ItemLossService {
     private ItemRepository itemRepository;
 
 
-    public void createItemLoss(ItemLossRequest request) {
+    public void createItemLoss(ItemLossRequest request, User lastUser) {
         User recordedUser = userRepository.findById(request.recordedById())
                 .orElseThrow(() -> new NullPointerException("User not found with id: " + request.recordedById()));
         Item item = itemRepository.findById(request.itemId())
                 .orElseThrow(() -> new NullPointerException("Item not found with id: " + request.itemId()));
-        // arrumar last user segunda
-        ItemLoss itemLoss = ItemLossMapper.toEntity(request, item, recordedUser, recordedUser);
+        ItemLoss itemLoss = ItemLossMapper.toEntity(request, item, recordedUser, lastUser);
         item.setCurrentStock(item.getCurrentStock() - request.lostQuantity());
         item.setLastUpdate(LocalDateTime.now());
         item.setLastUser(recordedUser);
@@ -43,18 +42,15 @@ public class ItemLossService {
     }
     
 
-    public void updateItemLoss(Long id, ItemLossRequest request) {
-        ItemLoss itemLoss = itemLossRepository.findById(id)
-                .orElseThrow(() -> new NullPointerException("ItemLoss not found with id: " + id));
+    public void updateItemLoss(Long id, ItemLossRequest request, User lastUser) {
+        ItemLoss itemLoss = getItemLossById(id);
         Item item = null;
         if (request.itemId() != null) {
             item = itemRepository.findById(request.itemId())
                     .orElseThrow(() -> new NullPointerException("Item not found with id: " + request.itemId()));
         }
-        // arrumar last usar segunda
-        User lastUser = userRepository.findById(request.recordedById())
-                .orElseThrow(() -> new NullPointerException("User not found with id: " + request.recordedById()));
         ItemLossMapper.updateEntity(itemLoss, request, item, lastUser);
+        
         if (item != null && request.lostQuantity() != null) {
             int stockDifference = request.lostQuantity() - itemLoss.getLostQuantity();
             item.setCurrentStock(item.getCurrentStock() - stockDifference);
@@ -63,5 +59,10 @@ public class ItemLossService {
             itemRepository.save(item);
         }
         itemLossRepository.save(itemLoss);
+        }
+
+        private ItemLoss getItemLossById(Long id) {
+            return itemLossRepository.findById(id)
+                    .orElseThrow(() -> new NullPointerException("ItemLoss not found with id: " + id));
         }
 }

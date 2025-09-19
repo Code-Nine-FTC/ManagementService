@@ -7,10 +7,10 @@ import org.springframework.web.bind.annotation.*;
 
 import com.codenine.managementservice.dto.ArchiveItem;
 import com.codenine.managementservice.dto.ItemFilterCriteria;
-// import com.codenine.managementservice.dto.ItemLossRequest;
+import com.codenine.managementservice.dto.ItemLossRequest;
 import com.codenine.managementservice.dto.ItemRequest;
 import com.codenine.managementservice.entity.User;
-// import com.codenine.managementservice.service.ItemLossService;
+import com.codenine.managementservice.service.ItemLossService;
 import com.codenine.managementservice.service.ItemService;
 
 import org.apache.tomcat.util.http.parser.Authorization;
@@ -26,8 +26,8 @@ public class ItemController {
     @Autowired
     private ItemService itemService;
 
-    // @Autowired
-    // private ItemLossService itemLossService;
+    @Autowired
+    private ItemLossService itemLossService;
 
     @PreAuthorize("@itemSecurity.hasItemManagementPermission(authentication, #entity.itemTypeId())")
     @PostMapping("/")
@@ -115,26 +115,28 @@ public class ItemController {
         }
     }
 
-    // @PostMapping("/loss")
-    // public ResponseEntity<?> createItemLoss(@RequestBody ItemLossRequest request) {
-    //     try {
-    //         itemLossService.createItemLoss(request);
-    //     } catch (Exception e) {
-    //         return ResponseEntity.status(500).body("Error creating item loss: " + e.getMessage());
-    //     }
-    //     return ResponseEntity.status(201).body("Item loss created successfully");
-    // }
+    @PostMapping("/loss")
+    public ResponseEntity<?> createItemLoss(@RequestBody ItemLossRequest request, Authorization authentication) {
+        try {
+            User lastUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+            itemLossService.createItemLoss(request, lastUser);
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Error creating item loss: " + e.getMessage());
+        }
+        return ResponseEntity.status(201).body("Item loss created successfully");
+    }
 
-    // @PutMapping("/loss/{id}")
-    // public ResponseEntity<?> updateItemLoss(@PathVariable Long id, @RequestBody ItemLossRequest request) {
-    //     try {
-    //         itemLossService.updateItemLoss(id, request);
-    //         return ResponseEntity.ok("Item loss updated successfully");
-    //     } catch (NullPointerException e) {
-    //         return ResponseEntity.status(404).body(e.getMessage());
-    //     } catch (Exception e) {
-    //         return ResponseEntity.status(500).body("Error updating item loss: " + e.getMessage());
-    //     }
-    // }
+    @PutMapping("/loss/{id}")
+    public ResponseEntity<?> updateItemLoss(@PathVariable Long id, @RequestBody ItemLossRequest request, Authorization authentication) {
+        try {
+            User lastUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+            itemLossService.updateItemLoss(id, request, lastUser);
+            return ResponseEntity.ok("Item loss updated successfully");
+        } catch (NullPointerException e) {
+            return ResponseEntity.status(404).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Error updating item loss: " + e.getMessage());
+        }
+    }
 
 }
