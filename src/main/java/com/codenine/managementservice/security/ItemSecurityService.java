@@ -16,7 +16,6 @@ public class ItemSecurityService {
     @Autowired
     private ItemTypeRepository itemTypeRepository;
 
-
     public boolean hasItemManagementPermission(Authentication authentication, Long itemTypeId)
             throws UserSectionMismatchException {
         User user = (User) authentication.getPrincipal();
