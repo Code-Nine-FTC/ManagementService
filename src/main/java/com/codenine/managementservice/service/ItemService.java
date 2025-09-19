@@ -7,6 +7,7 @@ import com.codenine.managementservice.dto.ItemResponseProjection;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.codenine.managementservice.dto.ArchiveItem;
 import com.codenine.managementservice.dto.ItemFilterCriteria;
 import com.codenine.managementservice.dto.ItemRequest;
 import com.codenine.managementservice.dto.ItemResponse;
@@ -23,6 +24,7 @@ import com.codenine.managementservice.repository.SectionRepository;
 import com.codenine.managementservice.repository.SupplierCompanyRepository;
 import com.codenine.managementservice.repository.UserRepository;
 
+import java.time.LocalDateTime;
 
 @Service
 public class ItemService {
@@ -86,7 +88,15 @@ public class ItemService {
         item.setLastUser(lastUser);
         itemRepository.save(item);
     }
-    
+
+    public void archiveItem(Long id, ArchiveItem archiveItem, User lastUser) {
+        Item item = getItemById(id);
+        item.setArchiveInfo("{\"status\": true, \"reason\": \"" + archiveItem.reason() + "\"}");
+        item.setLastUpdate(LocalDateTime.now());
+        item.setLastUser(lastUser);
+        itemRepository.save(item);
+    }
+
     private Item getItemById(Long id) {
         return itemRepository.findById(id).orElseThrow(() -> new NullPointerException("Item not found with id: " + id));
     }
