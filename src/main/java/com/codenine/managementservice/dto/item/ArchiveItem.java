@@ -1,4 +1,3 @@
 package com.codenine.managementservice.dto.item;
 
-public record ArchiveItem(String reason) {
-}
+public record ArchiveItem(String reason) {}

@@ -4,14 +4,15 @@ import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import com.codenine.managementservice.dto.item.ItemResponse;
 import com.codenine.managementservice.entity.Item;
-import org.springframework.data.repository.query.Param;
 
 public interface ItemRepository extends JpaRepository<Item, Long> {
-    @Query("""
-                SELECT new com.codenine.managementservice.dto.ItemResponse(
+  @Query(
+      """
+                SELECT new com.codenine.managementservice.dto.item.ItemResponse(
                     i.id,
                     i.name,
                     i.currentStock,
@@ -40,11 +41,11 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
                   AND (:isActive IS NULL OR i.isActive = :isActive)
                   AND (:itemId IS NULL OR i.id = :itemId)
             """)
-    List<ItemResponse> findAllItemResponses(
-            @Param("supplierId") Long supplierId,
-            @Param("sectionId") Long sectionId,
-            @Param("itemTypeId") Long itemTypeId,
-            @Param("lastUserId") Long lastUserId,
-            @Param("isActive") Boolean isActive,
-            @Param("itemId") Long itemId);
+  List<ItemResponse> findAllItemResponses(
+      @Param("supplierId") Long supplierId,
+      @Param("sectionId") Long sectionId,
+      @Param("itemTypeId") Long itemTypeId,
+      @Param("lastUserId") Long lastUserId,
+      @Param("isActive") Boolean isActive,
+      @Param("itemId") Long itemId);
 }

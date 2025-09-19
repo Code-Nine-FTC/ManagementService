@@ -3,7 +3,7 @@ package com.codenine.managementservice.dto.item;
 import java.time.LocalDateTime;
 
 public record ItemResponse(
-        Long itemId,
+    Long itemId,
     String name,
     Integer currentStock,
     String measure,
@@ -17,6 +17,4 @@ public record ItemResponse(
     Integer minimumStock,
     String qrCode,
     String lastUserName,
-    LocalDateTime lastUpdate
-) {
-}
+    LocalDateTime lastUpdate) {}
