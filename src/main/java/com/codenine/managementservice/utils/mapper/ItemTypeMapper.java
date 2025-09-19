@@ -1,4 +1,4 @@
-package com.codenine.managementservice.mapper;
+package com.codenine.managementservice.utils.mapper;
 
 import com.codenine.managementservice.dto.itemType.ItemTypeRequest;
 import com.codenine.managementservice.entity.ItemType;

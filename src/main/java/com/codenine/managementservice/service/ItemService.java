@@ -15,10 +15,10 @@ import com.codenine.managementservice.entity.ItemType;
 import com.codenine.managementservice.entity.SupplierCompany;
 
 import com.codenine.managementservice.entity.User;
-import com.codenine.managementservice.mapper.ItemMapper;
 import com.codenine.managementservice.repository.ItemRepository;
 import com.codenine.managementservice.repository.ItemTypeRepository;
 import com.codenine.managementservice.repository.SupplierCompanyRepository;
+import com.codenine.managementservice.utils.mapper.ItemMapper;
 
 import java.time.LocalDateTime;
 

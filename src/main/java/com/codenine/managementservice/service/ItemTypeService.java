@@ -11,9 +11,9 @@ import com.codenine.managementservice.dto.itemType.ItemTypeResponse;
 import com.codenine.managementservice.entity.ItemType;
 import com.codenine.managementservice.entity.Section;
 import com.codenine.managementservice.entity.User;
-import com.codenine.managementservice.mapper.ItemTypeMapper;
 import com.codenine.managementservice.repository.ItemTypeRepository;
 import com.codenine.managementservice.repository.SectionRepository;
+import com.codenine.managementservice.utils.mapper.ItemTypeMapper;
 
 @Service
 public class ItemTypeService {

@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import com.codenine.managementservice.repository.ItemLossRepository;
 import com.codenine.managementservice.repository.ItemRepository;
 import com.codenine.managementservice.repository.UserRepository;
+import com.codenine.managementservice.utils.mapper.ItemLossMapper;
 
 import java.time.LocalDateTime;
 
@@ -13,7 +14,6 @@ import com.codenine.managementservice.dto.itemLoss.ItemLossRequest;
 import com.codenine.managementservice.entity.Item;
 import com.codenine.managementservice.entity.ItemLoss;
 import com.codenine.managementservice.entity.User;
-import com.codenine.managementservice.mapper.ItemLossMapper;
 
 @Service
 public class ItemLossService {
