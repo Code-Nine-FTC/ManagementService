@@ -22,10 +22,10 @@ public class ItemLoss {
 
     @Column(nullable = false)
     private LocalDateTime lastUpdate = LocalDateTime.now();
-    
-    @ManyToOne 
+
+    @ManyToOne
     private User recordedBy;
-    
+
     @ManyToOne
     private Item item;
 

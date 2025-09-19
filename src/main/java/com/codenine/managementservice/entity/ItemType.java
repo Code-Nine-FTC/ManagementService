@@ -5,7 +5,6 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.List;
 
-
 @Data
 @Entity
 @Table(name = "items_type")
@@ -25,11 +24,7 @@ public class ItemType {
     private User lastUser;
 
     @ManyToOne
-    @JoinTable(
-        name = "itemtype_section",
-        joinColumns = @JoinColumn(name = "item_type_id"),
-        inverseJoinColumns = @JoinColumn(name = "section_id")
-    )
+    @JoinTable(name = "itemtype_section", joinColumns = @JoinColumn(name = "item_type_id"), inverseJoinColumns = @JoinColumn(name = "section_id"))
     private Section section;
 
     @OneToMany(mappedBy = "itemType")

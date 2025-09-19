@@ -1,10 +1,11 @@
 package com.codenine.managementservice.security;
 
-import com.codenine.managementservice.dto.Role;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+
+import com.codenine.managementservice.dto.user.Role;
 
 import java.security.Key;
 import java.util.Date;

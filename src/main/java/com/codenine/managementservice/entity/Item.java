@@ -6,7 +6,6 @@ import lombok.Data;
 import java.time.LocalDateTime;
 import java.util.List;
 
-
 @Data
 @Entity
 @Table(name = "items")
@@ -46,14 +45,10 @@ public class Item {
     private SupplierCompany supplier;
 
     @ManyToOne
-    @JoinTable(
-        name = "item_item_type",
-        joinColumns = @JoinColumn(name = "item_id"),
-        inverseJoinColumns = @JoinColumn(name = "item_type_id")
-    )
+    @JoinTable(name = "item_item_type", joinColumns = @JoinColumn(name = "item_id"), inverseJoinColumns = @JoinColumn(name = "item_type_id"))
     private ItemType itemType;
 
     @ManyToMany(mappedBy = "items")
     private List<Order> orders;
-    
+
 }

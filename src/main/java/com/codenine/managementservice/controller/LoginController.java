@@ -1,7 +1,7 @@
 package com.codenine.managementservice.controller;
 
-import com.codenine.managementservice.dto.LoginDto;
-import com.codenine.managementservice.dto.LoginResponseDto;
+import com.codenine.managementservice.dto.login.LoginDto;
+import com.codenine.managementservice.dto.login.LoginResponseDto;
 import com.codenine.managementservice.entity.Section;
 import com.codenine.managementservice.entity.User;
 import com.codenine.managementservice.repository.UserRepository;
@@ -13,7 +13,6 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 @RestController
@@ -38,8 +37,7 @@ public class LoginController {
         if (userEmail.isPresent()) {
             User user = userEmail.get();
             authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(email, password)
-            );
+                    new UsernamePasswordAuthenticationToken(email, password));
 
             List<Long> sectionIds = user.getSections().stream()
                     .map(Section::getId)
@@ -52,9 +50,7 @@ public class LoginController {
                             token,
                             email,
                             user.getRole().toString(),
-                            sectionIds
-                    )
-            );
+                            sectionIds));
         } else {
             return ResponseEntity.status(404).body("Usuário não encontrado");
         }
