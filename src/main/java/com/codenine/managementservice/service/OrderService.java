@@ -53,7 +53,8 @@ public class OrderService {
 
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         if (principal instanceof UserDetails userDetails) {
-            User user = userService.findByEmail(userDetails.getUsername());
+            User user = userRepository.findByEmail(userDetails.getUsername())
+                .orElseThrow(() -> new EntityNotFoundException("User not found with email: " + userDetails.getUsername()));
             order.setCreatedBy(user);
         }
 
@@ -66,7 +67,8 @@ public class OrderService {
 
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         if (principal instanceof UserDetails userDetails) {
-            User user = userService.findByEmail(userDetails.getUsername());
+            User user = userRepository.findByEmail(userDetails.getUsername())
+                .orElseThrow(() -> new EntityNotFoundException("User not found with email: " + userDetails.getUsername()));
             order.updateStatus(newStatus, user);
         } else {
             order.updateStatus(newStatus, null);
