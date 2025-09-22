@@ -5,6 +5,7 @@ import com.codenine.managementservice.dto.user.UserRequest;
 import com.codenine.managementservice.entity.User;
 import com.codenine.managementservice.repository.UserRepository;
 import com.codenine.managementservice.utils.exception.UserManagementException;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
@@ -22,7 +23,7 @@ public class UserSecurityService {
 
         User targetUser = userRepository.findById(userId).orElse(null);
         if (targetUser == null) {
-            throw new NullPointerException("Usuário alvo não encontrado");
+            throw new EntityNotFoundException("Usuário alvo não encontrado");
         }
 
         if (role.equals(Role.ADMIN)) {
@@ -62,11 +63,11 @@ public class UserSecurityService {
                 }
                 return true;
             default:
-                return false;
+                throw new UserManagementException("Usuário não possui permissão para registrar novos usuários");
         }
     }
 
-    public boolean userViewPermission(Authentication authentication, Long userId) {
+    public boolean hasUserViewPermission(Authentication authentication, Long userId) {
         User user = (User) authentication.getPrincipal();
         Role role = user.getRole();
 
