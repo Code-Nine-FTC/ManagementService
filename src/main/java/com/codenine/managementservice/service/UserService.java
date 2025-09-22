@@ -104,4 +104,9 @@ public class UserService {
       user.setLastUpdate(LocalDateTime.now());
       userRepository.save(user);
     }
+
+    public User findByEmail(String email) {
+        return userRepository.findByEmail(email)
+            .orElseThrow(() -> new EntityNotFoundException("User not found with email: " + email));
+    }
 }
