@@ -1,7 +1,9 @@
 package com.codenine.managementservice.controller;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -15,6 +17,7 @@ import com.codenine.managementservice.entity.Section;
 import com.codenine.managementservice.entity.User;
 import com.codenine.managementservice.repository.UserRepository;
 import com.codenine.managementservice.security.JwtUtil;
+import com.codenine.managementservice.dto.section.SectionDto;
 
 @RestController
 @RequestMapping("/login")
@@ -36,12 +39,17 @@ public class LoginController {
       User user = userEmail.get();
       authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(email, password));
 
-      List<Long> sectionIds = user.getSections().stream().map(Section::getId).toList();
+    List<Long> sectionIds = user.getSections().stream().map(s -> s.getId()).toList();
 
-      String token = jwtUtil.generateToken(email, user.getRole(), sectionIds);
+    List<SectionDto> sectionsDto =
+      user.getSections().stream()
+        .map(s -> new SectionDto(s.getId(), s.getTitle()))
+        .toList();
 
-      return ResponseEntity.status(200)
-          .body(new LoginResponseDto(token, user.getName(), email, user.getRole().toString(), sectionIds));
+    String token = jwtUtil.generateToken(email, user.getRole(), sectionIds);
+
+    return ResponseEntity.status(200)
+      .body(new LoginResponseDto(token, user.getName(), email, user.getRole().toString(), sectionsDto));
     } else {
       return ResponseEntity.status(404).body("Usuário não encontrado");
     }
