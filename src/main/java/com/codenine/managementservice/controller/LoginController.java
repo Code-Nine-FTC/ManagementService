@@ -41,7 +41,7 @@ public class LoginController {
 
     List<Long> sectionIds = user.getSections().stream().map(s -> s.getId()).toList();
 
-    List<SectionDto> sectionsDto =
+    List<SectionDto> sections =
       user.getSections().stream()
         .map(s -> new SectionDto(s.getId(), s.getTitle()))
         .toList();
@@ -49,7 +49,7 @@ public class LoginController {
     String token = jwtUtil.generateToken(email, user.getRole(), sectionIds);
 
     return ResponseEntity.status(200)
-      .body(new LoginResponseDto(token, user.getName(), email, user.getRole().toString(), sectionsDto));
+      .body(new LoginResponseDto(token, user.getName(), email, user.getRole().toString(), sections));
     } else {
       return ResponseEntity.status(404).body("Usuário não encontrado");
     }
