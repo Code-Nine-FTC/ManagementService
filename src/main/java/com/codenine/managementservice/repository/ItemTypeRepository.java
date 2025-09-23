@@ -24,7 +24,7 @@ public interface ItemTypeRepository extends JpaRepository<ItemType, Long> {
             )
             from ItemType it
             join it.section s
-            join it.lastUser u
+            left join it.lastUser u
             where (:itemTypeId IS NULL OR it.id = :itemTypeId)
             and (:sectionId IS NULL OR s.id = :sectionId)
             and (:lastUserId IS NULL OR u.id = :lastUserId)
