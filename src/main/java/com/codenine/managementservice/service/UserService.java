@@ -2,6 +2,7 @@ package com.codenine.managementservice.service;
 
 import com.codenine.managementservice.dto.user.Role;
 import com.codenine.managementservice.dto.user.UserRequest;
+import com.codenine.managementservice.dto.user.UserResponse;
 import com.codenine.managementservice.dto.user.UserUpdate;
 import com.codenine.managementservice.entity.Section;
 import com.codenine.managementservice.entity.User;
@@ -10,13 +11,14 @@ import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
+
 import org.springframework.stereotype.Service;
 
 import com.codenine.managementservice.repository.UserRepository;
 
-import java.net.PasswordAuthentication;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class UserService {
@@ -36,29 +38,58 @@ public class UserService {
             throw new IllegalArgumentException("Email already in use: " + userRequest.email());
         }
         List<Section> sections = getSectionsByIds(userRequest.sectionIds());
+        String password = passwordEncoder.encode(userRequest.password());
         User user = new User();
         user.setName(userRequest.name());
         user.setEmail(userRequest.email());
-        user.setPassword(userRequest.password());
+        user.setPassword(password);
         user.setRole(userRequest.role());
         user.setSections(sections);
         userRepository.save(user);
   }
 
-    public User getUser(Long id) {
-        return userRepository.findById(id)
-            .orElseThrow(() -> new EntityNotFoundException("User not found with id: " + id));
+    public UserResponse getUser(Long id) {
+        Optional<User> userOptional = userRepository.findById(id);
+        if (userOptional.isPresent()) {
+            UserResponse userResponse = new UserResponse(
+                userOptional.get().getId(),
+                userOptional.get().getName(),
+                userOptional.get().getEmail(),
+                userOptional.get().getRole(),
+                userOptional.get().getIsActive(),
+                userOptional.get().getSections().stream().map(Section::getId).toList()
+            );
+            return userResponse;
+        }
+        else {
+            throw new EntityNotFoundException("User not found with id: " + id);
+        }
     }
 
-    public List<User> getAllUsers(Authentication authentication) {
+    public List<UserResponse> getAllUsers(Authentication authentication) {
       User user = (User) authentication.getPrincipal();
         if (user.getRole().equals(Role.MANAGER)) {
             List<Long> sectionIds = user.getSections().stream()
                 .map(Section::getId).toList();
             List<User> users = userRepository.findBySections_IdIn(sectionIds);
-            return users;
+            List<UserResponse> userResponse = users.stream().map(u -> new UserResponse(
+                u.getId(),
+                u.getName(),
+                u.getEmail(),
+                u.getRole(),
+                u.getIsActive(),
+                u.getSections().stream().map(Section::getId).toList()
+            )).toList();
+            return userResponse;
         }
-        return userRepository.findAll();
+        return userRepository.findAll().stream().map(u -> new UserResponse(
+            u.getId(),
+            u.getName(),
+            u.getEmail(),
+            u.getRole(),
+            u.getIsActive(),
+            u.getSections().stream().map(Section::getId).toList()
+        )).toList();
     }
 
     public void disableUser(Long id) {

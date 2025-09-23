@@ -3,6 +3,7 @@ package com.codenine.managementservice.entity;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -29,5 +30,6 @@ public class Section {
   private List<User> users;
 
   @OneToMany(mappedBy = "section")
+  @JsonIgnoreProperties("section")
   private List<ItemType> itemTypes;
 }
