@@ -2,4 +2,6 @@ package com.codenine.managementservice.dto.login;
 
 import java.util.List;
 
-public record LoginResponseDto(String token, String email, String role, List<Long> sectionIds) {}
+import com.codenine.managementservice.dto.section.SectionDto;
+
+public record LoginResponseDto(String token, String name, String email, String role, List<SectionDto> sections) {}
