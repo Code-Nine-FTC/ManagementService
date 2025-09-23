@@ -6,6 +6,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
+import com.codenine.managementservice.dto.section.SectionDto;
+
 
 import com.codenine.managementservice.entity.User;
 
@@ -22,7 +24,8 @@ public class AuthTestController {
 
     return Map.of(
         "email", user.getEmail(),
+        "name", user.getName(),
         "role", user.getRole().name(),
-        "sections", user.getSections().stream().map(section -> section.getId()).toList());
+        "sections", user.getSections().stream().map(section -> new SectionDto(section.getId(), section.getTitle())).toList());
   }
 }

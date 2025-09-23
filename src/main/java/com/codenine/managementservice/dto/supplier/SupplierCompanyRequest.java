@@ -8,9 +8,7 @@ public record SupplierCompanyRequest(
     String email,
     String phoneNumber,
     String cnpj,
-    Boolean isActive,
     Integer rating,
-    LocalDateTime lastUpdate,
     Long lastUserId,
     List<Long> itemIds,
     List<Long> orderIds
