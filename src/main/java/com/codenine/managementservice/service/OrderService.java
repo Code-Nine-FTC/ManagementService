@@ -9,13 +9,16 @@ import com.codenine.managementservice.entity.Order;
 import com.codenine.managementservice.entity.Item;
 import com.codenine.managementservice.entity.SupplierCompany;
 import com.codenine.managementservice.entity.User;
+import com.codenine.managementservice.entity.Section;
 import com.codenine.managementservice.repository.OrderRepository;
 import com.codenine.managementservice.repository.ItemRepository;
 import com.codenine.managementservice.repository.SupplierCompanyRepository;
+import com.codenine.managementservice.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
+import jakarta.persistence.EntityNotFoundException;
 import java.util.List;
 
 @Service
@@ -23,15 +26,17 @@ public class OrderService {
     private final OrderRepository orderRepository;
     private final ItemRepository itemRepository;
     private final SupplierCompanyRepository supplierRepository;
+    private final UserRepository userRepository;
 
     @Autowired
     private UserService userService;
 
     @Autowired
-    public OrderService(OrderRepository orderRepository, ItemRepository itemRepository, SupplierCompanyRepository supplierRepository) {
+    public OrderService(OrderRepository orderRepository, ItemRepository itemRepository, SupplierCompanyRepository supplierRepository, UserRepository userRepository) {
         this.orderRepository = orderRepository;
         this.itemRepository = itemRepository;
         this.supplierRepository = supplierRepository;
+        this.userRepository = userRepository;
     }
 
     public Order createOrder(OrderRequest request) {
@@ -96,7 +101,7 @@ public class OrderService {
                 order.getCreatedBy().getEmail(),
                 order.getCreatedBy().getPassword(),
                 order.getCreatedBy().getRole(),
-                order.getCreatedBy().getSections() != null ? order.getCreatedBy().getSections().stream().map(section -> section.getId()).toList() : List.of()
+                order.getCreatedBy().getSections() != null ? order.getCreatedBy().getSections().stream().map(Section::getId).toList() : List.of()
             )
             : null;
         List<ItemResponse> items = order.getItems() != null
