@@ -1,6 +1,5 @@
 package com.codenine.managementservice.controller;
 
-import org.apache.tomcat.util.http.parser.Authorization;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -12,22 +11,25 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.RequestMapping;
 
 import com.codenine.managementservice.dto.itemType.ItemTypeFilterCriteria;
 import com.codenine.managementservice.dto.itemType.ItemTypeRequest;
 import com.codenine.managementservice.entity.User;
 import com.codenine.managementservice.service.ItemTypeService;
 
-@RestController("/item-types")
+@RestController
+@RequestMapping("/item-types")
 public class ItemTypeController {
 
   @Autowired private ItemTypeService itemTypeService;
 
   @PostMapping("/")
   public ResponseEntity<?> createItemType(
-      @RequestBody ItemTypeRequest newItemType, Authorization authentication) {
+    @RequestBody ItemTypeRequest newItemType) {
     try {
       User lastUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+      System.out.println("Criando item type: " + newItemType.name() + " pelo usuário: " + lastUser.getUsername());
       itemTypeService.createItemType(newItemType, lastUser);
     } catch (Exception e) {
       return ResponseEntity.status(500).body("Error creating item type: " + e.getMessage());
@@ -64,7 +66,7 @@ public class ItemTypeController {
 
   @PutMapping("/{id}")
   public ResponseEntity<?> updateItemType(
-      @PathVariable Long id, @RequestBody ItemTypeRequest entity, Authorization authentication) {
+    @PathVariable Long id, @RequestBody ItemTypeRequest entity) {
     try {
       User lastUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
       itemTypeService.updateItemType(id, entity, lastUser);
@@ -75,9 +77,10 @@ public class ItemTypeController {
   }
 
   @PatchMapping("/disable/{id}")
-  public ResponseEntity<?> disableItemType(@PathVariable Long id, Authorization authentication) {
+  public ResponseEntity<?> disableItemType(@PathVariable Long id) {
     try {
       User lastUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+      System.out.println("Desabilitando item type com ID: " + id + " pelo usuário: " + lastUser.getUsername());
       itemTypeService.disableItemType(id, lastUser);
     } catch (Exception e) {
       return ResponseEntity.status(500).body("Error disabling item type: " + e.getMessage());
