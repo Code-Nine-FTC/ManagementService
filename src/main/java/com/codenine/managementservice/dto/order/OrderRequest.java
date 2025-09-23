@@ -6,5 +6,6 @@ import java.util.List;
 public record OrderRequest(
     LocalDateTime withdrawDay,
     List<Long> itemIds,
-    List<Long> supplierIds
+    List<Long> supplierIds,
+    String status
 ) {}

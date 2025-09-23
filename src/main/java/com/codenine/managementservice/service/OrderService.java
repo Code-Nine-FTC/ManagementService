@@ -51,10 +51,10 @@ public class OrderService {
         }
 
         Order order = new Order();
-        order.setItems(items);
-        order.setSuppliers(suppliers);
-        order.setWithdrawDay(request.withdrawDay());
-        order.setStatus("PENDENTE");
+    order.setItems(items);
+    order.setSuppliers(suppliers);
+    order.setWithdrawDay(request.withdrawDay());
+    order.setStatus(request.status() != null ? request.status() : "PENDENTE");
 
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         if (principal instanceof UserDetails userDetails) {

@@ -9,6 +9,7 @@ public record SupplierCompanyRequest(
     String phoneNumber,
     String cnpj,
     Integer rating,
+    Boolean isActive,
     Long lastUserId,
     List<Long> itemIds,
     List<Long> orderIds

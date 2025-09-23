@@ -12,6 +12,7 @@ import com.codenine.managementservice.dto.supplier.SupplierCompanyResponse;
 
 @Service
 public class SupplierCompanyService {
+  @Autowired private com.codenine.managementservice.repository.OrderRepository orderRepository;
   public SupplierCompanyResponse toResponse(SupplierCompany entity) {
     if (entity == null) return null;
     return new SupplierCompanyResponse(
@@ -41,7 +42,7 @@ public class SupplierCompanyService {
     entity.setCnpj(req.cnpj());
     entity.setIsActive(req.isActive());
     entity.setRating(req.rating());
-    entity.setLastUpdate(req.lastUpdate());
+  entity.setLastUpdate(java.time.LocalDateTime.now());
     // lastUser
     if (req.lastUserId() != null) {
       entity.setLastUser(userRepository.findById(req.lastUserId()).orElse(null));
@@ -50,7 +51,10 @@ public class SupplierCompanyService {
     if (req.itemIds() != null && !req.itemIds().isEmpty()) {
       entity.setItems(itemRepository.findAllById(req.itemIds()));
     }
-    // faltando setOrders
+    // orders
+    if (req.orderIds() != null && !req.orderIds().isEmpty()) {
+      entity.setOrders(orderRepository.findAllById(req.orderIds()));
+    }
     return entity;
   }
   @Autowired private SupplierCompanyRepository supplierCompanyRepository;

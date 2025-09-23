@@ -22,7 +22,7 @@ public class OrderController {
     }
 
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
-    @PostMapping
+    @PostMapping("/")
     public ResponseEntity<OrderResponse> createOrder(@RequestBody OrderRequest request) {
         OrderResponse response = orderService.toOrderResponse(orderService.createOrder(request));
         return ResponseEntity.ok(response);
@@ -36,7 +36,7 @@ public class OrderController {
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping
+    @GetMapping("/")
     public ResponseEntity<List<OrderResponse>> getAllOrders() {
         List<OrderResponse> orders = orderService.getAllOrders();
         return ResponseEntity.ok(orders);
