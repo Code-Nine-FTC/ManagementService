@@ -30,19 +30,22 @@ public class UserSecurityService {
             return true;
         }
 
-        if (role.equals(Role.ASSISTANT) || role.equals(Role.MANAGER)) {
+        if (role.equals(Role.MANAGER)) {
             if (targetUser.getRole().equals(Role.ADMIN)) {
                 throw new UserManagementException("Usuário não possui permissão para gerenciar administradores");
             }
             boolean hasPermission = user.getSections().stream()
                     .anyMatch(section -> targetUser.getSections().stream()
-                    .anyMatch(targetSection -> targetSection.getId().equals(section.getId())));
+                            .anyMatch(targetSection -> targetSection.getId().equals(section.getId())));
             if (!hasPermission) {
                 throw new UserManagementException("Usuário não possui permissão para gerenciar usuários desse setor");
             }
             return true;
         }
-            return userRepository.existsById(userId);
+        if (role.equals(Role.ASSISTANT)) {
+            throw new UserManagementException("Usuário não possui permissão para gerenciar usuários");
+        }
+        return false;
     }
 
     public boolean hasUserRegisterPermission(Authentication authentication, UserRequest userRequest) {
@@ -89,10 +92,11 @@ public class UserSecurityService {
                 boolean hasPermission = user.getSections().stream()
                         .anyMatch(section -> targetUser.getSections().stream()
                                 .anyMatch(targetSection -> targetSection.getId().equals(section.getId())));
-                if (!hasPermission) {
+                if (hasPermission) {
+                    return true;
+                } else {
                     throw new UserManagementException("Usuário não possui permissão para visualizar usuários desse setor");
                 }
-                return true;
             default:
                 if (targetUser.getId().equals(user.getId())) {
                     return true;
