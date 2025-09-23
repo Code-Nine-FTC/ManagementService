@@ -39,4 +39,10 @@ public class Order {
       joinColumns = @JoinColumn(name = "order_id"),
       inverseJoinColumns = @JoinColumn(name = "supplier_id"))
   private List<SupplierCompany> suppliers;
+
+  public void updateStatus(String newStatus, User lastUser) {
+    this.status = newStatus;
+    this.lastUser = lastUser;
+    this.lastUpdate = java.time.LocalDateTime.now();
+  }
 }
