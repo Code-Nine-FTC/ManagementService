@@ -4,4 +4,4 @@ import java.util.List;
 
 import com.codenine.managementservice.dto.section.SectionDto;
 
-public record LoginResponseDto(String token, String name, String email, String role, List<SectionDto> sections) {}
+public record LoginResponseDto(String token, Long Id, String name, String email, String role, List<SectionDto> sections) {}

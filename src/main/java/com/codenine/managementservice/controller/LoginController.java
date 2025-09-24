@@ -60,7 +60,7 @@ public class LoginController {
     String token = jwtUtil.generateToken(email, user.getRole(), sectionIds);
 
     return ResponseEntity.status(200)
-      .body(new LoginResponseDto(token, user.getName(), email, user.getRole().toString(), sections));
+      .body(new LoginResponseDto(token, user.getId(), user.getName(), email, user.getRole().toString(), sections));
     } else {
       return ResponseEntity.status(404).body("Usuário não encontrado");
     }
