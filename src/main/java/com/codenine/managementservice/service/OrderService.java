@@ -83,9 +83,12 @@ public class OrderService {
     }
 
     public List<OrderResponse> getAllOrders() {
-        return orderRepository.findAll().stream()
-            .map(this::toOrderResponse)
-            .toList();
+        return orderRepository.findAllOrderResponses(null, null, null, null);
+    }
+
+    public List<OrderResponse> getOrdersWithFilters(
+            Long orderId, String status, Long createdById, Long lastUserId) {
+        return orderRepository.findAllOrderResponses(orderId, status, createdById, lastUserId);
     }
 
     public OrderResponse getOrderById(Long id) {

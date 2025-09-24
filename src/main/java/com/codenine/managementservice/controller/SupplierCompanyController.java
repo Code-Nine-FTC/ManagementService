@@ -18,13 +18,22 @@ public class SupplierCompanyController {
     private SupplierCompanyService supplierCompanyService;
 
     /**
-     * Lista todas as empresas fornecedoras.
+     * Lista todas as empresas fornecedoras com filtros opcionais.
+     * @param supplierId ID específico do fornecedor (opcional)
+     * @param isActive Status ativo/inativo (opcional)
+     * @param lastUserId ID do usuário que fez a última modificação (opcional)
      * @return Lista de fornecedores.
      */
-    @Operation(description = "Lista todas as empresas fornecedoras.")
+    @Operation(description = "Lista todas as empresas fornecedoras com filtros opcionais.")
     @GetMapping
-    public ResponseEntity<List<SupplierCompanyResponse>> getAllSuppliers() {
-        return ResponseEntity.ok(supplierCompanyService.getAllSupplierCompanies());
+    public ResponseEntity<List<SupplierCompanyResponse>> getAllSuppliers(
+        @Parameter(description = "ID específico do fornecedor", example = "1")
+        @RequestParam(required = false) Long supplierId,
+        @Parameter(description = "Status ativo/inativo", example = "true")
+        @RequestParam(required = false) Boolean isActive,
+        @Parameter(description = "ID do usuário que fez a última modificação", example = "1")
+        @RequestParam(required = false) Long lastUserId) {
+        return ResponseEntity.ok(supplierCompanyService.getSupplierCompaniesWithFilters(supplierId, isActive, lastUserId));
     }
 
     /**

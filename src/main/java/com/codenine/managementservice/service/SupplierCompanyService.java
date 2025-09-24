@@ -80,7 +80,12 @@ public class SupplierCompanyService {
   }
 
   public java.util.List<SupplierCompanyResponse> getAllSupplierCompanies() {
-    return supplierCompanyRepository.findAll().stream().map(this::toResponse).toList();
+    return supplierCompanyRepository.findAllSupplierCompanyResponses(null, null, null);
+  }
+
+  public java.util.List<SupplierCompanyResponse> getSupplierCompaniesWithFilters(
+      Long supplierId, Boolean isActive, Long lastUserId) {
+    return supplierCompanyRepository.findAllSupplierCompanyResponses(supplierId, isActive, lastUserId);
   }
 
   public void deleteSupplierCompany(Long id) {
