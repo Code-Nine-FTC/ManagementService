@@ -18,6 +18,9 @@ import com.codenine.managementservice.entity.User;
 import com.codenine.managementservice.repository.UserRepository;
 import com.codenine.managementservice.security.JwtUtil;
 import com.codenine.managementservice.dto.section.SectionDto;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
 
 @RestController
 @RequestMapping("/login")
@@ -29,8 +32,16 @@ public class LoginController {
 
   @Autowired private UserRepository userRepository;
 
+  /**
+   * Realiza o login do usuário.
+   * @param credentials Dados de login (email e senha).
+   * @return Token JWT e dados do usuário autenticado, ou mensagem de erro.
+   */
+  @Operation(description = "Realiza o login do usuário.")
+  @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Credenciais de login (email e senha)")
   @PostMapping
-  public ResponseEntity<?> login(@RequestBody LoginDto credentials) {
+  public ResponseEntity<?> login(
+    @org.springframework.web.bind.annotation.RequestBody LoginDto credentials) {
     String email = credentials.email();
     String password = credentials.password();
 
