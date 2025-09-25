@@ -58,13 +58,25 @@ public class OrderController {
     }
 
     /**
-     * Lista todos os pedidos.
+     * Lista todos os pedidos com filtros opcionais.
+     * @param orderId ID específico do pedido (opcional)
+     * @param status Status do pedido (opcional)
+     * @param createdById ID do usuário que criou o pedido (opcional)
+     * @param lastUserId ID do usuário que fez a última modificação (opcional)
      * @return Lista de pedidos.
      */
-    @Operation(description = "Lista todos os pedidos.")
+    @Operation(description = "Lista todos os pedidos com filtros opcionais.")
     @GetMapping
-    public ResponseEntity<List<OrderResponse>> getAllOrders() {
-        List<OrderResponse> orders = orderService.getAllOrders();
+    public ResponseEntity<List<OrderResponse>> getAllOrders(
+        @Parameter(description = "ID específico do pedido", example = "1")
+        @RequestParam(required = false) Long orderId,
+        @Parameter(description = "Status do pedido", example = "PENDING")
+        @RequestParam(required = false) String status,
+        @Parameter(description = "ID do usuário que criou o pedido", example = "1")
+        @RequestParam(required = false) Long createdById,
+        @Parameter(description = "ID do usuário que fez a última modificação", example = "1")
+        @RequestParam(required = false) Long lastUserId) {
+        List<OrderResponse> orders = orderService.getOrdersWithFilters(orderId, status, createdById, lastUserId);
         return ResponseEntity.ok(orders);
     }
 

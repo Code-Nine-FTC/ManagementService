@@ -51,13 +51,15 @@ public class UserService {
     public UserResponse getUser(Long id) {
         Optional<User> userOptional = userRepository.findById(id);
         if (userOptional.isPresent()) {
+            User user = userOptional.get();
             UserResponse userResponse = new UserResponse(
-                userOptional.get().getId(),
-                userOptional.get().getName(),
-                userOptional.get().getEmail(),
-                userOptional.get().getRole(),
-                userOptional.get().getIsActive(),
-                userOptional.get().getSections().stream().map(Section::getId).toList()
+                user.getId(),
+                user.getName(),
+                user.getEmail(),
+                user.getRole(),
+                user.getIsActive(),
+                user.getSections().stream().map(Section::getId).toList(),
+                user.getSections().stream().map(section -> new com.codenine.managementservice.dto.section.SectionDto(section.getId(), section.getTitle())).toList()
             );
             return userResponse;
         }
@@ -78,7 +80,8 @@ public class UserService {
                 u.getEmail(),
                 u.getRole(),
                 u.getIsActive(),
-                u.getSections().stream().map(Section::getId).toList()
+                u.getSections().stream().map(Section::getId).toList(),
+                u.getSections().stream().map(section -> new com.codenine.managementservice.dto.section.SectionDto(section.getId(), section.getTitle())).toList()
             )).toList();
             return userResponse;
         }
@@ -88,7 +91,8 @@ public class UserService {
             u.getEmail(),
             u.getRole(),
             u.getIsActive(),
-            u.getSections().stream().map(Section::getId).toList()
+            u.getSections().stream().map(Section::getId).toList(),
+            u.getSections().stream().map(section -> new com.codenine.managementservice.dto.section.SectionDto(section.getId(), section.getTitle())).toList()
         )).toList();
     }
 
