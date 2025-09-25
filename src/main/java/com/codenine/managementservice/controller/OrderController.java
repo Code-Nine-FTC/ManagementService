@@ -1,4 +1,3 @@
-package com.codenine.managementservice.controller;
 
 import com.codenine.managementservice.dto.order.OrderRequest;
 import com.codenine.managementservice.dto.order.OrderResponse;
@@ -95,6 +94,51 @@ public class OrderController {
             return ResponseEntity.ok(response);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.notFound().build();
+        }
+    }
+
+    /**
+     * Atualiza os dados de um pedido existente.
+     * @param id ID do pedido a ser atualizado.
+     * @param request Novos dados do pedido.
+     * @return Dados do pedido atualizado.
+     */
+    @Operation(description = "Atualiza os dados de um pedido existente.")
+    @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Novos dados do pedido")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @PutMapping("/{id}")
+    public ResponseEntity<OrderResponse> updateOrder(
+        @Parameter(description = "ID do pedido a ser atualizado", example = "1")
+        @PathVariable Long id,
+        @org.springframework.web.bind.annotation.RequestBody OrderRequest request) {
+        try {
+            OrderResponse response = orderService.toOrderResponse(orderService.updateOrder(id, request));
+            return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.notFound().build();
+        } catch (Exception e) {
+            return ResponseEntity.status(500).build();
+        }
+    }
+
+    /**
+     * Remove um pedido pelo ID.
+     * @param id ID do pedido a ser removido.
+     * @return Mensagem de sucesso ou erro.
+     */
+    @Operation(description = "Remove um pedido pelo ID.")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @DeleteMapping("/{id}")
+    public ResponseEntity<String> deleteOrder(
+        @Parameter(description = "ID do pedido a ser removido", example = "1")
+        @PathVariable Long id) {
+        try {
+            orderService.deleteOrder(id);
+            return ResponseEntity.ok("Order deleted successfully");
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(404).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Error deleting order: " + e.getMessage());
         }
     }
 }
