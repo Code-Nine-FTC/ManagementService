@@ -13,8 +13,16 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.codenine.managementservice.dto.user.Role;
-import com.codenine.managementservice.entity.*;
-import com.codenine.managementservice.repository.*;
+import com.codenine.managementservice.entity.Item;
+import com.codenine.managementservice.entity.ItemType;
+import com.codenine.managementservice.entity.Section;
+import com.codenine.managementservice.entity.SupplierCompany;
+import com.codenine.managementservice.entity.User;
+import com.codenine.managementservice.repository.ItemRepository;
+import com.codenine.managementservice.repository.ItemTypeRepository;
+import com.codenine.managementservice.repository.SectionRepository;
+import com.codenine.managementservice.repository.SupplierCompanyRepository;
+import com.codenine.managementservice.repository.UserRepository;
 
 @Component
 @Profile("dev") // Só executa no profile dev

@@ -1,26 +1,24 @@
 package com.codenine.managementservice.controller;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import com.codenine.managementservice.dto.login.LoginDto;
 import com.codenine.managementservice.dto.login.LoginResponseDto;
-import com.codenine.managementservice.entity.Section;
+import com.codenine.managementservice.dto.section.SectionDto;
 import com.codenine.managementservice.entity.User;
 import com.codenine.managementservice.repository.UserRepository;
 import com.codenine.managementservice.security.JwtUtil;
-import com.codenine.managementservice.dto.section.SectionDto;
+
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.parameters.RequestBody;
 
 @RestController
 @RequestMapping("/login")
@@ -34,14 +32,14 @@ public class LoginController {
 
   /**
    * Realiza o login do usuário.
+   *
    * @param credentials Dados de login (email e senha).
    * @return Token JWT e dados do usuário autenticado, ou mensagem de erro.
    */
   @Operation(description = "Realiza o login do usuário.")
-  @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Credenciais de login (email e senha)")
   @PostMapping
   public ResponseEntity<?> login(
-    @org.springframework.web.bind.annotation.RequestBody LoginDto credentials) {
+      @org.springframework.web.bind.annotation.RequestBody LoginDto credentials) {
     String email = credentials.email();
     String password = credentials.password();
 
@@ -50,17 +48,17 @@ public class LoginController {
       User user = userEmail.get();
       authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(email, password));
 
-    List<Long> sectionIds = user.getSections().stream().map(s -> s.getId()).toList();
+      List<Long> sectionIds = user.getSections().stream().map(s -> s.getId()).toList();
 
-    List<SectionDto> sections =
-      user.getSections().stream()
-        .map(s -> new SectionDto(s.getId(), s.getTitle()))
-        .toList();
+      List<SectionDto> sections =
+          user.getSections().stream().map(s -> new SectionDto(s.getId(), s.getTitle())).toList();
 
-    String token = jwtUtil.generateToken(email, user.getRole(), sectionIds);
+      String token = jwtUtil.generateToken(email, user.getRole(), sectionIds);
 
-    return ResponseEntity.status(200)
-      .body(new LoginResponseDto(token, user.getId(), user.getName(), email, user.getRole().toString(), sections));
+      return ResponseEntity.status(200)
+          .body(
+              new LoginResponseDto(
+                  token, user.getId(), user.getName(), email, user.getRole().toString(), sections));
     } else {
       return ResponseEntity.status(404).body("Usuário não encontrado");
     }

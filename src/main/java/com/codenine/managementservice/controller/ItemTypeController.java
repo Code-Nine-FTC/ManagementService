@@ -9,9 +9,9 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.bind.annotation.RequestMapping;
 
 import com.codenine.managementservice.dto.itemType.ItemTypeFilterCriteria;
 import com.codenine.managementservice.dto.itemType.ItemTypeRequest;
@@ -29,14 +29,15 @@ public class ItemTypeController {
 
   /**
    * Cria um novo tipo de item.
+   *
    * @param newItemType Dados do tipo de item a ser criado.
    * @return Mensagem de sucesso ou erro.
    */
   @Operation(description = "Cria um novo tipo de item.")
-  @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Dados do tipo de item a ser criado")
+  @io.swagger.v3.oas.annotations.parameters.RequestBody(
+      description = "Dados do tipo de item a ser criado")
   @PostMapping
-  public ResponseEntity<?> createItemType(
-    @RequestBody ItemTypeRequest newItemType) {
+  public ResponseEntity<?> createItemType(@RequestBody ItemTypeRequest newItemType) {
     try {
       User lastUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
       itemTypeService.createItemType(newItemType, lastUser);
@@ -48,14 +49,15 @@ public class ItemTypeController {
 
   /**
    * Busca um tipo de item pelo ID.
+   *
    * @param id ID do tipo de item.
    * @return Dados do tipo de item ou mensagem de erro.
    */
   @Operation(description = "Busca um tipo de item pelo ID.")
   @GetMapping("/{id}")
   public ResponseEntity<?> getItemType(
-    @Parameter(description = "ID do tipo de item a ser buscado", example = "1")
-    @PathVariable Long id) {
+      @Parameter(description = "ID do tipo de item a ser buscado", example = "1") @PathVariable
+          Long id) {
     try {
       var itemType = itemTypeService.getItemType(id);
       return ResponseEntity.ok(itemType);
@@ -68,6 +70,7 @@ public class ItemTypeController {
 
   /**
    * Lista todos os tipos de item, com filtros opcionais.
+   *
    * @param itemTypeId ID do tipo de item (opcional)
    * @param sectionId ID da seção (opcional)
    * @param lastUserId ID do último usuário (opcional)
@@ -76,9 +79,13 @@ public class ItemTypeController {
   @Operation(description = "Lista todos os tipos de item, com filtros opcionais.")
   @GetMapping
   public ResponseEntity<?> getAllItemTypes(
-      @Parameter(description = "ID do tipo de item", example = "1") @RequestParam(required = false) Long itemTypeId,
-      @Parameter(description = "ID da seção", example = "2") @RequestParam(required = false) Long sectionId,
-      @Parameter(description = "ID do último usuário", example = "3") @RequestParam(required = false) Long lastUserId) {
+      @Parameter(description = "ID do tipo de item", example = "1") @RequestParam(required = false)
+          Long itemTypeId,
+      @Parameter(description = "ID da seção", example = "2") @RequestParam(required = false)
+          Long sectionId,
+      @Parameter(description = "ID do último usuário", example = "3")
+          @RequestParam(required = false)
+          Long lastUserId) {
     try {
       var itemTypes =
           itemTypeService.getItemTypesByFilter(
@@ -91,6 +98,7 @@ public class ItemTypeController {
 
   /**
    * Atualiza um tipo de item existente.
+   *
    * @param id ID do tipo de item.
    * @param newItemType Novos dados do tipo de item.
    * @return Mensagem de sucesso ou erro.
@@ -99,8 +107,9 @@ public class ItemTypeController {
   @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Novos dados do tipo de item")
   @PutMapping("/{id}")
   public ResponseEntity<?> updateItemType(
-      @Parameter(description = "ID do tipo de item a ser atualizado", example = "1") @PathVariable Long id,
-      @org.springframework.web.bind.annotation.RequestBody ItemTypeRequest newItemType) {
+      @Parameter(description = "ID do tipo de item a ser atualizado", example = "1") @PathVariable
+          Long id,
+      @RequestBody ItemTypeRequest newItemType) {
     try {
       User lastUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
       itemTypeService.updateItemType(id, newItemType, lastUser);
@@ -114,14 +123,15 @@ public class ItemTypeController {
 
   /**
    * Desabilita um tipo de item.
+   *
    * @param id ID do tipo de item.
    * @return Mensagem de sucesso ou erro.
    */
   @Operation(description = "Desabilita um tipo de item.")
   @PatchMapping("/disable/{id}")
   public ResponseEntity<?> disableItemType(
-    @Parameter(description = "ID do tipo de item a ser desabilitado", example = "1")
-    @PathVariable Long id) {
+      @Parameter(description = "ID do tipo de item a ser desabilitado", example = "1") @PathVariable
+          Long id) {
     try {
       User lastUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
       itemTypeService.disableItemType(id, lastUser);

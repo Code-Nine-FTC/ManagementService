@@ -10,7 +10,7 @@ public class SectionMapper {
     Section section = new Section();
     section.setTitle(request.title());
     section.setRoleAccess(request.roleAccess());
-    section.setIsActive(request.isActive() != null ? request.isActive() : true);
+    section.setIsActive(request.isActive() == null || request.isActive());
     section.setLastUser(lastUser);
     return section;
   }

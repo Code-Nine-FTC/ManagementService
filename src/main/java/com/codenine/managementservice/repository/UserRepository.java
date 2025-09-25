@@ -9,5 +9,6 @@ import com.codenine.managementservice.entity.User;
 
 public interface UserRepository extends JpaRepository<User, Long> {
   Optional<User> findByEmail(String email);
+
   List<User> findBySections_IdIn(List<Long> sectionIds);
 }
