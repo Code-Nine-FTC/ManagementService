@@ -82,6 +82,45 @@ public class OrderService {
         return orderRepository.save(order);
     }
 
+    public Order updateOrder(Long orderId, OrderRequest request) {
+        Order order = orderRepository.findById(orderId)
+            .orElseThrow(() -> new IllegalArgumentException("Pedido não encontrado."));
+
+        if (request.itemIds() != null && !request.itemIds().isEmpty()) {
+            List<Item> items = itemRepository.findAllById(request.itemIds());
+            if (items.size() != request.itemIds().size()) {
+                throw new IllegalArgumentException("Um ou mais IDs de item são inválidos.");
+            }
+            order.setItems(items);
+        }
+
+        if (request.supplierIds() != null && !request.supplierIds().isEmpty()) {
+            List<SupplierCompany> suppliers = supplierRepository.findAllById(request.supplierIds());
+            if (suppliers.size() != request.supplierIds().size()) {
+                throw new IllegalArgumentException("Um ou mais IDs de fornecedor são inválidos.");
+            }
+            order.setSuppliers(suppliers);
+        }
+
+        if (request.withdrawDay() != null) {
+            order.setWithdrawDay(request.withdrawDay());
+        }
+
+        if (request.status() != null) {
+            order.setStatus(request.status());
+        }
+
+        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        if (principal instanceof UserDetails userDetails) {
+            User user = userRepository.findByEmail(userDetails.getUsername())
+                .orElseThrow(() -> new EntityNotFoundException("User not found with email: " + userDetails.getUsername()));
+            order.setLastUser(user);
+        }
+        order.setLastUpdate(java.time.LocalDateTime.now());
+
+        return orderRepository.save(order);
+    }
+
     public List<OrderResponse> getAllOrders() {
         return orderRepository.findAllOrderResponses(null, null, null, null);
     }
@@ -95,6 +134,12 @@ public class OrderService {
         Order order = orderRepository.findById(id)
             .orElseThrow(() -> new IllegalArgumentException("Pedido não encontrado."));
         return toOrderResponse(order);
+    }
+
+    public void deleteOrder(Long id) {
+        Order order = orderRepository.findById(id)
+            .orElseThrow(() -> new IllegalArgumentException("Pedido não encontrado."));
+        orderRepository.delete(order);
     }
 
     public OrderResponse toOrderResponse(Order order) {
