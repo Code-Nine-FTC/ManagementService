@@ -24,7 +24,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 
 @RestController
-@RequestMapping("/api/sections")
+@RequestMapping("/sections")
 public class SectionController {
 
   @Autowired private SectionService sectionService;
@@ -129,7 +129,7 @@ public class SectionController {
    * @return Mensagem de sucesso ou erro.
    */
   @Operation(description = "Desabilita uma seção.")
-  @PatchMapping("/disable/{id}")
+  @PatchMapping("/{id}")
   @PreAuthorize("hasRole('ADMIN')")
   public ResponseEntity<?> disableSection(
       @Parameter(description = "ID da seção a ser desabilitada", example = "1")
