@@ -21,7 +21,8 @@ import io.swagger.v3.oas.annotations.Parameter;
 @RequestMapping("/users")
 public class UserController {
 
-  @Autowired private UserService userService;
+  @Autowired
+  private UserService userService;
 
   /**
    * Cria um novo usuário no sistema.
@@ -30,18 +31,17 @@ public class UserController {
    * @return Mensagem de sucesso ou erro.
    */
   @Operation(description = "Cria um novo usuário no sistema.")
-  @io.swagger.v3.oas.annotations.parameters.RequestBody(
-      description = "Dados do usuário a ser criado")
+  @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Dados do usuário a ser criado")
   @PreAuthorize("@userSecurity.hasUserRegisterPermission(authentication, #userRequest)")
   @PostMapping
   public ResponseEntity<String> createUser(
-      @org.springframework.web.bind.annotation.RequestBody UserRequest userRequest) {
+      @RequestBody UserRequest userRequest) {
     try {
       userService.createUser(userRequest);
+      return ResponseEntity.status(201).body("User created successfully");
     } catch (Exception e) {
       return ResponseEntity.status(500).body("Error creating user: " + e.getMessage());
     }
-    return ResponseEntity.status(201).body("User created successfully");
   }
 
   /**
@@ -54,8 +54,7 @@ public class UserController {
   @PreAuthorize("@userSecurity.hasUserViewPermission(authentication, #id)")
   @GetMapping("/{id}")
   public ResponseEntity<?> getUser(
-      @Parameter(description = "ID do usuário a ser buscado", example = "1") @PathVariable
-          Long id) {
+      @Parameter(description = "ID do usuário a ser buscado", example = "1") @PathVariable Long id) {
     try {
       var user = userService.getUser(id);
       return ResponseEntity.ok(user);
@@ -93,8 +92,7 @@ public class UserController {
   @PatchMapping("/disable/{id}")
   @PreAuthorize("@userSecurity.hasUserManagementPermission(authentication, #id)")
   public ResponseEntity<String> disableUser(
-      @Parameter(description = "ID do usuário a ser desativado", example = "1") @PathVariable
-          Long id) {
+      @Parameter(description = "ID do usuário a ser desativado", example = "1") @PathVariable Long id) {
     try {
       userService.disableUser(id);
       return ResponseEntity.ok("User disabled successfully");
@@ -115,8 +113,7 @@ public class UserController {
   @PatchMapping("/enable/{id}")
   @PreAuthorize("@userSecurity.hasUserManagementPermission(authentication, #id)")
   public ResponseEntity<String> enableUser(
-      @Parameter(description = "ID do usuário a ser habilitado", example = "1") @PathVariable
-          Long id) {
+      @Parameter(description = "ID do usuário a ser habilitado", example = "1") @PathVariable Long id) {
     try {
       userService.enableUser(id);
       return ResponseEntity.ok("User enabled successfully");
@@ -130,7 +127,7 @@ public class UserController {
   /**
    * Atualiza os dados de um usuário pelo ID.
    *
-   * @param id ID do usuário.
+   * @param id          ID do usuário.
    * @param userRequest Novos dados do usuário.
    * @return Mensagem de sucesso ou erro.
    */
@@ -139,8 +136,7 @@ public class UserController {
   @PutMapping("/{id}")
   @PreAuthorize("@userSecurity.hasUserManagementPermission(authentication, #id)")
   public ResponseEntity<String> updateUser(
-      @Parameter(description = "ID do usuário a ser atualizado", example = "1") @PathVariable
-          Long id,
+      @Parameter(description = "ID do usuário a ser atualizado", example = "1") @PathVariable Long id,
       @org.springframework.web.bind.annotation.RequestBody UserUpdate userRequest) {
     try {
       userService.updateUser(id, userRequest);
@@ -155,7 +151,7 @@ public class UserController {
   /**
    * Atualiza o papel de um usuário pelo ID.
    *
-   * @param id ID do usuário.
+   * @param id   ID do usuário.
    * @param role Novo papel do usuário.
    * @return Mensagem de sucesso ou erro.
    */
@@ -163,11 +159,8 @@ public class UserController {
   @PatchMapping("/role/{id}")
   @PreAuthorize("hasRole('ADMIN')")
   public ResponseEntity<String> updateUserRole(
-      @Parameter(description = "ID do usuário a ter o papel atualizado", example = "1")
-          @PathVariable
-          Long id,
-      @Parameter(description = "Novo papel do usuário", example = "ADMIN") @RequestParam
-          Role role) {
+      @Parameter(description = "ID do usuário a ter o papel atualizado", example = "1") @PathVariable Long id,
+      @Parameter(description = "Novo papel do usuário", example = "ADMIN") @RequestParam Role role) {
     try {
       userService.updateRole(id, role);
       return ResponseEntity.ok("User role updated successfully");
@@ -181,19 +174,16 @@ public class UserController {
   /**
    * Atualiza as seções de um usuário pelo ID.
    *
-   * @param id ID do usuário.
+   * @param id         ID do usuário.
    * @param sectionIds Novas seções do usuário.
    * @return Mensagem de sucesso ou erro.
    */
   @Operation(description = "Atualiza as seções de um usuário pelo ID.")
-  @io.swagger.v3.oas.annotations.parameters.RequestBody(
-      description = "Lista de IDs das novas seções do usuário")
+  @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Lista de IDs das novas seções do usuário")
   @PatchMapping("/sections/{id}")
   @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
   public ResponseEntity<String> updateUserSections(
-      @Parameter(description = "ID do usuário a ter as seções atualizadas", example = "1")
-          @PathVariable
-          Long id,
+      @Parameter(description = "ID do usuário a ter as seções atualizadas", example = "1") @PathVariable Long id,
       @org.springframework.web.bind.annotation.RequestBody List<Long> sectionIds) {
     try {
       userService.updateSections(id, sectionIds);

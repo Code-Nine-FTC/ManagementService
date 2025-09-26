@@ -12,10 +12,12 @@ import com.codenine.managementservice.repository.UserRepository;
 
 @Service
 public class SupplierCompanyService {
-  @Autowired private com.codenine.managementservice.repository.OrderRepository orderRepository;
+  @Autowired
+  private com.codenine.managementservice.repository.OrderRepository orderRepository;
 
   public SupplierCompanyResponse toResponse(SupplierCompany entity) {
-    if (entity == null) return null;
+    if (entity == null)
+      return null;
     return new SupplierCompanyResponse(
         entity.getId(),
         entity.getName(),
@@ -34,11 +36,14 @@ public class SupplierCompanyService {
             : null);
   }
 
-  @Autowired private UserRepository userRepository;
-  @Autowired private ItemRepository itemRepository;
+  @Autowired
+  private UserRepository userRepository;
+  @Autowired
+  private ItemRepository itemRepository;
 
   public SupplierCompany toEntity(SupplierCompanyRequest req) {
-    if (req == null) return null;
+    if (req == null)
+      return null;
     SupplierCompany entity = new SupplierCompany();
     entity.setName(req.name());
     entity.setEmail(req.email());
@@ -62,9 +67,8 @@ public class SupplierCompanyService {
     return entity;
   }
 
-  @Autowired private SupplierCompanyRepository supplierCompanyRepository;
-
-  // CRUD Methods
+  @Autowired
+  private SupplierCompanyRepository supplierCompanyRepository;
 
   public SupplierCompanyResponse createSupplierCompany(SupplierCompanyRequest req) {
     SupplierCompany entity = toEntity(req);
