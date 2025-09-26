@@ -36,6 +36,10 @@ public class UserSecurityService {
         throw new UserManagementException(
             "Usuário não possui permissão para gerenciar administradores");
       }
+      if (targetUser.getRole().equals(Role.MANAGER)) {
+        throw new UserManagementException(
+            "Usuário não possui permissão para gerenciar outros gerentes");
+      }
       boolean hasPermission =
           user.getSections().stream()
               .anyMatch(
