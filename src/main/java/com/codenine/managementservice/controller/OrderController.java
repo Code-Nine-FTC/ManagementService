@@ -163,4 +163,49 @@ public class OrderController {
       return ResponseEntity.internalServerError().build();
     }
   }
+
+  /**
+   * Processa um pedido pelo ID.
+   *
+   * @param id ID do pedido.
+   * @return 200 OK em caso de sucesso.
+   */
+  @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+  @PatchMapping("/process/{id}")
+  public ResponseEntity<Void> processOrder(
+      @Parameter(description = "ID do pedido a ser processado", example = "1") @PathVariable Long id,
+      Authorization authorization) {
+    try {
+      User lastUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+      orderService.processOrder(id, lastUser);
+      return ResponseEntity.ok().build();
+    } catch (IllegalArgumentException e) {
+      return ResponseEntity.unprocessableEntity().build();
+    } catch (Exception e) {
+      return ResponseEntity.internalServerError().build();
+    }
+  }
+
+  /**
+   * Completa um pedido pelo ID.
+   *
+   * @param id ID do pedido.
+   * @return 200 OK em caso de sucesso.
+   */
+  @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+  @PatchMapping("/complete/{id}")
+  public ResponseEntity<Void> completeOrder(
+      @Parameter(description = "ID do pedido a ser completado", example = "1") @PathVariable Long id,
+      Authorization authorization) {
+    try {
+      User lastUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+      orderService.completeOrder(id, lastUser);
+      return ResponseEntity.ok().build();
+    } catch (IllegalArgumentException e) {
+      return ResponseEntity.unprocessableEntity().build();
+    } catch (Exception e) {
+      return ResponseEntity.internalServerError().build();
+    }
+  }
+
 }

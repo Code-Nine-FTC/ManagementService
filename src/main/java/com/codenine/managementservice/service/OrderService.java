@@ -78,6 +78,22 @@ public class OrderService {
     orderRepository.save(order);
   }
 
+  public void processOrder(Long orderId, User lastUser) {
+    Order order = getOrderById(orderId);
+    order.setStatus(OrderStatus.PROCESSING.name());
+    order.setLastUser(lastUser);
+    order.setLastUpdate(LocalDateTime.now());
+    orderRepository.save(order);
+  }
+
+  public void completeOrder(Long orderId, User lastUser) {
+    Order order = getOrderById(orderId);
+    order.setStatus(OrderStatus.COMPLETED.name());
+    order.setLastUser(lastUser);
+    order.setLastUpdate(LocalDateTime.now());
+    orderRepository.save(order);
+  }
+
   private Order getOrderById(Long id) {
     return orderRepository
         .findById(id)
