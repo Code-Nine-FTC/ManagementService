@@ -97,4 +97,23 @@ public class OrderController {
             return ResponseEntity.notFound().build();
         }
     }
+
+    /**
+     * Remove um pedido pelo ID.
+     * @param id ID do pedido.
+     * @return Sem conteúdo em caso de sucesso.
+     */
+    @Operation(description = "Remove um pedido pelo ID.")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteOrder(
+        @Parameter(description = "ID do pedido a ser removido", example = "1")
+        @PathVariable Long id) {
+        try {
+            orderService.deleteOrder(id);
+            return ResponseEntity.noContent().build();
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
 }
