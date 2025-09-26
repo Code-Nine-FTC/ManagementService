@@ -21,7 +21,9 @@ public interface SupplierCompanyRepository extends JpaRepository<SupplierCompany
           sc.isActive,
           sc.rating,
           sc.lastUpdate,
-          u.name
+          u.name,
+          null,
+          null
       )
       FROM SupplierCompany sc
       LEFT JOIN sc.lastUser u

@@ -33,9 +33,6 @@ public class UserService {
   @Autowired
   private PasswordEncoder passwordEncoder;
 
-  @Autowired
-  private UserMapper userMapper;
-
   public void createUser(UserRequest userRequest) {
     userRepository.findByEmail(userRequest.email())
         .ifPresent(existingUser -> {
@@ -43,7 +40,8 @@ public class UserService {
         });
 
     List<Section> sections = getSectionsByIds(userRequest.sectionIds());
-    User user = userMapper.toEntity(userRequest);
+    String encodedPassword = passwordEncoder.encode(userRequest.password());
+    User user = UserMapper.toEntity(userRequest, encodedPassword);
     user.setSections(sections);
     userRepository.save(user);
   }
@@ -116,26 +114,13 @@ public class UserService {
     userRepository.save(user);
   }
 
-  public void disableUser(Long id) {
-    User user = getUserById(id);
-    user.setIsActive(false);
-    user.setLastUpdate(LocalDateTime.now());
-    userRepository.save(user);
-  }
-
-  public void enableUser(Long id) {
-    User user = getUserById(id);
-    user.setIsActive(true);
-    user.setLastUpdate(LocalDateTime.now());
-    userRepository.save(user);
-  }
-
   public void updateUser(Long id, UserRequest userRequest) {
     User user = getUserById(id);
     if (userRequest.sectionIds() != null) {
       List<Section> sections = getSectionsByIds(userRequest.sectionIds());
       user.setSections(sections);
     }
+    user = UserMapper.toUpdate(user, userRequest);
     user.setLastUpdate(LocalDateTime.now());
     userRepository.save(user);
   }
