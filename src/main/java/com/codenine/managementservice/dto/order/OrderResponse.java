@@ -1,17 +1,13 @@
 package com.codenine.managementservice.dto.order;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
-import com.codenine.managementservice.dto.item.ItemResponse;
-import com.codenine.managementservice.dto.supplier.SupplierCompanyResponse;
-import com.codenine.managementservice.dto.user.UserRequest;
+import org.springframework.boot.autoconfigure.security.SecurityProperties.User;
 
 public record OrderResponse(
     Long id,
-    String status,
     LocalDateTime withdrawDay,
-    LocalDateTime createdAt,
-    UserRequest createdBy,
-    List<ItemResponse> items,
-    List<SupplierCompanyResponse> suppliers) {}
+    String status,
+    User createdBy,
+    User lastUser,
+    LocalDateTime createdAt) {}

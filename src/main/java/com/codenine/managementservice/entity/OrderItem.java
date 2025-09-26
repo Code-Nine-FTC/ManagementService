@@ -13,20 +13,17 @@ import lombok.Data;
 @Data
 @Table(name = "order_item")
 public class OrderItem {
-    @Id
-    @GeneratedValue
-    private Long id;
+  @Id @GeneratedValue private Long id;
 
-    @ManyToOne
-    @JoinColumn(name = "order_id")
-    private Order order;
+  @ManyToOne
+  @JoinColumn(name = "order_id")
+  private Order order;
 
-    @ManyToOne
-    @JoinColumn(name = "item_id")
-    private Item item;
+  @ManyToOne
+  @JoinColumn(name = "item_id")
+  private Item item;
 
-    private Integer quantity;
+  private Integer quantity;
 
-    @OneToMany
-    private User lastUser;
+  @OneToMany private User lastUser;
 }
