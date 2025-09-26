@@ -27,7 +27,6 @@ public class OrderController {
   @Autowired
   private OrderService orderService;
 
-
   /**
    * Cria um novo pedido.
    *
@@ -35,17 +34,16 @@ public class OrderController {
    * @return Dados do pedido criado.
    */
   @Operation(description = "Cria um novo pedido.")
-  @io.swagger.v3.oas.annotations.parameters.RequestBody(
-      description = "Dados do pedido a ser criado")
+  @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Dados do pedido a ser criado")
   @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
   @PostMapping
   public ResponseEntity<?> createOrder(
       @org.springframework.web.bind.annotation.RequestBody OrderRequest request, Authorization authorization) {
-        try{
-          User lastUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-          orderService.createOrder(request, lastUser);
-                return ResponseEntity.ok().build();
-    }  catch (IllegalArgumentException e) {
+    try {
+      User lastUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+      orderService.createOrder(request, lastUser);
+      return ResponseEntity.ok().build();
+    } catch (IllegalArgumentException e) {
       return ResponseEntity.unprocessableEntity().build();
     } catch (Exception e) {
       return ResponseEntity.internalServerError().build();
@@ -53,26 +51,24 @@ public class OrderController {
   }
 
   /**
-   * Atualiza o  pedido.
+   * Atualiza o pedido.
    *
-   * @param id ID do pedido.
+   * @param id   ID do pedido.
    * @param body Corpo contendo o novo status.
    * @return Dados do pedido atualizado.
    */
   @Operation(description = "Atualiza o Pedido.")
-  @io.swagger.v3.oas.annotations.parameters.RequestBody(
-      description = "Novo status do pedido (campo 'status')")
+  @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Novo status do pedido (campo 'status')")
   @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
   @PatchMapping("/{id}/status")
   public ResponseEntity<?> updateOrderStatus(
-      @Parameter(description = "ID do pedido a ser atualizado", example = "1") @PathVariable
-          Long id,
+      @Parameter(description = "ID do pedido a ser atualizado", example = "1") @PathVariable Long id,
       @RequestBody OrderRequest body, Authorization authorization) {
     try {
       User lastUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
       orderService.updateOrder(id, body, lastUser);
-            return ResponseEntity.ok().build();
-    }  catch (IllegalArgumentException e) {
+      return ResponseEntity.ok().build();
+    } catch (IllegalArgumentException e) {
       return ResponseEntity.unprocessableEntity().build();
     } catch (Exception e) {
       return ResponseEntity.internalServerError().build();
@@ -82,29 +78,22 @@ public class OrderController {
   /**
    * Lista todos os pedidos com filtros opcionais.
    *
-   * @param orderId ID específico do pedido (opcional)
-   * @param status Status do pedido (opcional)
+   * @param orderId     ID específico do pedido (opcional)
+   * @param status      Status do pedido (opcional)
    * @param createdById ID do usuário que criou o pedido (opcional)
-   * @param lastUserId ID do usuário que fez a última modificação (opcional)
+   * @param lastUserId  ID do usuário que fez a última modificação (opcional)
    * @return Lista de pedidos.
    */
   @Operation(description = "Lista todos os pedidos com filtros opcionais.")
   @GetMapping
   public ResponseEntity<List<OrderResponse>> getAllOrders(
-      @Parameter(description = "ID específico do pedido", example = "1")
-          @RequestParam(required = false)
-          Long orderId,
-      @Parameter(description = "Status do pedido", example = "PENDING")
-          @RequestParam(required = false)
-          OrderStatus status,
-      @Parameter(description = "Id do fornecedor", example = "1")
-          @RequestParam(required = false)
-          Long supplierId) {
+      @Parameter(description = "ID específico do pedido", example = "1") @RequestParam(required = false) Long orderId,
+      @Parameter(description = "Status do pedido", example = "PENDING") @RequestParam(required = false) OrderStatus status,
+      @Parameter(description = "Id do fornecedor", example = "1") @RequestParam(required = false) Long supplierId) {
     try {
-      List<OrderResponse> responses =
-          orderService.getAllOrders(new OrderFilterCriteria(orderId, status, supplierId));
-            return ResponseEntity.ok(responses);
-    }  catch (IllegalArgumentException e) {
+      List<OrderResponse> responses = orderService.getAllOrders(new OrderFilterCriteria(orderId, status, supplierId));
+      return ResponseEntity.ok(responses);
+    } catch (IllegalArgumentException e) {
       return ResponseEntity.unprocessableEntity().build();
     } catch (Exception e) {
       return ResponseEntity.internalServerError().build();
@@ -123,8 +112,8 @@ public class OrderController {
       @Parameter(description = "ID do pedido a ser buscado", example = "1") @PathVariable Long id) {
     try {
       OrderResponse response = orderService.getOrderByIdResponse(id);
-           return ResponseEntity.ok(response);
-    }  catch (IllegalArgumentException e) {
+      return ResponseEntity.ok(response);
+    } catch (IllegalArgumentException e) {
       return ResponseEntity.unprocessableEntity().build();
     } catch (Exception e) {
       return ResponseEntity.internalServerError().build();
@@ -141,13 +130,13 @@ public class OrderController {
   @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
   @PatchMapping("/cancel/{id}")
   public ResponseEntity<Void> deleteOrder(
-      @Parameter(description = "ID do pedido a ser removido", example = "1") @PathVariable
-          Long id, Authorization authorization) {
+      @Parameter(description = "ID do pedido a ser removido", example = "1") @PathVariable Long id,
+      Authorization authorization) {
     try {
       User lastUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
       orderService.deleteOrder(id, lastUser);
       return ResponseEntity.ok().build();
-    }  catch (IllegalArgumentException e) {
+    } catch (IllegalArgumentException e) {
       return ResponseEntity.unprocessableEntity().build();
     } catch (Exception e) {
       return ResponseEntity.internalServerError().build();
@@ -163,8 +152,8 @@ public class OrderController {
   @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
   @PatchMapping("/approve/{id}")
   public ResponseEntity<Void> approveOrder(
-      @Parameter(description = "ID do pedido a ser aprovado", example = "1") @PathVariable
-          Long id, Authorization authorization) {
+      @Parameter(description = "ID do pedido a ser aprovado", example = "1") @PathVariable Long id,
+      Authorization authorization) {
     try {
       User lastUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
       orderService.orderApproved(id, lastUser);
