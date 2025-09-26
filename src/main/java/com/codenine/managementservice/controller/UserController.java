@@ -1,16 +1,12 @@
 package com.codenine.managementservice.controller;
 
-import java.util.List;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
-import com.codenine.managementservice.dto.user.Role;
 import com.codenine.managementservice.dto.user.UserRequest;
-import com.codenine.managementservice.dto.user.UserUpdate;
 import com.codenine.managementservice.service.UserService;
 import com.codenine.managementservice.utils.exception.UserManagementException;
 
@@ -21,8 +17,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 @RequestMapping("/users")
 public class UserController {
 
-  @Autowired
-  private UserService userService;
+  @Autowired private UserService userService;
 
   /**
    * Cria um novo usuário no sistema.
@@ -31,11 +26,11 @@ public class UserController {
    * @return Mensagem de sucesso ou erro.
    */
   @Operation(description = "Cria um novo usuário no sistema.")
-  @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Dados do usuário a ser criado")
+  @io.swagger.v3.oas.annotations.parameters.RequestBody(
+      description = "Dados do usuário a ser criado")
   @PreAuthorize("@userSecurity.hasUserRegisterPermission(authentication, #userRequest)")
   @PostMapping
-  public ResponseEntity<String> createUser(
-      @RequestBody UserRequest userRequest) {
+  public ResponseEntity<String> createUser(@RequestBody UserRequest userRequest) {
     try {
       userService.createUser(userRequest);
       return ResponseEntity.status(201).body("User created successfully");
@@ -54,7 +49,8 @@ public class UserController {
   @PreAuthorize("@userSecurity.hasUserViewPermission(authentication, #id)")
   @GetMapping("/{id}")
   public ResponseEntity<?> getUser(
-      @Parameter(description = "ID do usuário a ser buscado", example = "1") @PathVariable Long id) {
+      @Parameter(description = "ID do usuário a ser buscado", example = "1") @PathVariable
+          Long id) {
     try {
       var user = userService.getUser(id);
       return ResponseEntity.ok(user);
@@ -88,12 +84,13 @@ public class UserController {
    * @param id ID do usuário.
    * @return Mensagem de sucesso ou erro.
    */
-
   @Operation(description = "Ativa ou desativa um usuário pelo ID.")
   @PatchMapping("/switch/{id}")
   @PreAuthorize("@userSecurity.hasUserManagementPermission(authentication, #id)")
   public ResponseEntity<String> switchUserActive(
-      @Parameter(description = "ID do usuário a ser ativado/desativado", example = "1") @PathVariable Long id) {
+      @Parameter(description = "ID do usuário a ser ativado/desativado", example = "1")
+          @PathVariable
+          Long id) {
     try {
       userService.switchUserActive(id);
       return ResponseEntity.ok("User status switched successfully");
@@ -107,7 +104,7 @@ public class UserController {
   /**
    * Atualiza os dados de um usuário pelo ID.
    *
-   * @param id          ID do usuário.
+   * @param id ID do usuário.
    * @param userRequest Novos dados do usuário.
    * @return Mensagem de sucesso ou erro.
    */
@@ -116,8 +113,11 @@ public class UserController {
   @PutMapping("/{id}")
   @PreAuthorize("@userSecurity.hasUserManagementPermission(authentication, #id)")
   public ResponseEntity<String> updateUser(
-      @Parameter(description = "ID do usuário a ser atualizado", example = "1") @PathVariable Long id,
-      @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Novos dados do usuário") @RequestBody UserRequest userRequest) {
+      @Parameter(description = "ID do usuário a ser atualizado", example = "1") @PathVariable
+          Long id,
+      @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Novos dados do usuário")
+          @RequestBody
+          UserRequest userRequest) {
     try {
       userService.updateUser(id, userRequest);
       return ResponseEntity.ok("User updated successfully");
@@ -127,5 +127,4 @@ public class UserController {
       return ResponseEntity.status(500).body("Error updating user: " + e.getMessage());
     }
   }
-
 }

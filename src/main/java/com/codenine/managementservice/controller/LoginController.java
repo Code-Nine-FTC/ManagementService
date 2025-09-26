@@ -22,14 +22,11 @@ import io.swagger.v3.oas.annotations.Operation;
 @RequestMapping("/login")
 public class LoginController {
 
-  @Autowired
-  private JwtUtil jwtUtil;
+  @Autowired private JwtUtil jwtUtil;
 
-  @Autowired
-  private AuthenticationManager authenticationManager;
+  @Autowired private AuthenticationManager authenticationManager;
 
-  @Autowired
-  private UserRepository userRepository;
+  @Autowired private UserRepository userRepository;
 
   /**
    * Realiza o login do usuário.
@@ -38,7 +35,8 @@ public class LoginController {
    * @return Token JWT e dados do usuário autenticado, ou mensagem de erro.
    */
   @Operation(description = "Realiza o login do usuário.")
-  @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Credenciais de login (email e senha)")
+  @io.swagger.v3.oas.annotations.parameters.RequestBody(
+      description = "Credenciais de login (email e senha)")
   @PostMapping
   public ResponseEntity<?> login(@RequestBody LoginDto credentials) {
     String email = credentials.email();
@@ -56,9 +54,12 @@ public class LoginController {
     User user = userEmail.get();
     authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(email, password));
     List<Long> sectionIds = user.getSections().stream().map(s -> s.getId()).toList();
-    List<SectionDto> sections = user.getSections().stream().map(s -> new SectionDto(s.getId(), s.getTitle())).toList();
+    List<SectionDto> sections =
+        user.getSections().stream().map(s -> new SectionDto(s.getId(), s.getTitle())).toList();
     String token = jwtUtil.generateToken(email, user.getRole(), sectionIds);
     return ResponseEntity.status(200)
-        .body(new LoginResponseDto(token, user.getId(), user.getName(), email, user.getRole().toString(), sections));
+        .body(
+            new LoginResponseDto(
+                token, user.getId(), user.getName(), email, user.getRole().toString(), sections));
   }
 }

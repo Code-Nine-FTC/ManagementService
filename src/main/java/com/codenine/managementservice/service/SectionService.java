@@ -16,8 +16,7 @@ import com.codenine.managementservice.utils.mapper.SectionMapper;
 @Service
 public class SectionService {
 
-  @Autowired
-  private SectionRepository sectionRepository;
+  @Autowired private SectionRepository sectionRepository;
 
   public void createSection(SectionRequest newSection, User lastUser) {
     if (newSection.title() == null || newSection.title().trim().isEmpty()) {

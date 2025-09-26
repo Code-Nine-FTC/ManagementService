@@ -12,7 +12,6 @@ import org.springframework.stereotype.Service;
 import com.codenine.managementservice.dto.user.Role;
 import com.codenine.managementservice.dto.user.UserRequest;
 import com.codenine.managementservice.dto.user.UserResponse;
-import com.codenine.managementservice.dto.user.UserUpdate;
 import com.codenine.managementservice.entity.Section;
 import com.codenine.managementservice.entity.User;
 import com.codenine.managementservice.repository.SectionRepository;
@@ -24,20 +23,19 @@ import jakarta.persistence.EntityNotFoundException;
 @Service
 public class UserService {
 
-  @Autowired
-  private UserRepository userRepository;
+  @Autowired private UserRepository userRepository;
 
-  @Autowired
-  private SectionRepository sectionRepository;
+  @Autowired private SectionRepository sectionRepository;
 
-  @Autowired
-  private PasswordEncoder passwordEncoder;
+  @Autowired private PasswordEncoder passwordEncoder;
 
   public void createUser(UserRequest userRequest) {
-    userRepository.findByEmail(userRequest.email())
-        .ifPresent(existingUser -> {
-          throw new IllegalArgumentException("Email already in use: " + userRequest.email());
-        });
+    userRepository
+        .findByEmail(userRequest.email())
+        .ifPresent(
+            existingUser -> {
+              throw new IllegalArgumentException("Email already in use: " + userRequest.email());
+            });
 
     List<Section> sections = getSectionsByIds(userRequest.sectionIds());
     String encodedPassword = passwordEncoder.encode(userRequest.password());
@@ -50,18 +48,20 @@ public class UserService {
     Optional<User> userOptional = userRepository.findById(id);
     if (userOptional.isPresent()) {
       User user = userOptional.get();
-      UserResponse userResponse = new UserResponse(
-          user.getId(),
-          user.getName(),
-          user.getEmail(),
-          user.getRole(),
-          user.getIsActive(),
-          user.getSections().stream().map(Section::getId).toList(),
-          user.getSections().stream()
-              .map(
-                  section -> new com.codenine.managementservice.dto.section.SectionDto(
-                      section.getId(), section.getTitle()))
-              .toList());
+      UserResponse userResponse =
+          new UserResponse(
+              user.getId(),
+              user.getName(),
+              user.getEmail(),
+              user.getRole(),
+              user.getIsActive(),
+              user.getSections().stream().map(Section::getId).toList(),
+              user.getSections().stream()
+                  .map(
+                      section ->
+                          new com.codenine.managementservice.dto.section.SectionDto(
+                              section.getId(), section.getTitle()))
+                  .toList());
       return userResponse;
     } else {
       throw new EntityNotFoundException("User not found with id: " + id);
@@ -73,37 +73,42 @@ public class UserService {
     if (user.getRole().equals(Role.MANAGER)) {
       List<Long> sectionIds = user.getSections().stream().map(Section::getId).toList();
       List<User> users = userRepository.findBySections_IdIn(sectionIds);
-      List<UserResponse> userResponse = users.stream()
-          .map(
-              u -> new UserResponse(
-                  u.getId(),
-                  u.getName(),
-                  u.getEmail(),
-                  u.getRole(),
-                  u.getIsActive(),
-                  u.getSections().stream().map(Section::getId).toList(),
-                  u.getSections().stream()
-                      .map(
-                          section -> new com.codenine.managementservice.dto.section.SectionDto(
-                              section.getId(), section.getTitle()))
-                      .toList()))
-          .toList();
+      List<UserResponse> userResponse =
+          users.stream()
+              .map(
+                  u ->
+                      new UserResponse(
+                          u.getId(),
+                          u.getName(),
+                          u.getEmail(),
+                          u.getRole(),
+                          u.getIsActive(),
+                          u.getSections().stream().map(Section::getId).toList(),
+                          u.getSections().stream()
+                              .map(
+                                  section ->
+                                      new com.codenine.managementservice.dto.section.SectionDto(
+                                          section.getId(), section.getTitle()))
+                              .toList()))
+              .toList();
       return userResponse;
     }
     return userRepository.findAll().stream()
         .map(
-            u -> new UserResponse(
-                u.getId(),
-                u.getName(),
-                u.getEmail(),
-                u.getRole(),
-                u.getIsActive(),
-                u.getSections().stream().map(Section::getId).toList(),
-                u.getSections().stream()
-                    .map(
-                        section -> new com.codenine.managementservice.dto.section.SectionDto(
-                            section.getId(), section.getTitle()))
-                    .toList()))
+            u ->
+                new UserResponse(
+                    u.getId(),
+                    u.getName(),
+                    u.getEmail(),
+                    u.getRole(),
+                    u.getIsActive(),
+                    u.getSections().stream().map(Section::getId).toList(),
+                    u.getSections().stream()
+                        .map(
+                            section ->
+                                new com.codenine.managementservice.dto.section.SectionDto(
+                                    section.getId(), section.getTitle()))
+                        .toList()))
         .toList();
   }
 
