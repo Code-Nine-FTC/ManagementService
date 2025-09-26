@@ -1,16 +1,12 @@
 package com.codenine.managementservice.controller;
 
-import java.util.List;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
-import com.codenine.managementservice.dto.user.Role;
 import com.codenine.managementservice.dto.user.UserRequest;
-import com.codenine.managementservice.dto.user.UserUpdate;
 import com.codenine.managementservice.service.UserService;
 import com.codenine.managementservice.utils.exception.UserManagementException;
 
@@ -34,14 +30,13 @@ public class UserController {
       description = "Dados do usuário a ser criado")
   @PreAuthorize("@userSecurity.hasUserRegisterPermission(authentication, #userRequest)")
   @PostMapping
-  public ResponseEntity<String> createUser(
-      @org.springframework.web.bind.annotation.RequestBody UserRequest userRequest) {
+  public ResponseEntity<String> createUser(@RequestBody UserRequest userRequest) {
     try {
       userService.createUser(userRequest);
+      return ResponseEntity.status(201).body("User created successfully");
     } catch (Exception e) {
       return ResponseEntity.status(500).body("Error creating user: " + e.getMessage());
     }
-    return ResponseEntity.status(201).body("User created successfully");
   }
 
   /**
@@ -74,9 +69,15 @@ public class UserController {
   @Operation(description = "Lista todos os usuários do sistema.")
   @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
   @GetMapping
-  public ResponseEntity<?> getAllUsers(@Parameter(hidden = true) Authentication authentication) {
+  public ResponseEntity<?> getAllUsers(
+      @Parameter(hidden = true) Authentication authentication,
+      @Parameter(description = "Id da seção", example = "2") @RequestParam(required = false)
+          Long sectionId,
+      @Parameter(description = "Usuário atívo ou inativo", example = "true/false")
+          @RequestParam(required = false)
+          boolean isActive) {
     try {
-      var users = userService.getAllUsers(authentication);
+      var users = userService.getAllUsers(authentication, sectionId, isActive);
       return ResponseEntity.ok(users);
     } catch (Exception e) {
       return ResponseEntity.status(500).body("Error retrieving users: " + e.getMessage());
@@ -84,46 +85,25 @@ public class UserController {
   }
 
   /**
-   * Desativa um usuário pelo ID.
+   * Ativa ou desativa um usuário pelo ID.
    *
    * @param id ID do usuário.
    * @return Mensagem de sucesso ou erro.
    */
-  @Operation(description = "Desativa um usuário pelo ID.")
-  @PatchMapping("/disable/{id}")
+  @Operation(description = "Ativa ou desativa um usuário pelo ID.")
+  @PatchMapping("/switch/{id}")
   @PreAuthorize("@userSecurity.hasUserManagementPermission(authentication, #id)")
-  public ResponseEntity<String> disableUser(
-      @Parameter(description = "ID do usuário a ser desativado", example = "1") @PathVariable
+  public ResponseEntity<String> switchUserActive(
+      @Parameter(description = "ID do usuário a ser ativado/desativado", example = "1")
+          @PathVariable
           Long id) {
     try {
-      userService.disableUser(id);
-      return ResponseEntity.ok("User disabled successfully");
+      userService.switchUserActive(id);
+      return ResponseEntity.ok("User status switched successfully");
     } catch (NullPointerException e) {
       return ResponseEntity.status(404).body(e.getMessage());
     } catch (Exception e) {
-      return ResponseEntity.status(500).body("Error disabling user: " + e.getMessage());
-    }
-  }
-
-  /**
-   * Habilita um usuário pelo ID.
-   *
-   * @param id ID do usuário.
-   * @return Mensagem de sucesso ou erro.
-   */
-  @Operation(description = "Habilita um usuário pelo ID.")
-  @PatchMapping("/enable/{id}")
-  @PreAuthorize("@userSecurity.hasUserManagementPermission(authentication, #id)")
-  public ResponseEntity<String> enableUser(
-      @Parameter(description = "ID do usuário a ser habilitado", example = "1") @PathVariable
-          Long id) {
-    try {
-      userService.enableUser(id);
-      return ResponseEntity.ok("User enabled successfully");
-    } catch (NullPointerException e) {
-      return ResponseEntity.status(404).body(e.getMessage());
-    } catch (Exception e) {
-      return ResponseEntity.status(500).body("Error enabling user: " + e.getMessage());
+      return ResponseEntity.status(500).body("Error switching user status: " + e.getMessage());
     }
   }
 
@@ -141,7 +121,9 @@ public class UserController {
   public ResponseEntity<String> updateUser(
       @Parameter(description = "ID do usuário a ser atualizado", example = "1") @PathVariable
           Long id,
-      @org.springframework.web.bind.annotation.RequestBody UserUpdate userRequest) {
+      @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Novos dados do usuário")
+          @RequestBody
+          UserRequest userRequest) {
     try {
       userService.updateUser(id, userRequest);
       return ResponseEntity.ok("User updated successfully");
@@ -149,59 +131,6 @@ public class UserController {
       return ResponseEntity.status(404).body(e.getMessage());
     } catch (Exception e) {
       return ResponseEntity.status(500).body("Error updating user: " + e.getMessage());
-    }
-  }
-
-  /**
-   * Atualiza o papel de um usuário pelo ID.
-   *
-   * @param id ID do usuário.
-   * @param role Novo papel do usuário.
-   * @return Mensagem de sucesso ou erro.
-   */
-  @Operation(description = "Atualiza o papel de um usuário pelo ID.")
-  @PatchMapping("/role/{id}")
-  @PreAuthorize("hasRole('ADMIN')")
-  public ResponseEntity<String> updateUserRole(
-      @Parameter(description = "ID do usuário a ter o papel atualizado", example = "1")
-          @PathVariable
-          Long id,
-      @Parameter(description = "Novo papel do usuário", example = "ADMIN") @RequestParam
-          Role role) {
-    try {
-      userService.updateRole(id, role);
-      return ResponseEntity.ok("User role updated successfully");
-    } catch (NullPointerException e) {
-      return ResponseEntity.status(404).body(e.getMessage());
-    } catch (Exception e) {
-      return ResponseEntity.status(500).body("Error updating user role: " + e.getMessage());
-    }
-  }
-
-  /**
-   * Atualiza as seções de um usuário pelo ID.
-   *
-   * @param id ID do usuário.
-   * @param sectionIds Novas seções do usuário.
-   * @return Mensagem de sucesso ou erro.
-   */
-  @Operation(description = "Atualiza as seções de um usuário pelo ID.")
-  @io.swagger.v3.oas.annotations.parameters.RequestBody(
-      description = "Lista de IDs das novas seções do usuário")
-  @PatchMapping("/sections/{id}")
-  @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
-  public ResponseEntity<String> updateUserSections(
-      @Parameter(description = "ID do usuário a ter as seções atualizadas", example = "1")
-          @PathVariable
-          Long id,
-      @org.springframework.web.bind.annotation.RequestBody List<Long> sectionIds) {
-    try {
-      userService.updateSections(id, sectionIds);
-      return ResponseEntity.ok("User sections updated successfully");
-    } catch (NullPointerException e) {
-      return ResponseEntity.status(404).body(e.getMessage());
-    } catch (Exception e) {
-      return ResponseEntity.status(500).body("Error updating user sections: " + e.getMessage());
     }
   }
 }

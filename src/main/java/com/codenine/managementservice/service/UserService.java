@@ -12,11 +12,12 @@ import org.springframework.stereotype.Service;
 import com.codenine.managementservice.dto.user.Role;
 import com.codenine.managementservice.dto.user.UserRequest;
 import com.codenine.managementservice.dto.user.UserResponse;
-import com.codenine.managementservice.dto.user.UserUpdate;
 import com.codenine.managementservice.entity.Section;
 import com.codenine.managementservice.entity.User;
 import com.codenine.managementservice.repository.SectionRepository;
 import com.codenine.managementservice.repository.UserRepository;
+import com.codenine.managementservice.utils.NormalizeEmail;
+import com.codenine.managementservice.utils.mapper.UserMapper;
 
 import jakarta.persistence.EntityNotFoundException;
 
@@ -30,17 +31,16 @@ public class UserService {
   @Autowired private PasswordEncoder passwordEncoder;
 
   public void createUser(UserRequest userRequest) {
-    User existingUser = userRepository.findByEmail(userRequest.email()).orElse(null);
-    if (existingUser != null) {
-      throw new IllegalArgumentException("Email already in use: " + userRequest.email());
-    }
+    String email = NormalizeEmail.normalize(userRequest.email());
+    userRepository
+        .findByEmail(email)
+        .ifPresent(
+            existingUser -> {
+              throw new IllegalArgumentException("Email already in use: " + email);
+            });
     List<Section> sections = getSectionsByIds(userRequest.sectionIds());
-    String password = passwordEncoder.encode(userRequest.password());
-    User user = new User();
-    user.setName(userRequest.name());
-    user.setEmail(userRequest.email());
-    user.setPassword(password);
-    user.setRole(userRequest.role());
+    String encodedPassword = passwordEncoder.encode(userRequest.password());
+    User user = UserMapper.toEntity(userRequest, encodedPassword, email);
     user.setSections(sections);
     userRepository.save(user);
   }
@@ -49,121 +49,61 @@ public class UserService {
     Optional<User> userOptional = userRepository.findById(id);
     if (userOptional.isPresent()) {
       User user = userOptional.get();
-      UserResponse userResponse =
-          new UserResponse(
-              user.getId(),
-              user.getName(),
-              user.getEmail(),
-              user.getRole(),
-              user.getIsActive(),
-              user.getSections().stream().map(Section::getId).toList(),
-              user.getSections().stream()
-                  .map(
-                      section ->
-                          new com.codenine.managementservice.dto.section.SectionDto(
-                              section.getId(), section.getTitle()))
-                  .toList());
-      return userResponse;
+      return UserMapper.toResponse(user);
     } else {
       throw new EntityNotFoundException("User not found with id: " + id);
     }
   }
 
-  public List<UserResponse> getAllUsers(Authentication authentication) {
+  public List<UserResponse> getAllUsers(
+      Authentication authentication, Long sectionId, boolean isActive) {
     User user = (User) authentication.getPrincipal();
     if (user.getRole().equals(Role.MANAGER)) {
       List<Long> sectionIds = user.getSections().stream().map(Section::getId).toList();
-      List<User> users = userRepository.findBySections_IdIn(sectionIds);
-      List<UserResponse> userResponse =
-          users.stream()
-              .map(
-                  u ->
-                      new UserResponse(
-                          u.getId(),
-                          u.getName(),
-                          u.getEmail(),
-                          u.getRole(),
-                          u.getIsActive(),
-                          u.getSections().stream().map(Section::getId).toList(),
-                          u.getSections().stream()
-                              .map(
-                                  section ->
-                                      new com.codenine.managementservice.dto.section.SectionDto(
-                                          section.getId(), section.getTitle()))
-                              .toList()))
+      List<User> users =
+          userRepository.findBySections_IdInAndIsActive(sectionIds, isActive).stream()
+              .filter(u -> !u.getRole().equals(Role.ADMIN))
               .toList();
-      return userResponse;
+      return UserMapper.toResponse(users);
     }
-    return userRepository.findAll().stream()
-        .map(
-            u ->
-                new UserResponse(
-                    u.getId(),
-                    u.getName(),
-                    u.getEmail(),
-                    u.getRole(),
-                    u.getIsActive(),
-                    u.getSections().stream().map(Section::getId).toList(),
-                    u.getSections().stream()
-                        .map(
-                            section ->
-                                new com.codenine.managementservice.dto.section.SectionDto(
-                                    section.getId(), section.getTitle()))
-                        .toList()))
-        .toList();
+    List<User> users;
+    if (sectionId != null) {
+      users = userRepository.findBySections_IdInAndIsActive(List.of(sectionId), isActive);
+    } else {
+      users = userRepository.findByIsActive(isActive);
+    }
+    return UserMapper.toResponse(users);
   }
 
-  public void disableUser(Long id) {
-    User user =
-        userRepository
-            .findById(id)
-            .orElseThrow(() -> new EntityNotFoundException("User not found with id: " + id));
-    user.setIsActive(false);
-    userRepository.save(user);
-  }
-
-  public void enableUser(Long id) {
-    User user =
-        userRepository
-            .findById(id)
-            .orElseThrow(() -> new EntityNotFoundException("User not found with id: " + id));
-    user.setIsActive(true);
-    userRepository.save(user);
-  }
-
-  public List<Section> getSectionsByIds(List<Long> sectionIds) {
-    return sectionRepository.findAllById(sectionIds);
-  }
-
-  public void updateUser(Long id, UserUpdate userRequest) {
-    User user =
-        userRepository
-            .findById(id)
-            .orElseThrow(() -> new EntityNotFoundException("User not found with id: " + id));
-    user.setName(userRequest.name());
-    user.setPassword(passwordEncoder.encode(userRequest.password()));
+  public void switchUserActive(Long id) {
+    User user = getUserById(id);
+    user.setIsActive(!user.getIsActive());
     user.setLastUpdate(LocalDateTime.now());
     userRepository.save(user);
   }
 
-  public void updateRole(Long id, Role role) {
-    User user =
-        userRepository
-            .findById(id)
-            .orElseThrow(() -> new EntityNotFoundException("User not found with id: " + id));
-    user.setRole(role);
+  public void updateUser(Long id, UserRequest userRequest) {
+    User user = getUserById(id);
+    if (userRequest.sectionIds() != null) {
+      List<Section> sections = getSectionsByIds(userRequest.sectionIds());
+      user.setSections(sections);
+    }
+    user = UserMapper.toUpdate(user, userRequest);
     user.setLastUpdate(LocalDateTime.now());
     userRepository.save(user);
   }
 
-  public void updateSections(Long id, List<Long> sectionIds) {
-    User user =
-        userRepository
-            .findById(id)
-            .orElseThrow(() -> new EntityNotFoundException("User not found with id: " + id));
-    List<Section> sections = getSectionsByIds(sectionIds);
-    user.setSections(sections);
-    user.setLastUpdate(LocalDateTime.now());
-    userRepository.save(user);
+  private User getUserById(Long id) {
+    return userRepository
+        .findById(id)
+        .orElseThrow(() -> new EntityNotFoundException("User not found with id: " + id));
+  }
+
+  private List<Section> getSectionsByIds(List<Long> sectionIds) {
+    List<Section> sections = sectionRepository.findAllById(sectionIds);
+    if (sections.size() != sectionIds.size()) {
+      throw new EntityNotFoundException("One or more sections not found with provided IDs");
+    }
+    return sections;
   }
 }

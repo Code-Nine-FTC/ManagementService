@@ -64,8 +64,6 @@ public class SupplierCompanyService {
 
   @Autowired private SupplierCompanyRepository supplierCompanyRepository;
 
-  // CRUD Methods
-
   public SupplierCompanyResponse createSupplierCompany(SupplierCompanyRequest req) {
     SupplierCompany entity = toEntity(req);
     SupplierCompany saved = supplierCompanyRepository.save(entity);

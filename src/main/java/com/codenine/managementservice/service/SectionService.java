@@ -57,7 +57,6 @@ public class SectionService {
 
   public void deleteSection(Long id, User lastUser) {
     Section section = getSectionById(id);
-    // Verificar se a seção não tem dependências (ItemTypes, Users, etc.)
     if (section.getItemTypes() != null && !section.getItemTypes().isEmpty()) {
       throw new IllegalStateException("Cannot delete section with associated item types.");
     }

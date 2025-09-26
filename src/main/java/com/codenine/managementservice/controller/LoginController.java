@@ -15,6 +15,7 @@ import com.codenine.managementservice.dto.section.SectionDto;
 import com.codenine.managementservice.entity.User;
 import com.codenine.managementservice.repository.UserRepository;
 import com.codenine.managementservice.security.JwtUtil;
+import com.codenine.managementservice.utils.NormalizeEmail;
 
 import io.swagger.v3.oas.annotations.Operation;
 
@@ -38,29 +39,28 @@ public class LoginController {
   @io.swagger.v3.oas.annotations.parameters.RequestBody(
       description = "Credenciais de login (email e senha)")
   @PostMapping
-  public ResponseEntity<?> login(
-      @org.springframework.web.bind.annotation.RequestBody LoginDto credentials) {
-    String email = credentials.email();
+  public ResponseEntity<?> login(@RequestBody LoginDto credentials) {
+    String email = NormalizeEmail.normalize(credentials.email());
     String password = credentials.password();
 
     Optional<User> userEmail = userRepository.findByEmail(email);
-    if (userEmail.isPresent()) {
-      User user = userEmail.get();
-      authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(email, password));
 
-      List<Long> sectionIds = user.getSections().stream().map(s -> s.getId()).toList();
-
-      List<SectionDto> sections =
-          user.getSections().stream().map(s -> new SectionDto(s.getId(), s.getTitle())).toList();
-
-      String token = jwtUtil.generateToken(email, user.getRole(), sectionIds);
-
-      return ResponseEntity.status(200)
-          .body(
-              new LoginResponseDto(
-                  token, user.getId(), user.getName(), email, user.getRole().toString(), sections));
-    } else {
+    if (userEmail.isEmpty()) {
       return ResponseEntity.status(404).body("Usuário não encontrado");
     }
+    if (!userEmail.get().getIsActive()) {
+      return ResponseEntity.status(403).body("Usuário não Autorizado");
+    }
+
+    User user = userEmail.get();
+    authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(email, password));
+    List<Long> sectionIds = user.getSections().stream().map(s -> s.getId()).toList();
+    List<SectionDto> sections =
+        user.getSections().stream().map(s -> new SectionDto(s.getId(), s.getTitle())).toList();
+    String token = jwtUtil.generateToken(email, user.getRole(), sectionIds);
+    return ResponseEntity.status(200)
+        .body(
+            new LoginResponseDto(
+                token, user.getId(), user.getName(), email, user.getRole().toString(), sections));
   }
 }
