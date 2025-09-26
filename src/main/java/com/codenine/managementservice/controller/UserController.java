@@ -132,12 +132,12 @@ public class UserController {
    * @return Mensagem de sucesso ou erro.
    */
   @Operation(description = "Atualiza os dados de um usuário pelo ID.")
-  @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Novos dados do usuário")
+  @RequestBody(description = "Novos dados do usuário")
   @PutMapping("/{id}")
   @PreAuthorize("@userSecurity.hasUserManagementPermission(authentication, #id)")
   public ResponseEntity<String> updateUser(
       @Parameter(description = "ID do usuário a ser atualizado", example = "1") @PathVariable Long id,
-      @org.springframework.web.bind.annotation.RequestBody UserUpdate userRequest) {
+      @RequestBody UserRequest userRequest) {
     try {
       userService.updateUser(id, userRequest);
       return ResponseEntity.ok("User updated successfully");
