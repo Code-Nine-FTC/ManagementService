@@ -11,10 +11,10 @@ import com.codenine.managementservice.dto.section.SectionDto;
 
 public class UserMapper {
 
-  public static User toEntity(UserRequest userRequest, String passwordEncoder) {
+  public static User toEntity(UserRequest userRequest, String passwordEncoder, String email) {
     User user = new User();
     user.setName(userRequest.name());
-    user.setEmail(userRequest.email());
+    user.setEmail(email);
     user.setPassword(passwordEncoder);
     user.setLastUpdate(LocalDateTime.now());
     return user;

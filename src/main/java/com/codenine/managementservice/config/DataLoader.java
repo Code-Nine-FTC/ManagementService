@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
+import com.codenine.managementservice.utils.NormalizeEmail;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Profile;
@@ -200,9 +201,9 @@ public class DataLoader implements CommandLineRunner {
     for (int i = 0; i < names.length; i++) {
       User user = new User();
       user.setName(names[i]);
-      user.setEmail(names[i].toLowerCase().replace(" ", ".") + "@exercito.mil.br");
+      String email = names[i].toLowerCase().replace(" ", ".") + "@exercito.mil.br";
+      user.setEmail(NormalizeEmail.normalize(email));
       user.setPassword(passwordEncoder.encode("senha" + (i + 1)));
-
       if (names[i].contains("Capitão")) {
         user.setRole(Role.ADMIN);
       } else if (names[i].contains("Tenente") || names[i].contains("Major")) {

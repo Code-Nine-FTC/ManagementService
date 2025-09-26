@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+import com.codenine.managementservice.utils.NormalizeEmail;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -30,16 +31,16 @@ public class UserService {
   @Autowired private PasswordEncoder passwordEncoder;
 
   public void createUser(UserRequest userRequest) {
+    String email = NormalizeEmail.normalize(userRequest.email());
     userRepository
-        .findByEmail(userRequest.email())
+        .findByEmail(email)
         .ifPresent(
             existingUser -> {
-              throw new IllegalArgumentException("Email already in use: " + userRequest.email());
+              throw new IllegalArgumentException("Email already in use: " + email);
             });
-
     List<Section> sections = getSectionsByIds(userRequest.sectionIds());
     String encodedPassword = passwordEncoder.encode(userRequest.password());
-    User user = UserMapper.toEntity(userRequest, encodedPassword);
+    User user = UserMapper.toEntity(userRequest, encodedPassword, email);
     user.setSections(sections);
     userRepository.save(user);
   }

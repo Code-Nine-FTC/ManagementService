@@ -3,6 +3,7 @@ package com.codenine.managementservice.controller;
 import java.util.List;
 import java.util.Optional;
 
+import com.codenine.managementservice.utils.NormalizeEmail;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -39,7 +40,7 @@ public class LoginController {
       description = "Credenciais de login (email e senha)")
   @PostMapping
   public ResponseEntity<?> login(@RequestBody LoginDto credentials) {
-    String email = credentials.email();
+    String email = NormalizeEmail.normalize(credentials.email());
     String password = credentials.password();
 
     Optional<User> userEmail = userRepository.findByEmail(email);
