@@ -83,46 +83,11 @@ public class UserController {
   }
 
   /**
-   * Desativa um usuário pelo ID.
+   * Ativa ou desativa um usuário pelo ID.
    *
    * @param id ID do usuário.
    * @return Mensagem de sucesso ou erro.
    */
-  @Operation(description = "Desativa um usuário pelo ID.")
-  @PatchMapping("/disable/{id}")
-  @PreAuthorize("@userSecurity.hasUserManagementPermission(authentication, #id)")
-  public ResponseEntity<String> disableUser(
-      @Parameter(description = "ID do usuário a ser desativado", example = "1") @PathVariable Long id) {
-    try {
-      userService.disableUser(id);
-      return ResponseEntity.ok("User disabled successfully");
-    } catch (NullPointerException e) {
-      return ResponseEntity.status(404).body(e.getMessage());
-    } catch (Exception e) {
-      return ResponseEntity.status(500).body("Error disabling user: " + e.getMessage());
-    }
-  }
-
-  /**
-   * Habilita um usuário pelo ID.
-   *
-   * @param id ID do usuário.
-   * @return Mensagem de sucesso ou erro.
-   */
-  @Operation(description = "Habilita um usuário pelo ID.")
-  @PatchMapping("/enable/{id}")
-  @PreAuthorize("@userSecurity.hasUserManagementPermission(authentication, #id)")
-  public ResponseEntity<String> enableUser(
-      @Parameter(description = "ID do usuário a ser habilitado", example = "1") @PathVariable Long id) {
-    try {
-      userService.enableUser(id);
-      return ResponseEntity.ok("User enabled successfully");
-    } catch (NullPointerException e) {
-      return ResponseEntity.status(404).body(e.getMessage());
-    } catch (Exception e) {
-      return ResponseEntity.status(500).body("Error enabling user: " + e.getMessage());
-    }
-  }
 
   @Operation(description = "Ativa ou desativa um usuário pelo ID.")
   @PatchMapping("/switch/{id}")
