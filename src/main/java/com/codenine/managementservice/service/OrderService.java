@@ -18,226 +18,45 @@ import com.codenine.managementservice.entity.Section;
 import com.codenine.managementservice.entity.SupplierCompany;
 import com.codenine.managementservice.entity.User;
 import com.codenine.managementservice.repository.ItemRepository;
+import com.codenine.managementservice.repository.OrderItemRepositorio;
 import com.codenine.managementservice.repository.OrderRepository;
 import com.codenine.managementservice.repository.SupplierCompanyRepository;
 import com.codenine.managementservice.repository.UserRepository;
+import com.codenine.managementservice.utils.mapper.OrderMapper;
+import com.codenine.managementservice.entity.OrderItem;
 
 import jakarta.persistence.EntityNotFoundException;
 
 @Service
 public class OrderService {
-  private final OrderRepository orderRepository;
-  private final ItemRepository itemRepository;
-  private final SupplierCompanyRepository supplierRepository;
-  private final UserRepository userRepository;
-
-  @Autowired private UserService userService;
 
   @Autowired
-  public OrderService(
-      OrderRepository orderRepository,
-      ItemRepository itemRepository,
-      SupplierCompanyRepository supplierRepository,
-      UserRepository userRepository) {
-    this.orderRepository = orderRepository;
-    this.itemRepository = itemRepository;
-    this.supplierRepository = supplierRepository;
-    this.userRepository = userRepository;
-  }
+  private OrderRepository orderRepository;
 
-  public Order createOrder(OrderRequest request) {
-    List<Item> items = itemRepository.findAllById(request.itemIds());
-    List<SupplierCompany> suppliers = supplierRepository.findAllById(request.supplierIds());
+  @Autowired
+  private ItemRepository itemRepository;
 
-    if (items.size() != request.itemIds().size()) {
+  @Autowired
+  private SupplierCompanyRepository supplierCompanyRepository;
+
+  @Autowired
+  private UserRepository userRepository;
+
+  @Autowired
+  private OrderItemRepositorio orderItemRepositorio;
+
+  public void createOrder(OrderRequest request, User lastUser) {
+    List<Item> items = itemRepository.findAllById(request.itemQuantities().keySet());
+    if (items.size() != request.itemQuantities().keySet().size())
       throw new IllegalArgumentException("Um ou mais IDs de item são inválidos.");
-    }
-    if (suppliers.size() != request.supplierIds().size()) {
-      throw new IllegalArgumentException("Um ou mais IDs de fornecedor são inválidos.");
-    }
 
-    Order order = new Order();
-    order.setItems(items);
-    order.setSuppliers(suppliers);
-    order.setWithdrawDay(request.withdrawDay());
-    order.setStatus(request.status() != null ? request.status() : "PENDENTE");
+    OrderItem orderItem = new OrderItem();
+    Object[] entities = OrderMapper.toEntity(request, lastUser, orderItem, items);
+    Order order = (Order) entities[0];
+    orderItem = (OrderItem) entities[1];
 
-    Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-    if (principal instanceof UserDetails userDetails) {
-      User user =
-          userRepository
-              .findByEmail(userDetails.getUsername())
-              .orElseThrow(
-                  () ->
-                      new EntityNotFoundException(
-                          "User not found with email: " + userDetails.getUsername()));
-      order.setCreatedBy(user);
-    }
-
-    return orderRepository.save(order);
+    orderRepository.save(order);
+    orderItemRepositorio.save(orderItem);
   }
 
-  public Order updateOrderStatus(Long orderId, String newStatus) {
-    Order order =
-        orderRepository
-            .findById(orderId)
-            .orElseThrow(() -> new IllegalArgumentException("Pedido não encontrado."));
-
-    Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-    if (principal instanceof UserDetails userDetails) {
-      User user =
-          userRepository
-              .findByEmail(userDetails.getUsername())
-              .orElseThrow(
-                  () ->
-                      new EntityNotFoundException(
-                          "User not found with email: " + userDetails.getUsername()));
-      order.updateStatus(newStatus, user);
-    } else {
-      order.updateStatus(newStatus, null);
-    }
-
-    return orderRepository.save(order);
-  }
-
-  public Order updateOrder(Long orderId, OrderRequest request) {
-    Order order =
-        orderRepository
-            .findById(orderId)
-            .orElseThrow(() -> new IllegalArgumentException("Pedido não encontrado."));
-
-    if (request.itemIds() != null && !request.itemIds().isEmpty()) {
-      List<Item> items = itemRepository.findAllById(request.itemIds());
-      if (items.size() != request.itemIds().size()) {
-        throw new IllegalArgumentException("Um ou mais IDs de item são inválidos.");
-      }
-      order.setItems(items);
-    }
-
-    if (request.supplierIds() != null && !request.supplierIds().isEmpty()) {
-      List<SupplierCompany> suppliers = supplierRepository.findAllById(request.supplierIds());
-      if (suppliers.size() != request.supplierIds().size()) {
-        throw new IllegalArgumentException("Um ou mais IDs de fornecedor são inválidos.");
-      }
-      order.setSuppliers(suppliers);
-    }
-
-    if (request.withdrawDay() != null) {
-      order.setWithdrawDay(request.withdrawDay());
-    }
-
-    if (request.status() != null) {
-      order.setStatus(request.status());
-    }
-
-    Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-    if (principal instanceof UserDetails userDetails) {
-      User user =
-          userRepository
-              .findByEmail(userDetails.getUsername())
-              .orElseThrow(
-                  () ->
-                      new EntityNotFoundException(
-                          "User not found with email: " + userDetails.getUsername()));
-      order.setLastUser(user);
-    }
-    order.setLastUpdate(java.time.LocalDateTime.now());
-
-    return orderRepository.save(order);
-  }
-
-  public List<OrderResponse> getAllOrders() {
-    return orderRepository.findAllOrderResponses(null, null, null, null);
-  }
-
-  public List<OrderResponse> getOrdersWithFilters(
-      Long orderId, String status, Long createdById, Long lastUserId) {
-    return orderRepository.findAllOrderResponses(orderId, status, createdById, lastUserId);
-  }
-
-  public OrderResponse getOrderById(Long id) {
-    Order order =
-        orderRepository
-            .findById(id)
-            .orElseThrow(() -> new IllegalArgumentException("Pedido não encontrado."));
-    return toOrderResponse(order);
-  }
-
-  public void deleteOrder(Long id) {
-    Order order =
-        orderRepository
-            .findById(id)
-            .orElseThrow(() -> new IllegalArgumentException("Pedido não encontrado."));
-    orderRepository.delete(order);
-  }
-
-  public OrderResponse toOrderResponse(Order order) {
-    UserRequest createdBy =
-        order.getCreatedBy() != null
-            ? new UserRequest(
-                order.getCreatedBy().getName(),
-                order.getCreatedBy().getEmail(),
-                order.getCreatedBy().getPassword(),
-                order.getCreatedBy().getRole(),
-                order.getCreatedBy().getSections() != null
-                    ? order.getCreatedBy().getSections().stream().map(Section::getId).toList()
-                    : List.of())
-            : null;
-    List<ItemResponse> items =
-        order.getItems() != null
-            ? order.getItems().stream()
-                .map(
-                    item ->
-                        new ItemResponse(
-                            item.getId(), // itemId
-                            item.getName(),
-                            item.getCurrentStock(),
-                            item.getMeasure(),
-                            item.getExpireDate(),
-                            item.getSupplier() != null ? item.getSupplier().getId() : null,
-                            item.getSupplier() != null ? item.getSupplier().getName() : null,
-                            null, // sectionId
-                            null, // sectionName
-                            item.getItemType() != null ? item.getItemType().getId() : null,
-                            item.getItemType() != null ? item.getItemType().getName() : null,
-                            item.getMinimumStock(),
-                            item.getQrCode(),
-                            item.getLastUser() != null ? item.getLastUser().getName() : null,
-                            item.getLastUpdate()))
-                .toList()
-            : List.of();
-    List<SupplierCompanyResponse> suppliers =
-        order.getSuppliers() != null
-            ? order.getSuppliers().stream()
-                .map(
-                    supplier ->
-                        new SupplierCompanyResponse(
-                            supplier.getId(),
-                            supplier.getName(),
-                            supplier.getEmail(),
-                            supplier.getPhoneNumber(),
-                            supplier.getCnpj(),
-                            supplier.getIsActive(),
-                            supplier.getRating(),
-                            supplier.getLastUpdate(),
-                            supplier.getLastUser() != null
-                                ? supplier.getLastUser().getName()
-                                : null,
-                            supplier.getItems() != null
-                                ? supplier.getItems().stream().map(Item::getId).toList()
-                                : List.of(),
-                            supplier.getOrders() != null
-                                ? supplier.getOrders().stream().map(Order::getId).toList()
-                                : List.of()))
-                .toList()
-            : List.of();
-    return new OrderResponse(
-        order.getId(),
-        order.getStatus(),
-        order.getWithdrawDay(),
-        order.getCreatedAt(),
-        createdBy,
-        items,
-        suppliers);
-  }
 }

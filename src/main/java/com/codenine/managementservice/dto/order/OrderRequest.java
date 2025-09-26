@@ -1,7 +1,8 @@
 package com.codenine.managementservice.dto.order;
 
 import java.time.LocalDateTime;
-import java.util.List;
+import java.util.Map;
 
 public record OrderRequest(
-    LocalDateTime withdrawDay, List<Long> itemIds, List<Long> supplierIds, String status) {}
+        LocalDateTime withdrawDay, Map<Long, Integer> itemQuantities) {
+}
