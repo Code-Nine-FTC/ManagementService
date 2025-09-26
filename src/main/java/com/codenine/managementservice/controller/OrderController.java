@@ -1,7 +1,6 @@
 package com.codenine.managementservice.controller;
 
 import java.util.List;
-import java.util.Map;
 
 import org.apache.tomcat.util.http.parser.Authorization;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -111,7 +110,7 @@ public class OrderController {
   public ResponseEntity<OrderResponse> getOrderById(
       @Parameter(description = "ID do pedido a ser buscado", example = "1") @PathVariable Long id) {
     try {
-      OrderResponse response = orderService.getOrderByIdResponse(id);
+      OrderResponse response = orderService.getOrderResponseById(id);
       return ResponseEntity.ok(response);
     } catch (IllegalArgumentException e) {
       return ResponseEntity.unprocessableEntity().build();
@@ -134,7 +133,7 @@ public class OrderController {
       Authorization authorization) {
     try {
       User lastUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-      orderService.deleteOrder(id, lastUser);
+      orderService.cancelOrder(id, lastUser);
       return ResponseEntity.ok().build();
     } catch (IllegalArgumentException e) {
       return ResponseEntity.unprocessableEntity().build();
@@ -156,7 +155,7 @@ public class OrderController {
       Authorization authorization) {
     try {
       User lastUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-      orderService.orderApproved(id, lastUser);
+      orderService.approveOrder(id, lastUser);
       return ResponseEntity.ok().build();
     } catch (IllegalArgumentException e) {
       return ResponseEntity.unprocessableEntity().build();

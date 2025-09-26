@@ -1,21 +1,21 @@
 package com.codenine.managementservice.service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.codenine.managementservice.dto.order.OrderFilterCriteria;
 import com.codenine.managementservice.dto.order.OrderRequest;
 import com.codenine.managementservice.dto.order.OrderResponse;
+import com.codenine.managementservice.dto.order.OrderStatus;
 import com.codenine.managementservice.entity.Item;
 import com.codenine.managementservice.entity.Order;
-import com.codenine.managementservice.entity.OrderItem;
 import com.codenine.managementservice.entity.User;
 import com.codenine.managementservice.repository.ItemRepository;
-import com.codenine.managementservice.repository.OrderItemRepositorio;
 import com.codenine.managementservice.repository.OrderRepository;
-import com.codenine.managementservice.repository.SupplierCompanyRepository;
-import com.codenine.managementservice.repository.UserRepository;
+
 import com.codenine.managementservice.utils.mapper.OrderMapper;
 
 import jakarta.persistence.EntityNotFoundException;
@@ -23,15 +23,11 @@ import jakarta.persistence.EntityNotFoundException;
 @Service
 public class OrderService {
 
-  @Autowired private OrderRepository orderRepository;
+  @Autowired
+  private OrderRepository orderRepository;
 
-  @Autowired private ItemRepository itemRepository;
-
-  @Autowired private SupplierCompanyRepository supplierCompanyRepository;
-
-  @Autowired private UserRepository userRepository;
-
-  @Autowired private OrderItemRepositorio orderItemRepositorio;
+  @Autowired
+  private ItemRepository itemRepository;
 
   public void createOrder(OrderRequest request, User lastUser) {
     List<Item> items = itemRepository.findAllById(request.itemQuantities().keySet());
@@ -54,15 +50,32 @@ public class OrderService {
     orderRepository.save(order);
   }
 
-  public void deleteOrder(Long orderId) {
+  public void cancelOrder(Long orderId, User lastUser) {
     Order order = getOrderById(orderId);
-    order.getOrderItems().forEach(oi -> orderItemRepositorio.delete(oi));
-    orderRepository.delete(order);
-    orderRepository.save(null);
+    order.setStatus(OrderStatus.CANCELLED.name());
+    order.setLastUser(lastUser);
+    order.setLastUpdate(LocalDateTime.now());
+    orderRepository.save(order);
   }
 
-  public List<OrderResponse> getAllOrders(Long userId, OrderStatu status) {
-    return orderRepository.findAllOrderResponses(userId, status);
+  public List<OrderResponse> getAllOrders(OrderFilterCriteria criteria) {
+    return orderRepository.findAllOrderResponses(
+        criteria.userId() != null ? criteria.userId() : null,
+        criteria.status() != null ? criteria.status().name() : null,
+        criteria.supplierId() != null ? criteria.supplierId() : null);
+  }
+
+  public OrderResponse getOrderResponseById(Long orderId) {
+    return orderRepository.findAllOrderResponses(orderId, null, orderId).stream().findFirst()
+        .orElseThrow(() -> new EntityNotFoundException("Ordem com ID " + orderId + " não encontrada."));
+  }
+
+  public void approveOrder(Long orderId, User lastUser) {
+    Order order = getOrderById(orderId);
+    order.setStatus(OrderStatus.APPROVED.name());
+    order.setLastUser(lastUser);
+    order.setLastUpdate(LocalDateTime.now());
+    orderRepository.save(order);
   }
 
   private Order getOrderById(Long id) {
@@ -71,10 +84,4 @@ public class OrderService {
         .orElseThrow(() -> new EntityNotFoundException("Ordem com ID " + id + " não encontrada."));
   }
 
-  private OrderItem getOrderItemById(Long id) {
-    return orderItemRepositorio
-        .findById(id)
-        .orElseThrow(
-            () -> new EntityNotFoundException("Item de ordem com ID " + id + " não encontrado."));
-  }
 }
