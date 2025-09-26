@@ -8,11 +8,11 @@ import org.springframework.data.repository.query.Param;
 
 import com.codenine.managementservice.dto.itemType.ItemTypeResponse;
 import com.codenine.managementservice.entity.ItemType;
-import com.codenine.managementservice.entity.Section;
 
 public interface ItemTypeRepository extends JpaRepository<ItemType, Long> {
 
-  @Query("""
+  @Query(
+      """
       Select new com.codenine.managementservice.dto.itemType.ItemTypeResponse(
       it.id,
       it.name,
@@ -34,7 +34,8 @@ public interface ItemTypeRepository extends JpaRepository<ItemType, Long> {
       @Param("sectionId") Long sectionId,
       @Param("lastUserId") Long lastUserId);
 
-  @Query("""
+  @Query(
+      """
       select it
       from ItemType it
       join it.section s
@@ -42,5 +43,4 @@ public interface ItemTypeRepository extends JpaRepository<ItemType, Long> {
       and (:sectionId IS NULL OR s.id = :sectionId)
       """)
   ItemType findByNameAndSectionId(@Param("name") String name, @Param("sectionId") Long sectionId);
-
 }

@@ -1,6 +1,7 @@
 package com.codenine.managementservice.dto.user;
 
 import java.util.List;
+
 import com.codenine.managementservice.dto.section.SectionDto;
 
 public record UserResponse(
@@ -10,6 +11,4 @@ public record UserResponse(
     Role role,
     boolean isActive,
     List<Long> sectionIds,
-    List<SectionDto> sections
-) {
-}
+    List<SectionDto> sections) {}
