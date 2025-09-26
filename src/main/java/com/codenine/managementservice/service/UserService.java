@@ -127,7 +127,7 @@ public class UserService {
     return sectionRepository.findAllById(sectionIds);
   }
 
-  public void updateUser(Long id, UserUpdate userRequest) {
+  public void updateUser(Long id, UserRequest userRequest) {
     User user = getUserById(id);
     user.setName(userRequest.name());
     user.setPassword(passwordEncoder.encode(userRequest.password()));
@@ -135,19 +135,8 @@ public class UserService {
     userRepository.save(user);
   }
 
-  public void updateRole(Long id, Role role) {
-    User user = userRepository
-        .findById(id)
-        .orElseThrow(() -> new EntityNotFoundException("User not found with id: " + id));
-    user.setRole(role);
-    user.setLastUpdate(LocalDateTime.now());
-    userRepository.save(user);
-  }
-
   public void updateSections(Long id, List<Long> sectionIds) {
-    User user = userRepository
-        .findById(id)
-        .orElseThrow(() -> new EntityNotFoundException("User not found with id: " + id));
+    User user = getUserById(id);
     List<Section> sections = getSectionsByIds(sectionIds);
     user.setSections(sections);
     user.setLastUpdate(LocalDateTime.now());
