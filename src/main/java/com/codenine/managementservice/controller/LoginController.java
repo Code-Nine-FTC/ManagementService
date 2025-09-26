@@ -15,6 +15,7 @@ import com.codenine.managementservice.dto.section.SectionDto;
 import com.codenine.managementservice.entity.User;
 import com.codenine.managementservice.repository.UserRepository;
 import com.codenine.managementservice.security.JwtUtil;
+import com.codenine.managementservice.utils.NormalizeEmail;
 
 import io.swagger.v3.oas.annotations.Operation;
 
@@ -39,7 +40,7 @@ public class LoginController {
       description = "Credenciais de login (email e senha)")
   @PostMapping
   public ResponseEntity<?> login(@RequestBody LoginDto credentials) {
-    String email = credentials.email();
+    String email = NormalizeEmail.normalize(credentials.email());
     String password = credentials.password();
 
     Optional<User> userEmail = userRepository.findByEmail(email);
