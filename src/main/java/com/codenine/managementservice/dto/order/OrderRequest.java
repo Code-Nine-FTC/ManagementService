@@ -4,8 +4,4 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 public record OrderRequest(
-    LocalDateTime withdrawDay,
-    List<Long> itemIds,
-    List<Long> supplierIds,
-    String status
-) {}
+    LocalDateTime withdrawDay, List<Long> itemIds, List<Long> supplierIds, String status) {}

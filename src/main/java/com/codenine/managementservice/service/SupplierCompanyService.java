@@ -3,31 +3,35 @@ package com.codenine.managementservice.service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.codenine.managementservice.entity.SupplierCompany;
-import com.codenine.managementservice.repository.SupplierCompanyRepository;
-import com.codenine.managementservice.repository.UserRepository;
-import com.codenine.managementservice.repository.ItemRepository;
 import com.codenine.managementservice.dto.supplier.SupplierCompanyRequest;
 import com.codenine.managementservice.dto.supplier.SupplierCompanyResponse;
+import com.codenine.managementservice.entity.SupplierCompany;
+import com.codenine.managementservice.repository.ItemRepository;
+import com.codenine.managementservice.repository.SupplierCompanyRepository;
+import com.codenine.managementservice.repository.UserRepository;
 
 @Service
 public class SupplierCompanyService {
   @Autowired private com.codenine.managementservice.repository.OrderRepository orderRepository;
+
   public SupplierCompanyResponse toResponse(SupplierCompany entity) {
     if (entity == null) return null;
     return new SupplierCompanyResponse(
-      entity.getId(),
-      entity.getName(),
-      entity.getEmail(),
-      entity.getPhoneNumber(),
-      entity.getCnpj(),
-      entity.getIsActive(),
-      entity.getRating(),
-      entity.getLastUpdate(),
-      entity.getLastUser() != null ? entity.getLastUser().getName() : null,
-      entity.getItems() != null ? entity.getItems().stream().map(item -> item.getId()).toList() : null,
-      entity.getOrders() != null ? entity.getOrders().stream().map(order -> order.getId()).toList() : null
-    );
+        entity.getId(),
+        entity.getName(),
+        entity.getEmail(),
+        entity.getPhoneNumber(),
+        entity.getCnpj(),
+        entity.getIsActive(),
+        entity.getRating(),
+        entity.getLastUpdate(),
+        entity.getLastUser() != null ? entity.getLastUser().getName() : null,
+        entity.getItems() != null
+            ? entity.getItems().stream().map(item -> item.getId()).toList()
+            : null,
+        entity.getOrders() != null
+            ? entity.getOrders().stream().map(order -> order.getId()).toList()
+            : null);
   }
 
   @Autowired private UserRepository userRepository;
@@ -42,7 +46,7 @@ public class SupplierCompanyService {
     entity.setCnpj(req.cnpj());
     entity.setIsActive(req.isActive());
     entity.setRating(req.rating());
-  entity.setLastUpdate(java.time.LocalDateTime.now());
+    entity.setLastUpdate(java.time.LocalDateTime.now());
     // lastUser
     if (req.lastUserId() != null) {
       entity.setLastUser(userRepository.findById(req.lastUserId()).orElse(null));
@@ -57,6 +61,7 @@ public class SupplierCompanyService {
     }
     return entity;
   }
+
   @Autowired private SupplierCompanyRepository supplierCompanyRepository;
 
   // CRUD Methods
@@ -85,7 +90,8 @@ public class SupplierCompanyService {
 
   public java.util.List<SupplierCompanyResponse> getSupplierCompaniesWithFilters(
       Long supplierId, Boolean isActive, Long lastUserId) {
-    return supplierCompanyRepository.findAllSupplierCompanyResponses(supplierId, isActive, lastUserId);
+    return supplierCompanyRepository.findAllSupplierCompanyResponses(
+        supplierId, isActive, lastUserId);
   }
 
   public void deleteSupplierCompany(Long id) {

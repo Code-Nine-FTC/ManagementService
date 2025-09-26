@@ -1,6 +1,5 @@
 package com.codenine.managementservice.dto.supplier;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 public record SupplierCompanyRequest(
@@ -12,5 +11,4 @@ public record SupplierCompanyRequest(
     Boolean isActive,
     Long lastUserId,
     List<Long> itemIds,
-    List<Long> orderIds
-) {}
+    List<Long> orderIds) {}

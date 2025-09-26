@@ -20,6 +20,14 @@ import com.codenine.managementservice.repository.*;
 @Profile("dev") // Só executa no profile dev
 public class DataLoader implements CommandLineRunner {
 
+  private User _user_adm;
+
+  private List<Section> sections;
+  private SupplierCompany _supplier_mig;
+
+  private List<String> itemExcelFiles =
+      List.of("src/main/resources/almoxarifado.xlsx", "src/main/resources/farmacia.xlsx");
+
   @Autowired private UserRepository userRepository;
 
   @Autowired private SectionRepository sectionRepository;
@@ -31,6 +39,8 @@ public class DataLoader implements CommandLineRunner {
   @Autowired private SupplierCompanyRepository supplierCompanyRepository;
 
   @Autowired private PasswordEncoder passwordEncoder;
+
+  @Autowired private ExcelItemImporter excelItemImporter;
 
   private final Random random = new Random();
 
@@ -48,20 +58,18 @@ public class DataLoader implements CommandLineRunner {
     List<Section> sections = createSections();
     System.out.println("Sections criadas: " + sections.size());
 
-    // Criar item types
-    List<ItemType> itemTypes = createItemTypes(sections.get(0), sections.get(1));
-    System.out.println("ItemTypes criados: " + itemTypes.size());
+    createTypeItemsFromExcel();
+    System.out.println("ItemTypes criados com sucesso.");
 
     // Criar suppliers
     List<SupplierCompany> suppliers = createSuppliers();
-    System.out.println("Suppliers criados: " + suppliers.size());
+    System.out.println("Suppliers criados com sucesso.");
 
+    createItemsFromExcel();
+    System.out.println("Items criados com sucesso.");
     // Criar users
     List<User> users = createUsers(sections);
-    System.out.println("Users criados: " + users.size());
-
-    // Criar items em lotes (muito mais eficiente)
-    createItemsInBatches(users, sections, itemTypes, suppliers);
+    System.out.println("Users criados com sucesso.");
 
     System.out.println("Inserção de dados concluída!");
   }
@@ -81,30 +89,59 @@ public class DataLoader implements CommandLineRunner {
 
     sections.add(almoxarifado);
     sections.add(farmacia);
+    sectionRepository.saveAll(sections);
 
-    return sectionRepository.saveAll(sections);
+    User adminUser = new User();
+    adminUser.setName("Administrador CODE NINE");
+    adminUser.setEmail("codenine@email.com");
+    adminUser.setPassword(passwordEncoder.encode("codenine123"));
+    adminUser.setRole(Role.ADMIN);
+    adminUser.setSections(sections);
+
+    userRepository.save(adminUser);
+
+    almoxarifado.setLastUser(adminUser);
+    almoxarifado.setLastUpdate(LocalDateTime.now());
+
+    farmacia.setLastUser(adminUser);
+    farmacia.setLastUpdate(LocalDateTime.now());
+    this.sections = sections;
+    this._user_adm = adminUser;
+
+    sectionRepository.saveAll(sections);
+
+    return sections;
   }
 
-  private List<ItemType> createItemTypes(Section almoxarifado, Section farmacia) {
-    List<ItemType> itemTypes = new ArrayList<>();
-
-    // Tipos militares
-    for (int i = 1; i <= 50; i++) {
-      ItemType itemType = new ItemType();
-      itemType.setName("Tipo Militar " + i);
-      itemType.setSection(almoxarifado);
-      itemTypes.add(itemType);
+  private void createTypeItemsFromExcel() {
+    try {
+      for (Section section : this.sections) {
+        String filePath =
+            section.getTitle().equalsIgnoreCase("Almoxarifado")
+                ? "src/main/resources/almoxarifado.xlsx"
+                : "src/main/resources/farmacia.xlsx";
+        excelItemImporter.importItemTypesFromExcel(filePath, section.getId(), this._user_adm);
+      }
+      System.out.println("Itens importados do Excel com sucesso.");
+    } catch (Exception e) {
+      System.err.println("Erro ao importar itens do Excel: " + e.getMessage());
     }
+  }
 
-    // Tipos farmácia
-    for (int i = 1; i <= 50; i++) {
-      ItemType itemType = new ItemType();
-      itemType.setName("Tipo Farmácia " + i);
-      itemType.setSection(farmacia);
-      itemTypes.add(itemType);
+  private void createItemsFromExcel() {
+    try {
+      for (Section section : this.sections) {
+        String filePath =
+            section.getTitle().equalsIgnoreCase("Almoxarifado")
+                ? "src/main/resources/almoxarifado.xlsx"
+                : "src/main/resources/farmacia.xlsx";
+        excelItemImporter.importItemsExcel(
+            filePath, section.getId(), this._user_adm, this._supplier_mig);
+      }
+      System.out.println("Itens importados do Excel com sucesso.");
+    } catch (Exception e) {
+      System.err.println("Erro ao importar itens do Excel: " + e.getMessage());
     }
-
-    return itemTypeRepository.saveAll(itemTypes);
   }
 
   private List<SupplierCompany> createSuppliers() {
@@ -133,8 +170,22 @@ public class DataLoader implements CommandLineRunner {
       supplier.setEmail(emails[i]);
       supplier.setPhoneNumber(phones[i]);
       supplier.setIsActive(true);
+      supplier.setLastUpdate(LocalDateTime.now());
+      supplier.setLastUser(this._user_adm);
       suppliers.add(supplier);
     }
+    SupplierCompany migrationSupplier = new SupplierCompany();
+    migrationSupplier.setName("Usuario de Migração");
+    migrationSupplier.setCnpj("99.999.999/0001-99");
+    migrationSupplier.setEmail("migration@supplier.com");
+    migrationSupplier.setPhoneNumber("(99) 9999-9999");
+    migrationSupplier.setIsActive(true);
+    migrationSupplier.setLastUpdate(LocalDateTime.now());
+    migrationSupplier.setLastUser(this._user_adm);
+    suppliers.add(migrationSupplier);
+
+    supplierCompanyRepository.save(migrationSupplier);
+    this._supplier_mig = migrationSupplier;
 
     return supplierCompanyRepository.saveAll(suppliers);
   }
@@ -166,96 +217,7 @@ public class DataLoader implements CommandLineRunner {
 
       users.add(user);
     }
-    User adminUser = new User();
-    adminUser.setName("Administrador CODE NINE");
-    adminUser.setEmail("codenine@email.com");
-    adminUser.setPassword(passwordEncoder.encode("codenine123"));
-    adminUser.setRole(Role.ADMIN);
-    adminUser.setSections(sections);
-    users.add(adminUser);
 
     return userRepository.saveAll(users);
-  }
-
-  private void createItemsInBatches(
-      List<User> users,
-      List<Section> sections,
-      List<ItemType> itemTypes,
-      List<SupplierCompany> suppliers) {
-    String[] almoxarifadoItems = {
-      "Calça Camuflada", "Radio HT Motorola", "Fuzil IA2", "Cartucho 5.56mm",
-      "Chave Inglesa", "Barraca Militar", "Prancheta de Ordem", "Capacete Balístico"
-    };
-
-    String[] farmaciaItems = {
-      "Kit Primeiros Socorros", "Termômetro Digital", "Álcool Gel", "Luvas Cirúrgicas",
-      "Máscara Descartável", "Soro Fisiológico", "Esparadrapo", "Medicamento Analgésico"
-    };
-
-    String[] cores = {"Verde", "Preto", "Cinza", "Azul"};
-    String[] tamanhos = {"P", "M", "G", "GG"};
-
-    // Inserir em lotes de 1000 para performance
-    int batchSize = 1000;
-    List<Item> batch = new ArrayList<>();
-
-    // Items do Almoxarifado
-    Section almoxarifado = sections.get(0);
-    for (int i = 1; i <= 7000; i++) {
-      Item item = new Item();
-      String nameBase = almoxarifadoItems[random.nextInt(almoxarifadoItems.length)];
-      String cor = cores[random.nextInt(cores.length)];
-      String tamanho = tamanhos[random.nextInt(tamanhos.length)];
-
-      item.setName(nameBase + " " + cor + " " + tamanho + " " + i);
-      item.setMeasure("unidade");
-      item.setExpireDate(LocalDateTime.of(2026, 12, 31, 23, 59, 59));
-      item.setMinimumStock(random.nextInt(20) + 1);
-      int maxStock = item.getMinimumStock() + random.nextInt(200) + 10;
-      item.setCurrentStock(
-          random.nextInt(maxStock - item.getMinimumStock()) + item.getMinimumStock());
-      item.setQrCode("QR" + String.format("%05d", i));
-      item.setIsActive(true);
-      item.setLastUser(users.get(random.nextInt(users.size())));
-      item.setItemType(itemTypes.get((i - 1) % 50)); // Tipos militares (0-49)
-      item.setSupplier(suppliers.get(random.nextInt(suppliers.size())));
-
-      batch.add(item);
-
-      if (batch.size() == batchSize || i == 7000) {
-        itemRepository.saveAll(batch);
-        batch.clear();
-        System.out.println("Inseridos " + i + " items do almoxarifado...");
-      }
-    }
-
-    // Items da Farmácia
-    Section farmacia = sections.get(1);
-    for (int i = 7001; i <= 10000; i++) {
-      Item item = new Item();
-      String nameBase = farmaciaItems[random.nextInt(farmaciaItems.length)];
-      String lote = "Lote " + String.format("%04d", i);
-
-      item.setName(nameBase + " " + lote);
-      item.setMeasure("unidade");
-      item.setExpireDate(LocalDateTime.of(2026, 12, 31, 23, 59, 59));
-      item.setMinimumStock(random.nextInt(20) + 1);
-      int maxStock = item.getMinimumStock() + random.nextInt(200) + 10;
-      item.setCurrentStock(
-          random.nextInt(maxStock - item.getMinimumStock()) + item.getMinimumStock());
-      item.setQrCode("QR" + String.format("%05d", i));
-      item.setIsActive(true);
-      item.setLastUser(users.get(random.nextInt(users.size())));
-      item.setItemType(itemTypes.get(50 + ((i - 7001) % 50))); // Tipos farmácia (50-99)
-      item.setSupplier(suppliers.get(random.nextInt(suppliers.size())));
-
-      batch.add(item);
-
-      if (batch.size() == batchSize || i == 10000) {
-        itemRepository.saveAll(batch);
-        batch.clear();
-        System.out.println("Inseridos " + (i - 7000) + " items da farmácia...");
-      }
-    }
   }
 }
