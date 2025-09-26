@@ -124,6 +124,21 @@ public class UserController {
     }
   }
 
+  @Operation(description = "Ativa ou desativa um usuário pelo ID.")
+  @PatchMapping("/switch/{id}")
+  @PreAuthorize("@userSecurity.hasUserManagementPermission(authentication, #id)")
+  public ResponseEntity<String> switchUserActive(
+      @Parameter(description = "ID do usuário a ser ativado/desativado", example = "1") @PathVariable Long id) {
+    try {
+      userService.switchUserActive(id);
+      return ResponseEntity.ok("User status switched successfully");
+    } catch (NullPointerException e) {
+      return ResponseEntity.status(404).body(e.getMessage());
+    } catch (Exception e) {
+      return ResponseEntity.status(500).body("Error switching user status: " + e.getMessage());
+    }
+  }
+
   /**
    * Atualiza os dados de um usuário pelo ID.
    *
@@ -132,12 +147,12 @@ public class UserController {
    * @return Mensagem de sucesso ou erro.
    */
   @Operation(description = "Atualiza os dados de um usuário pelo ID.")
-  @RequestBody(description = "Novos dados do usuário")
+  @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Novos dados do usuário")
   @PutMapping("/{id}")
   @PreAuthorize("@userSecurity.hasUserManagementPermission(authentication, #id)")
   public ResponseEntity<String> updateUser(
       @Parameter(description = "ID do usuário a ser atualizado", example = "1") @PathVariable Long id,
-      @RequestBody UserRequest userRequest) {
+      @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Novos dados do usuário") @RequestBody UserRequest userRequest) {
     try {
       userService.updateUser(id, userRequest);
       return ResponseEntity.ok("User updated successfully");
@@ -148,50 +163,4 @@ public class UserController {
     }
   }
 
-  /**
-   * Atualiza o papel de um usuário pelo ID.
-   *
-   * @param id   ID do usuário.
-   * @param role Novo papel do usuário.
-   * @return Mensagem de sucesso ou erro.
-   */
-  @Operation(description = "Atualiza o papel de um usuário pelo ID.")
-  @PatchMapping("/role/{id}")
-  @PreAuthorize("hasRole('ADMIN')")
-  public ResponseEntity<String> updateUserRole(
-      @Parameter(description = "ID do usuário a ter o papel atualizado", example = "1") @PathVariable Long id,
-      @Parameter(description = "Novo papel do usuário", example = "ADMIN") @RequestParam Role role) {
-    try {
-      userService.updateRole(id, role);
-      return ResponseEntity.ok("User role updated successfully");
-    } catch (NullPointerException e) {
-      return ResponseEntity.status(404).body(e.getMessage());
-    } catch (Exception e) {
-      return ResponseEntity.status(500).body("Error updating user role: " + e.getMessage());
-    }
-  }
-
-  /**
-   * Atualiza as seções de um usuário pelo ID.
-   *
-   * @param id         ID do usuário.
-   * @param sectionIds Novas seções do usuário.
-   * @return Mensagem de sucesso ou erro.
-   */
-  @Operation(description = "Atualiza as seções de um usuário pelo ID.")
-  @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Lista de IDs das novas seções do usuário")
-  @PatchMapping("/sections/{id}")
-  @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
-  public ResponseEntity<String> updateUserSections(
-      @Parameter(description = "ID do usuário a ter as seções atualizadas", example = "1") @PathVariable Long id,
-      @org.springframework.web.bind.annotation.RequestBody List<Long> sectionIds) {
-    try {
-      userService.updateSections(id, sectionIds);
-      return ResponseEntity.ok("User sections updated successfully");
-    } catch (NullPointerException e) {
-      return ResponseEntity.status(404).body(e.getMessage());
-    } catch (Exception e) {
-      return ResponseEntity.status(500).body("Error updating user sections: " + e.getMessage());
-    }
-  }
 }

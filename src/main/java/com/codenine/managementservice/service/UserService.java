@@ -109,6 +109,13 @@ public class UserService {
         .toList();
   }
 
+  public void switchUserActive(Long id) {
+    User user = getUserById(id);
+    user.setIsActive(!user.getIsActive());
+    user.setLastUpdate(LocalDateTime.now());
+    userRepository.save(user);
+  }
+
   public void disableUser(Long id) {
     User user = getUserById(id);
     user.setIsActive(false);
@@ -123,22 +130,12 @@ public class UserService {
     userRepository.save(user);
   }
 
-  public List<Section> getSectionsByIds(List<Long> sectionIds) {
-    return sectionRepository.findAllById(sectionIds);
-  }
-
   public void updateUser(Long id, UserRequest userRequest) {
     User user = getUserById(id);
-    user.setName(userRequest.name());
-    user.setPassword(passwordEncoder.encode(userRequest.password()));
-    user.setLastUpdate(LocalDateTime.now());
-    userRepository.save(user);
-  }
-
-  public void updateSections(Long id, List<Long> sectionIds) {
-    User user = getUserById(id);
-    List<Section> sections = getSectionsByIds(sectionIds);
-    user.setSections(sections);
+    if (userRequest.sectionIds() != null) {
+      List<Section> sections = getSectionsByIds(userRequest.sectionIds());
+      user.setSections(sections);
+    }
     user.setLastUpdate(LocalDateTime.now());
     userRepository.save(user);
   }
@@ -147,5 +144,13 @@ public class UserService {
     return userRepository
         .findById(id)
         .orElseThrow(() -> new EntityNotFoundException("User not found with id: " + id));
+  }
+
+  private List<Section> getSectionsByIds(List<Long> sectionIds) {
+    List<Section> sections = sectionRepository.findAllById(sectionIds);
+    if (sections.size() != sectionIds.size()) {
+      throw new EntityNotFoundException("One or more sections not found with provided IDs");
+    }
+    return sections;
   }
 }
