@@ -18,7 +18,6 @@ public class Item {
   @Column(nullable = false)
   private String name;
 
-  @Column(nullable = false)
   private String measure;
 
   private LocalDateTime expireDate;
@@ -38,15 +37,14 @@ public class Item {
   @Column(columnDefinition = "TEXT")
   private String archiveInfo;
 
-  @ManyToOne private User lastUser;
-
-  @ManyToOne private SupplierCompany supplier;
+  @ManyToOne
+  private User lastUser;
 
   @ManyToOne
-  @JoinTable(
-      name = "item_item_type",
-      joinColumns = @JoinColumn(name = "item_id"),
-      inverseJoinColumns = @JoinColumn(name = "item_type_id"))
+  private SupplierCompany supplier;
+
+  @ManyToOne
+  @JoinTable(name = "item_item_type", joinColumns = @JoinColumn(name = "item_id"), inverseJoinColumns = @JoinColumn(name = "item_type_id"))
   private ItemType itemType;
 
   @ManyToMany(mappedBy = "items")
