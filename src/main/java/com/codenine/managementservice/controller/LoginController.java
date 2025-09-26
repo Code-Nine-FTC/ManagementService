@@ -3,7 +3,6 @@ package com.codenine.managementservice.controller;
 import java.util.List;
 import java.util.Optional;
 
-import com.codenine.managementservice.utils.NormalizeEmail;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -16,6 +15,7 @@ import com.codenine.managementservice.dto.section.SectionDto;
 import com.codenine.managementservice.entity.User;
 import com.codenine.managementservice.repository.UserRepository;
 import com.codenine.managementservice.security.JwtUtil;
+import com.codenine.managementservice.utils.NormalizeEmail;
 
 import io.swagger.v3.oas.annotations.Operation;
 

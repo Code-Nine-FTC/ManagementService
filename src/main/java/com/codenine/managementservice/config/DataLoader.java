@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-import com.codenine.managementservice.utils.NormalizeEmail;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Profile;
@@ -16,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.codenine.managementservice.dto.user.Role;
 import com.codenine.managementservice.entity.*;
 import com.codenine.managementservice.repository.*;
+import com.codenine.managementservice.utils.NormalizeEmail;
 
 @Component
 @Profile("dev") // Só executa no profile dev

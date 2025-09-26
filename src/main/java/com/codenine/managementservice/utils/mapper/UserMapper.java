@@ -3,11 +3,11 @@ package com.codenine.managementservice.utils.mapper;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import com.codenine.managementservice.dto.section.SectionDto;
 import com.codenine.managementservice.dto.user.UserRequest;
 import com.codenine.managementservice.dto.user.UserResponse;
 import com.codenine.managementservice.entity.Section;
 import com.codenine.managementservice.entity.User;
-import com.codenine.managementservice.dto.section.SectionDto;
 
 public class UserMapper {
 
@@ -38,10 +38,7 @@ public class UserMapper {
         user.getIsActive(),
         user.getSections().stream().map(Section::getId).toList(),
         user.getSections().stream()
-            .map(
-                section ->
-                    new SectionDto(
-                            section.getId(), section.getTitle()))
+            .map(section -> new SectionDto(section.getId(), section.getTitle()))
             .toList());
   }
 

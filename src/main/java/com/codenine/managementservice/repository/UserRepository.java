@@ -3,7 +3,6 @@ package com.codenine.managementservice.repository;
 import java.util.List;
 import java.util.Optional;
 
-import com.codenine.managementservice.dto.user.UserResponse;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import com.codenine.managementservice.entity.User;

@@ -70,12 +70,12 @@ public class UserController {
   @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
   @GetMapping
   public ResponseEntity<?> getAllUsers(
-          @Parameter(hidden = true) Authentication authentication,
-          @Parameter(description = "Id da seção", example = "2") @RequestParam(required = false)
-            Long sectionId,
-          @Parameter(description = "Usuário atívo ou inativo", example = "true/false") @RequestParam(required = false)
-            boolean isActive
-  ) {
+      @Parameter(hidden = true) Authentication authentication,
+      @Parameter(description = "Id da seção", example = "2") @RequestParam(required = false)
+          Long sectionId,
+      @Parameter(description = "Usuário atívo ou inativo", example = "true/false")
+          @RequestParam(required = false)
+          boolean isActive) {
     try {
       var users = userService.getAllUsers(authentication, sectionId, isActive);
       return ResponseEntity.ok(users);

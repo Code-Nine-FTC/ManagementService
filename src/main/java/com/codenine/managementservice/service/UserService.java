@@ -4,7 +4,6 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
-import com.codenine.managementservice.utils.NormalizeEmail;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -17,6 +16,7 @@ import com.codenine.managementservice.entity.Section;
 import com.codenine.managementservice.entity.User;
 import com.codenine.managementservice.repository.SectionRepository;
 import com.codenine.managementservice.repository.UserRepository;
+import com.codenine.managementservice.utils.NormalizeEmail;
 import com.codenine.managementservice.utils.mapper.UserMapper;
 
 import jakarta.persistence.EntityNotFoundException;
@@ -49,27 +49,28 @@ public class UserService {
     Optional<User> userOptional = userRepository.findById(id);
     if (userOptional.isPresent()) {
       User user = userOptional.get();
-        return UserMapper.toResponse(user);
+      return UserMapper.toResponse(user);
     } else {
       throw new EntityNotFoundException("User not found with id: " + id);
     }
   }
 
-  public List<UserResponse> getAllUsers(Authentication authentication, Long sectionId, boolean isActive) {
+  public List<UserResponse> getAllUsers(
+      Authentication authentication, Long sectionId, boolean isActive) {
     User user = (User) authentication.getPrincipal();
     if (user.getRole().equals(Role.MANAGER)) {
       List<Long> sectionIds = user.getSections().stream().map(Section::getId).toList();
-      List<User> users = userRepository.findBySections_IdInAndIsActive(sectionIds, isActive)
-              .stream()
+      List<User> users =
+          userRepository.findBySections_IdInAndIsActive(sectionIds, isActive).stream()
               .filter(u -> !u.getRole().equals(Role.ADMIN))
               .toList();
-        return UserMapper.toResponse(users);
+      return UserMapper.toResponse(users);
     }
     List<User> users;
     if (sectionId != null) {
-        users = userRepository.findBySections_IdInAndIsActive(List.of(sectionId), isActive);
-        } else {
-        users = userRepository.findByIsActive(isActive);
+      users = userRepository.findBySections_IdInAndIsActive(List.of(sectionId), isActive);
+    } else {
+      users = userRepository.findByIsActive(isActive);
     }
     return UserMapper.toResponse(users);
   }
