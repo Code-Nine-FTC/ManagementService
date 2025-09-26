@@ -48,68 +48,29 @@ public class UserService {
     Optional<User> userOptional = userRepository.findById(id);
     if (userOptional.isPresent()) {
       User user = userOptional.get();
-      UserResponse userResponse =
-          new UserResponse(
-              user.getId(),
-              user.getName(),
-              user.getEmail(),
-              user.getRole(),
-              user.getIsActive(),
-              user.getSections().stream().map(Section::getId).toList(),
-              user.getSections().stream()
-                  .map(
-                      section ->
-                          new com.codenine.managementservice.dto.section.SectionDto(
-                              section.getId(), section.getTitle()))
-                  .toList());
-      return userResponse;
+        return UserMapper.toResponse(user);
     } else {
       throw new EntityNotFoundException("User not found with id: " + id);
     }
   }
 
-  public List<UserResponse> getAllUsers(Authentication authentication) {
+  public List<UserResponse> getAllUsers(Authentication authentication, Long sectionId, boolean isActive) {
     User user = (User) authentication.getPrincipal();
     if (user.getRole().equals(Role.MANAGER)) {
       List<Long> sectionIds = user.getSections().stream().map(Section::getId).toList();
-      List<User> users = userRepository.findBySections_IdIn(sectionIds);
-      List<UserResponse> userResponse =
-          users.stream()
-              .map(
-                  u ->
-                      new UserResponse(
-                          u.getId(),
-                          u.getName(),
-                          u.getEmail(),
-                          u.getRole(),
-                          u.getIsActive(),
-                          u.getSections().stream().map(Section::getId).toList(),
-                          u.getSections().stream()
-                              .map(
-                                  section ->
-                                      new com.codenine.managementservice.dto.section.SectionDto(
-                                          section.getId(), section.getTitle()))
-                              .toList()))
+      List<User> users = userRepository.findBySections_IdInAndIsActive(sectionIds, isActive)
+              .stream()
+              .filter(u -> !u.getRole().equals(Role.ADMIN))
               .toList();
-      return userResponse;
+        return UserMapper.toResponse(users);
     }
-    return userRepository.findAll().stream()
-        .map(
-            u ->
-                new UserResponse(
-                    u.getId(),
-                    u.getName(),
-                    u.getEmail(),
-                    u.getRole(),
-                    u.getIsActive(),
-                    u.getSections().stream().map(Section::getId).toList(),
-                    u.getSections().stream()
-                        .map(
-                            section ->
-                                new com.codenine.managementservice.dto.section.SectionDto(
-                                    section.getId(), section.getTitle()))
-                        .toList()))
-        .toList();
+    List<User> users;
+    if (sectionId != null) {
+        users = userRepository.findBySections_IdInAndIsActive(List.of(sectionId), isActive);
+        } else {
+        users = userRepository.findByIsActive(isActive);
+    }
+    return UserMapper.toResponse(users);
   }
 
   public void switchUserActive(Long id) {
