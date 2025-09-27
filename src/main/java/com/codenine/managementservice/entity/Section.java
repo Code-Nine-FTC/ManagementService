@@ -28,8 +28,7 @@ public class Section {
 
   private LocalDateTime lastUpdate = LocalDateTime.now();
 
-  @ManyToOne
-  private User lastUser;
+  @ManyToOne private User lastUser;
 
   @ManyToMany(mappedBy = "sections")
   private List<User> users;

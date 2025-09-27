@@ -12,7 +12,8 @@ import com.codenine.managementservice.entity.Order;
 
 public interface OrderRepository extends JpaRepository<Order, Long> {
 
-  @Query("""
+  @Query(
+      """
       SELECT new com.codenine.managementservice.dto.order.OrderResponse(
           o.id,
           o.withdrawDay,
@@ -35,10 +36,13 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
 
       """)
   List<OrderResponse> findAllOrderResponses(
-      @Param("orderId") Long orderId, @Param("status") String status, @Param("supplierId") Long supplierId,
+      @Param("orderId") Long orderId,
+      @Param("status") String status,
+      @Param("supplierId") Long supplierId,
       @Param("sectionId") Long sectionId);
 
-  @Query("""
+  @Query(
+      """
       select new com.codenine.managementservice.dto.order.OrderItemResponse(
           o.id,
           oi.item.id,

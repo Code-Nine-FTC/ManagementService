@@ -24,20 +24,18 @@ import jakarta.persistence.EntityNotFoundException;
 @Service
 public class OrderService {
 
-  @Autowired
-  private OrderRepository orderRepository;
+  @Autowired private OrderRepository orderRepository;
 
-  @Autowired
-  private ItemRepository itemRepository;
+  @Autowired private ItemRepository itemRepository;
 
-  @Autowired
-  private SectionRepository sectionRepository;
+  @Autowired private SectionRepository sectionRepository;
 
   public void createOrder(OrderRequest request, User lastUser) {
     List<Item> items = itemRepository.findAllById(request.itemQuantities().keySet());
     if (items.size() != request.itemQuantities().keySet().size())
       throw new IllegalArgumentException("Um ou mais IDs de item são inválidos.");
-    Section section = sectionRepository.findById(lastUser.getSections().get(0).getId()).orElse(null);
+    Section section =
+        sectionRepository.findById(lastUser.getSections().get(0).getId()).orElse(null);
     Order order = OrderMapper.toEntity(request, lastUser, items, section);
 
     orderRepository.save(order);
@@ -71,8 +69,10 @@ public class OrderService {
   }
 
   public OrderResponse getOrderResponseById(Long orderId) {
-    return orderRepository.findAllOrderResponses(orderId, null, orderId, null).stream().findFirst()
-        .orElseThrow(() -> new EntityNotFoundException("Ordem com ID " + orderId + " não encontrada."));
+    return orderRepository.findAllOrderResponses(orderId, null, orderId, null).stream()
+        .findFirst()
+        .orElseThrow(
+            () -> new EntityNotFoundException("Ordem com ID " + orderId + " não encontrada."));
   }
 
   public void approveOrder(Long orderId, User lastUser) {
@@ -104,5 +104,4 @@ public class OrderService {
         .findById(id)
         .orElseThrow(() -> new EntityNotFoundException("Ordem com ID " + id + " não encontrada."));
   }
-
 }

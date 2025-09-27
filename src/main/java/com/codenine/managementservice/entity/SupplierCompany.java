@@ -10,9 +10,7 @@ import lombok.Data;
 @Entity
 @Table(name = "suppliers_companies")
 public class SupplierCompany {
-  @GeneratedValue
-  @Id
-  private Long id;
+  @GeneratedValue @Id private Long id;
 
   @Column(nullable = false)
   private String name;
@@ -32,10 +30,7 @@ public class SupplierCompany {
 
   private LocalDateTime lastUpdate = LocalDateTime.now();
 
-  @ManyToOne
-  private User lastUser;
+  @ManyToOne private User lastUser;
 
-  @OneToMany
-  private List<Item> items;
-
+  @OneToMany private List<Item> items;
 }

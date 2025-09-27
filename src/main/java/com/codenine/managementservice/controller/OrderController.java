@@ -23,8 +23,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 @RequestMapping("/orders")
 public class OrderController {
 
-  @Autowired
-  private OrderService orderService;
+  @Autowired private OrderService orderService;
 
   /**
    * Cria um novo pedido.
@@ -33,11 +32,13 @@ public class OrderController {
    * @return Dados do pedido criado.
    */
   @Operation(description = "Cria um novo pedido.")
-  @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Dados do pedido a ser criado")
+  @io.swagger.v3.oas.annotations.parameters.RequestBody(
+      description = "Dados do pedido a ser criado")
   @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
   @PostMapping
   public ResponseEntity<?> createOrder(
-      @org.springframework.web.bind.annotation.RequestBody OrderRequest request, Authorization authorization) {
+      @org.springframework.web.bind.annotation.RequestBody OrderRequest request,
+      Authorization authorization) {
     try {
       User lastUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
       orderService.createOrder(request, lastUser);
@@ -52,17 +53,20 @@ public class OrderController {
   /**
    * Atualiza o pedido.
    *
-   * @param id   ID do pedido.
+   * @param id ID do pedido.
    * @param body Corpo contendo o novo status.
    * @return Dados do pedido atualizado.
    */
   @Operation(description = "Atualiza o Pedido.")
-  @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Novo status do pedido (campo 'status')")
+  @io.swagger.v3.oas.annotations.parameters.RequestBody(
+      description = "Novo status do pedido (campo 'status')")
   @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
   @PatchMapping("/{id}/status")
   public ResponseEntity<?> updateOrderStatus(
-      @Parameter(description = "ID do pedido a ser atualizado", example = "1") @PathVariable Long id,
-      @RequestBody OrderRequest body, Authorization authorization) {
+      @Parameter(description = "ID do pedido a ser atualizado", example = "1") @PathVariable
+          Long id,
+      @RequestBody OrderRequest body,
+      Authorization authorization) {
     try {
       User lastUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
       orderService.updateOrder(id, body, lastUser);
@@ -77,22 +81,29 @@ public class OrderController {
   /**
    * Lista todos os pedidos com filtros opcionais.
    *
-   * @param orderId     ID específico do pedido (opcional)
-   * @param status      Status do pedido (opcional)
+   * @param orderId ID específico do pedido (opcional)
+   * @param status Status do pedido (opcional)
    * @param createdById ID do usuário que criou o pedido (opcional)
-   * @param lastUserId  ID do usuário que fez a última modificação (opcional)
+   * @param lastUserId ID do usuário que fez a última modificação (opcional)
    * @return Lista de pedidos.
    */
   @Operation(description = "Lista todos os pedidos com filtros opcionais.")
   @GetMapping
   public ResponseEntity<List<OrderResponse>> getAllOrders(
-      @Parameter(description = "ID específico do pedido", example = "1") @RequestParam(required = false) Long orderId,
-      @Parameter(description = "Status do pedido", example = "PENDING") @RequestParam(required = false) OrderStatus status,
-      @Parameter(description = "Id do fornecedor", example = "1") @RequestParam(required = false) Long supplierId,
-      @Parameter(description = "Id da seção", example = "1") @RequestParam(required = false) Long sectionId) {
+      @Parameter(description = "ID específico do pedido", example = "1")
+          @RequestParam(required = false)
+          Long orderId,
+      @Parameter(description = "Status do pedido", example = "PENDING")
+          @RequestParam(required = false)
+          OrderStatus status,
+      @Parameter(description = "Id do fornecedor", example = "1") @RequestParam(required = false)
+          Long supplierId,
+      @Parameter(description = "Id da seção", example = "1") @RequestParam(required = false)
+          Long sectionId) {
     try {
-      List<OrderResponse> responses = orderService
-          .getAllOrders(new OrderFilterCriteria(orderId, status, supplierId, sectionId));
+      List<OrderResponse> responses =
+          orderService.getAllOrders(
+              new OrderFilterCriteria(orderId, status, supplierId, sectionId));
       return ResponseEntity.ok(responses);
     } catch (IllegalArgumentException e) {
       return ResponseEntity.unprocessableEntity().build();
@@ -175,7 +186,8 @@ public class OrderController {
   @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
   @PatchMapping("/process/{id}")
   public ResponseEntity<Void> processOrder(
-      @Parameter(description = "ID do pedido a ser processado", example = "1") @PathVariable Long id,
+      @Parameter(description = "ID do pedido a ser processado", example = "1") @PathVariable
+          Long id,
       Authorization authorization) {
     try {
       User lastUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
@@ -197,7 +209,8 @@ public class OrderController {
   @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
   @PatchMapping("/complete/{id}")
   public ResponseEntity<Void> completeOrder(
-      @Parameter(description = "ID do pedido a ser completado", example = "1") @PathVariable Long id,
+      @Parameter(description = "ID do pedido a ser completado", example = "1") @PathVariable
+          Long id,
       Authorization authorization) {
     try {
       User lastUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
@@ -209,5 +222,4 @@ public class OrderController {
       return ResponseEntity.internalServerError().build();
     }
   }
-
 }

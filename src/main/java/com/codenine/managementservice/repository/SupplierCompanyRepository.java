@@ -11,7 +11,8 @@ import com.codenine.managementservice.entity.SupplierCompany;
 
 public interface SupplierCompanyRepository extends JpaRepository<SupplierCompany, Long> {
 
-  @Query("""
+  @Query(
+      """
       SELECT new com.codenine.managementservice.dto.supplier.SupplierCompanyResponse(
           sc.id,
           sc.name,
