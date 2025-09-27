@@ -40,7 +40,8 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
 
   @Query("""
       select new com.codenine.managementservice.dto.order.OrderItemResponse(
-          o.id,
+          oi.id,
+          o.id as ordemId,
           oi.item.id,
           oi.item.name,
           oi.quantity,
