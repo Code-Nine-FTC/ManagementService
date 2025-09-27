@@ -88,9 +88,11 @@ public class OrderController {
   public ResponseEntity<List<OrderResponse>> getAllOrders(
       @Parameter(description = "ID específico do pedido", example = "1") @RequestParam(required = false) Long orderId,
       @Parameter(description = "Status do pedido", example = "PENDING") @RequestParam(required = false) OrderStatus status,
-      @Parameter(description = "Id do fornecedor", example = "1") @RequestParam(required = false) Long supplierId) {
+      @Parameter(description = "Id do fornecedor", example = "1") @RequestParam(required = false) Long supplierId,
+      @Parameter(description = "Id da seção", example = "1") @RequestParam(required = false) Long sectionId) {
     try {
-      List<OrderResponse> responses = orderService.getAllOrders(new OrderFilterCriteria(orderId, status, supplierId));
+      List<OrderResponse> responses = orderService
+          .getAllOrders(new OrderFilterCriteria(orderId, status, supplierId, sectionId));
       return ResponseEntity.ok(responses);
     } catch (IllegalArgumentException e) {
       return ResponseEntity.unprocessableEntity().build();

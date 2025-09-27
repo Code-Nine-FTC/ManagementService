@@ -28,7 +28,8 @@ public class Section {
 
   private LocalDateTime lastUpdate = LocalDateTime.now();
 
-  @ManyToOne private User lastUser;
+  @ManyToOne
+  private User lastUser;
 
   @ManyToMany(mappedBy = "sections")
   private List<User> users;
@@ -36,4 +37,8 @@ public class Section {
   @OneToMany(mappedBy = "section")
   @JsonIgnoreProperties("section")
   private List<ItemType> itemTypes;
+
+  @OneToMany(mappedBy = "section")
+  @JsonIgnoreProperties("section")
+  private List<Order> orders;
 }

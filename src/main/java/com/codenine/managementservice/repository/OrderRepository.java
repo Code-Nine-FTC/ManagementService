@@ -27,12 +27,16 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
       LEFT JOIN o.orderItems oi
       LEFT JOIN oi.item i
       LEFT JOIN i.supplier s
+      LEFT JOIN o.section sec
       WHERE (:supplierId IS NULL OR s.id = :supplierId)
         AND (:orderId IS NULL OR o.id = :orderId)
         AND (:status IS NULL OR o.status = :status)
+        AND (:sectionId IS NULL OR sec.id = :sectionId)
+
       """)
   List<OrderResponse> findAllOrderResponses(
-      @Param("orderId") Long orderId, @Param("status") String status, @Param("supplierId") Long supplierId);
+      @Param("orderId") Long orderId, @Param("status") String status, @Param("supplierId") Long supplierId,
+      @Param("sectionId") Long sectionId);
 
   @Query("""
       select new com.codenine.managementservice.dto.order.OrderItemResponse(
