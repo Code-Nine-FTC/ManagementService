@@ -71,7 +71,7 @@ public class SupplierCompanyService {
   }
 
   public SupplierCompanyResponse updateSupplierCompany(Long id, SupplierCompanyRequest req) {
-    SupplierCompany existing = getSupplierCompanyById(id);
+    getSupplierCompanyById(id);
     SupplierCompany entity = toEntity(req);
     entity.setId(id);
     SupplierCompany updated = supplierCompanyRepository.save(entity);
