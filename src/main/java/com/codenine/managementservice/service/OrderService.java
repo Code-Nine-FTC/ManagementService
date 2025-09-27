@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.codenine.managementservice.dto.order.OrderFilterCriteria;
+import com.codenine.managementservice.dto.order.OrderItemResponse;
 import com.codenine.managementservice.dto.order.OrderRequest;
 import com.codenine.managementservice.dto.order.OrderResponse;
 import com.codenine.managementservice.dto.order.OrderStatus;
@@ -24,18 +25,20 @@ import jakarta.persistence.EntityNotFoundException;
 @Service
 public class OrderService {
 
-  @Autowired private OrderRepository orderRepository;
+  @Autowired
+  private OrderRepository orderRepository;
 
-  @Autowired private ItemRepository itemRepository;
+  @Autowired
+  private ItemRepository itemRepository;
 
-  @Autowired private SectionRepository sectionRepository;
+  @Autowired
+  private SectionRepository sectionRepository;
 
   public void createOrder(OrderRequest request, User lastUser) {
     List<Item> items = itemRepository.findAllById(request.itemQuantities().keySet());
     if (items.size() != request.itemQuantities().keySet().size())
       throw new IllegalArgumentException("Um ou mais IDs de item são inválidos.");
-    Section section =
-        sectionRepository.findById(lastUser.getSections().get(0).getId()).orElse(null);
+    Section section = sectionRepository.findById(lastUser.getSections().get(0).getId()).orElse(null);
     Order order = OrderMapper.toEntity(request, lastUser, items, section);
 
     orderRepository.save(order);
@@ -66,6 +69,11 @@ public class OrderService {
         criteria.status() != null ? criteria.status().name() : null,
         criteria.supplierId() != null ? criteria.supplierId() : null,
         criteria.sectionId() != null ? criteria.sectionId() : null);
+  }
+
+  public List<OrderItemResponse> getOrderItemsByOrderId(Long orderId) {
+    getOrderById(orderId);
+    return orderRepository.findAllOrderItemResponsesByOrderId(orderId);
   }
 
   public OrderResponse getOrderResponseById(Long orderId) {
