@@ -21,6 +21,9 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.PathVariable;
 
 @RestController
 @RequestMapping("/orders")
@@ -53,24 +56,14 @@ public class OrderController {
     }
   }
 
-  /**
-   * Atualiza o pedido.
-   *
-   * @param id   ID do pedido.
-   * @param body Corpo contendo o novo status.
-   * @return Dados do pedido atualizado.
-   */
-  @Operation(description = "Atualiza o Pedido.")
-  @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Novo status do pedido (campo 'status')")
-  @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
-  @PatchMapping("/{id}/status")
-  public ResponseEntity<?> updateOrderStatus(
-      @Parameter(description = "ID do pedido a ser atualizado", example = "1") @PathVariable Long id,
-      @RequestBody OrderRequest body,
+  @PutMapping("/{id}")
+  public ResponseEntity<?> updateOrder(
+      @PathVariable Long id,
+      @RequestBody OrderRequest request,
       Authorization authorization) {
     try {
       User lastUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-      orderService.updateOrder(id, body, lastUser);
+      orderService.updateOrder(id, request, lastUser);
       return ResponseEntity.ok().build();
     } catch (IllegalArgumentException e) {
       return ResponseEntity.unprocessableEntity().build();
