@@ -13,30 +13,35 @@ import com.codenine.managementservice.entity.Order;
 public interface OrderRepository extends JpaRepository<Order, Long> {
 
   @Query("""
-      SELECT new com.codenine.managementservice.dto.order.OrderResponse(
-          o.id,
-          o.withdrawDay,
-          o.status,
-          o.createdBy,
-          o.lastUser,
-          o.createdAt
+      SELECT distinct new com.codenine.managementservice.dto.order.OrderResponse(
+        o.id,
+        o.withdrawDay,
+        o.status,
+        cb.id,
+        cb.name,
+        lu.id,
+        lu.name,
+        o.createdAt
       )
       FROM Order o
       LEFT JOIN o.createdBy cb
       LEFT JOIN o.lastUser lu
-      LEFT JOIN o.orderItems oi
-      LEFT JOIN oi.item i
-      LEFT JOIN i.supplier s
-      WHERE (:supplierId IS NULL OR s.id = :supplierId)
-        AND (:orderId IS NULL OR o.id = :orderId)
+      LEFT JOIN o.section sec
+      WHERE (:orderId IS NULL OR o.id = :orderId)
         AND (:status IS NULL OR o.status = :status)
+        AND (:sectionId IS NULL OR sec.id = :sectionId)
+
       """)
   List<OrderResponse> findAllOrderResponses(
-      @Param("orderId") Long orderId, @Param("status") String status, @Param("supplierId") Long supplierId);
+      @Param("orderId") Long orderId,
+      @Param("status") String status,
+      @Param("supplierId") Long supplierId,
+      @Param("sectionId") Long sectionId);
 
   @Query("""
       select new com.codenine.managementservice.dto.order.OrderItemResponse(
-          o.id,
+          oi.id,
+          o.id as ordemId,
           oi.item.id,
           oi.item.name,
           oi.quantity,

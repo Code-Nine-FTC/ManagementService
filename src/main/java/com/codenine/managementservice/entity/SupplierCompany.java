@@ -33,7 +33,4 @@ public class SupplierCompany {
   @ManyToOne private User lastUser;
 
   @OneToMany private List<Item> items;
-
-  @ManyToMany(mappedBy = "suppliers")
-  private List<Order> orders;
 }

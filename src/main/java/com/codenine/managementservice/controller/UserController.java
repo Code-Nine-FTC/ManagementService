@@ -75,9 +75,10 @@ public class UserController {
           Long sectionId,
       @Parameter(description = "Usuário atívo ou inativo", example = "true/false")
           @RequestParam(required = false)
-          boolean isActive) {
+          Boolean isActive) {
     try {
-      var users = userService.getAllUsers(authentication, sectionId, isActive);
+      boolean active = isActive == null ? true : isActive;
+      var users = userService.getAllUsers(authentication, sectionId, active);
       return ResponseEntity.ok(users);
     } catch (Exception e) {
       return ResponseEntity.status(500).body("Error retrieving users: " + e.getMessage());

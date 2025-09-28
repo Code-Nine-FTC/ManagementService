@@ -13,5 +13,4 @@ public record SupplierCompanyResponse(
     Integer rating,
     LocalDateTime lastUpdate,
     String lastUserName,
-    List<Long> itemIds,
-    List<Long> orderIds) {}
+    List<Long> itemIds) {}

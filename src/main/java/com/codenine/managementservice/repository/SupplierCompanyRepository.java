@@ -23,7 +23,6 @@ public interface SupplierCompanyRepository extends JpaRepository<SupplierCompany
           sc.rating,
           sc.lastUpdate,
           u.name,
-          null,
           null
       )
       FROM SupplierCompany sc

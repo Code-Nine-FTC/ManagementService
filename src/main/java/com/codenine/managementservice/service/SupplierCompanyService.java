@@ -12,7 +12,6 @@ import com.codenine.managementservice.repository.UserRepository;
 
 @Service
 public class SupplierCompanyService {
-  @Autowired private com.codenine.managementservice.repository.OrderRepository orderRepository;
 
   public SupplierCompanyResponse toResponse(SupplierCompany entity) {
     if (entity == null) return null;
@@ -28,9 +27,6 @@ public class SupplierCompanyService {
         entity.getLastUser() != null ? entity.getLastUser().getName() : null,
         entity.getItems() != null
             ? entity.getItems().stream().map(item -> item.getId()).toList()
-            : null,
-        entity.getOrders() != null
-            ? entity.getOrders().stream().map(order -> order.getId()).toList()
             : null);
   }
 
@@ -55,10 +51,7 @@ public class SupplierCompanyService {
     if (req.itemIds() != null && !req.itemIds().isEmpty()) {
       entity.setItems(itemRepository.findAllById(req.itemIds()));
     }
-    // orders
-    if (req.orderIds() != null && !req.orderIds().isEmpty()) {
-      entity.setOrders(orderRepository.findAllById(req.orderIds()));
-    }
+
     return entity;
   }
 

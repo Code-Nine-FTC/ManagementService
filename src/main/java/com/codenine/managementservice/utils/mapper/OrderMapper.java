@@ -11,17 +11,20 @@ import com.codenine.managementservice.dto.order.OrderStatus;
 import com.codenine.managementservice.entity.Item;
 import com.codenine.managementservice.entity.Order;
 import com.codenine.managementservice.entity.OrderItem;
+import com.codenine.managementservice.entity.Section;
 import com.codenine.managementservice.entity.User;
 
 public class OrderMapper {
 
-  public static Order toEntity(OrderRequest orderRequest, User lastUser, List<Item> items) {
+  public static Order toEntity(
+      OrderRequest orderRequest, User lastUser, List<Item> items, Section section) {
     Map<Long, Item> itemMap =
         items.stream().collect(Collectors.toMap(Item::getId, Function.identity()));
     Order order = new Order();
     order.setWithdrawDay(orderRequest.withdrawDay());
     order.setCreatedBy(lastUser);
     order.setLastUser(lastUser);
+    order.setSection(section);
     order.setStatus(OrderStatus.PENDING.name());
     order.setCreatedAt(LocalDateTime.now());
 
