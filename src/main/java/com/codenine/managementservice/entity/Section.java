@@ -3,6 +3,8 @@ package com.codenine.managementservice.entity;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -17,6 +19,9 @@ public class Section {
   @Column(nullable = false)
   private String title;
 
+  @Column(name = "role_access")
+  private Integer roleAccess;
+
   private Boolean isActive = true;
 
   private LocalDateTime createdAt = LocalDateTime.now();
@@ -29,5 +34,10 @@ public class Section {
   private List<User> users;
 
   @OneToMany(mappedBy = "section")
+  @JsonIgnoreProperties("section")
   private List<ItemType> itemTypes;
+
+  @OneToMany(mappedBy = "section")
+  @JsonIgnoreProperties("section")
+  private List<Order> orders;
 }

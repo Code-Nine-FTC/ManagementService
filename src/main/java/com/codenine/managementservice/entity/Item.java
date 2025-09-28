@@ -18,7 +18,6 @@ public class Item {
   @Column(nullable = false)
   private String name;
 
-  @Column(nullable = false)
   private String measure;
 
   private LocalDateTime expireDate;
@@ -49,6 +48,6 @@ public class Item {
       inverseJoinColumns = @JoinColumn(name = "item_type_id"))
   private ItemType itemType;
 
-  @ManyToMany(mappedBy = "items")
-  private List<Order> orders;
+  @OneToMany(mappedBy = "item")
+  private List<OrderItem> orderItems;
 }

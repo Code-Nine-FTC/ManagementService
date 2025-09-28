@@ -10,6 +10,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import com.codenine.managementservice.dto.user.Role;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import jakarta.persistence.*;
 import lombok.Data;
@@ -46,6 +47,7 @@ public class User implements UserDetails {
       name = "user_section",
       joinColumns = @JoinColumn(name = "user_id"),
       inverseJoinColumns = @JoinColumn(name = "section_id"))
+  @JsonIgnoreProperties({"users", "itemTypes"})
   private List<Section> sections;
 
   @Override

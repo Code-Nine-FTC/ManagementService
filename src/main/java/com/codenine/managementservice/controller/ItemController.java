@@ -16,6 +16,10 @@ import com.codenine.managementservice.entity.User;
 import com.codenine.managementservice.service.ItemLossService;
 import com.codenine.managementservice.service.ItemService;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
+
 @RestController
 @RequestMapping("/items")
 public class ItemController {
@@ -24,10 +28,19 @@ public class ItemController {
 
   @Autowired private ItemLossService itemLossService;
 
+  /**
+   * Cria um novo item.
+   *
+   * @param entity Dados do item a ser criado.
+   * @return Mensagem de sucesso ou erro.
+   */
+  @Operation(description = "Cria um novo item.")
+  @RequestBody(description = "Dados do item a ser criado")
   @PreAuthorize("@itemSecurity.hasItemManagementPermission(authentication, #entity.itemTypeId())")
-  @PostMapping("/")
+  @PostMapping
   public ResponseEntity<String> createItem(
-      @RequestBody ItemRequest entity, Authentication authentication) {
+      @org.springframework.web.bind.annotation.RequestBody ItemRequest entity,
+      @Parameter(hidden = true) Authentication authentication) {
     try {
       User lastUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
       itemService.createItem(entity, lastUser);
@@ -37,8 +50,16 @@ public class ItemController {
     return ResponseEntity.status(201).body("Item created successfully");
   }
 
+  /**
+   * Busca um item pelo ID.
+   *
+   * @param id ID do item.
+   * @return Dados do item ou mensagem de erro.
+   */
+  @Operation(description = "Busca um item pelo ID.")
   @GetMapping("/{id}")
-  public ResponseEntity<?> getItem(@PathVariable Long id) {
+  public ResponseEntity<?> getItem(
+      @Parameter(description = "ID do item a ser buscado", example = "1") @PathVariable Long id) {
     try {
       var item = itemService.getItem(id);
       return ResponseEntity.ok(item);
@@ -49,14 +70,34 @@ public class ItemController {
     }
   }
 
-  @GetMapping("/")
+  /**
+   * Lista todos os itens, com filtros opcionais.
+   *
+   * @param supplierId ID do fornecedor (opcional)
+   * @param sectionId ID da seção (opcional)
+   * @param itemTypeId ID do tipo de item (opcional)
+   * @param lastUserId ID do último usuário (opcional)
+   * @param isActive Se o item está ativo (opcional)
+   * @param itemId ID do item (opcional)
+   * @return Lista de itens.
+   */
+  @Operation(description = "Lista todos os itens, com filtros opcionais.")
+  @GetMapping
   public ResponseEntity<?> getAllItems(
-      @RequestParam(required = false) Long supplierId,
-      @RequestParam(required = false) Long sectionId,
-      @RequestParam(required = false) Long itemTypeId,
-      @RequestParam(required = false) Long lastUserId,
-      @RequestParam(required = false) Boolean isActive,
-      @RequestParam(required = false) Long itemId) {
+      @Parameter(description = "ID do fornecedor", example = "1") @RequestParam(required = false)
+          Long supplierId,
+      @Parameter(description = "ID da seção", example = "2") @RequestParam(required = false)
+          Long sectionId,
+      @Parameter(description = "ID do tipo de item", example = "3") @RequestParam(required = false)
+          Long itemTypeId,
+      @Parameter(description = "ID do último usuário", example = "4")
+          @RequestParam(required = false)
+          Long lastUserId,
+      @Parameter(description = "Se o item está ativo", example = "true")
+          @RequestParam(required = false)
+          Boolean isActive,
+      @Parameter(description = "ID do item", example = "5") @RequestParam(required = false)
+          Long itemId) {
     try {
       var items =
           itemService.getItemsByFilter(
@@ -68,10 +109,21 @@ public class ItemController {
     }
   }
 
+  /**
+   * Atualiza os dados de um item existente.
+   *
+   * @param id ID do item a ser atualizado.
+   * @param entity Novos dados do item.
+   * @return Mensagem de sucesso ou erro.
+   */
+  @Operation(description = "Atualiza os dados de um item existente.")
+  @RequestBody(description = "Novos dados do item")
   @PreAuthorize("@itemSecurity.hasItemManagementPermission(authentication, #id)")
   @PutMapping("/{id}")
   public ResponseEntity<?> updateItem(
-      @PathVariable Long id, @RequestBody ItemRequest entity, Authorization authentication) {
+      @Parameter(description = "ID do item a ser atualizado", example = "1") @PathVariable Long id,
+      @org.springframework.web.bind.annotation.RequestBody ItemRequest entity,
+      @Parameter(hidden = true) Authorization authentication) {
     try {
       User lastUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
       itemService.updateItem(id, entity, lastUser);
@@ -83,9 +135,19 @@ public class ItemController {
     }
   }
 
+  /**
+   * Desabilita um item.
+   *
+   * @param id ID do item a ser desabilitado.
+   * @return Mensagem de sucesso ou erro.
+   */
+  @Operation(description = "Desabilita um item.")
   @PreAuthorize("@itemSecurity.hasItemManagementPermission(authentication, #id)")
   @PatchMapping("/disable/{id}")
-  public ResponseEntity<?> disableItem(@PathVariable Long id, Authorization authentication) {
+  public ResponseEntity<?> disableItem(
+      @Parameter(description = "ID do item a ser desabilitado", example = "1") @PathVariable
+          Long id,
+      @Parameter(hidden = true) Authorization authentication) {
     try {
       User lastUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
       itemService.disableItem(id, lastUser);
@@ -97,9 +159,20 @@ public class ItemController {
     }
   }
 
+  /**
+   * Arquiva um item.
+   *
+   * @param id ID do item a ser arquivado.
+   * @param archiveItem Dados do arquivo.
+   * @return Mensagem de sucesso ou erro.
+   */
+  @Operation(description = "Arquiva um item.")
+  @RequestBody(description = "Dados do arquivo")
   @PatchMapping("/archive/{id}")
   public ResponseEntity<?> archiveItem(
-      @PathVariable Long id, @RequestBody ArchiveItem archiveItem, Authorization authentication) {
+      @Parameter(description = "ID do item a ser arquivado", example = "1") @PathVariable Long id,
+      @org.springframework.web.bind.annotation.RequestBody ArchiveItem archiveItem,
+      @Parameter(hidden = true) Authorization authentication) {
     try {
       User lastUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
       itemService.archiveItem(id, archiveItem, lastUser);
@@ -111,9 +184,18 @@ public class ItemController {
     }
   }
 
+  /**
+   * Cria um registro de perda de item.
+   *
+   * @param request Dados da perda do item.
+   * @return Mensagem de sucesso ou erro.
+   */
+  @Operation(description = "Cria um registro de perda de item.")
+  @RequestBody(description = "Dados da perda do item")
   @PostMapping("/loss")
   public ResponseEntity<?> createItemLoss(
-      @RequestBody ItemLossRequest request, Authorization authentication) {
+      @org.springframework.web.bind.annotation.RequestBody ItemLossRequest request,
+      @Parameter(hidden = true) Authorization authentication) {
     try {
       User lastUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
       itemLossService.createItemLoss(request, lastUser);
@@ -123,9 +205,21 @@ public class ItemController {
     return ResponseEntity.status(201).body("Item loss created successfully");
   }
 
+  /**
+   * Atualiza um registro de perda de item existente.
+   *
+   * @param id ID da perda do item a ser atualizada.
+   * @param request Novos dados da perda do item.
+   * @return Mensagem de sucesso ou erro.
+   */
+  @Operation(description = "Atualiza um registro de perda de item existente.")
+  @RequestBody(description = "Novos dados da perda do item")
   @PutMapping("/loss/{id}")
   public ResponseEntity<?> updateItemLoss(
-      @PathVariable Long id, @RequestBody ItemLossRequest request, Authorization authentication) {
+      @Parameter(description = "ID da perda do item a ser atualizada", example = "1") @PathVariable
+          Long id,
+      @org.springframework.web.bind.annotation.RequestBody ItemLossRequest request,
+      @Parameter(hidden = true) Authorization authentication) {
     try {
       User lastUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
       itemLossService.updateItemLoss(id, request, lastUser);

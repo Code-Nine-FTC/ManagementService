@@ -9,6 +9,11 @@ public class GlobalExceptionHandler {
   @ExceptionHandler(UserSectionMismatchException.class)
   public ResponseEntity<String> handleUserSectionMismatchException(
       UserSectionMismatchException ex) {
-    return ResponseEntity.badRequest().body(ex.getMessage());
+    return ResponseEntity.status(403).body(ex.getMessage());
+  }
+
+  @ExceptionHandler(UserManagementException.class)
+  public ResponseEntity<String> handleUserManagementException(UserManagementException ex) {
+    return ResponseEntity.status(403).body(ex.getMessage());
   }
 }
