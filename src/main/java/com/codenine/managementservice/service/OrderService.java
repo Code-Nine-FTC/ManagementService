@@ -121,6 +121,7 @@ public class OrderService {
   public void completeOrder(Long orderId, User lastUser) {
     Order order = getOrderById(orderId);
     order.setStatus(OrderStatus.COMPLETED.name());
+    order.setWithdrawDay(LocalDateTime.now());
     order.setLastUser(lastUser);
     order.setLastUpdate(LocalDateTime.now());
     orderRepository.save(order);

@@ -29,6 +29,8 @@ public class Order {
 
   private LocalDateTime lastUpdate = LocalDateTime.now();
 
+  private LocalDateTime expireAt;
+
   @ManyToOne
   private User createdBy;
 
