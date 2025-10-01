@@ -16,7 +16,8 @@ import com.codenine.managementservice.utils.mapper.SectionMapper;
 @Service
 public class SectionService {
 
-  @Autowired private SectionRepository sectionRepository;
+  @Autowired
+  private SectionRepository sectionRepository;
 
   public void createSection(SectionRequest newSection, User lastUser) {
     if (newSection.title() == null || newSection.title().trim().isEmpty()) {
@@ -45,25 +46,6 @@ public class SectionService {
     return sectionRepository.findAllSectionResponses(
         filterCriteria.sectionId(), filterCriteria.lastUserId(),
         filterCriteria.roleAccess(), filterCriteria.isActive());
-  }
-
-  public void disableSection(Long id, User lastUser) {
-    Section section = getSectionById(id);
-    section.setIsActive(false);
-    section.setLastUser(lastUser);
-    section.setLastUpdate(java.time.LocalDateTime.now());
-    sectionRepository.save(section);
-  }
-
-  public void deleteSection(Long id, User lastUser) {
-    Section section = getSectionById(id);
-    if (section.getItemTypes() != null && !section.getItemTypes().isEmpty()) {
-      throw new IllegalStateException("Cannot delete section with associated item types.");
-    }
-    if (section.getUsers() != null && !section.getUsers().isEmpty()) {
-      throw new IllegalStateException("Cannot delete section with associated users.");
-    }
-    sectionRepository.delete(section);
   }
 
   private Section getSectionById(Long id) {

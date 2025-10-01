@@ -32,12 +32,7 @@ public class OrderController {
   @Autowired
   private OrderService orderService;
 
-  /**
-   * Cria um novo pedido.
-   *
-   * @param request Dados do pedido a ser criado.
-   * @return Dados do pedido criado.
-   */
+
   @Operation(description = "Cria um novo pedido.")
   @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Dados do pedido a ser criado")
   @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
@@ -72,15 +67,7 @@ public class OrderController {
     }
   }
 
-  /**
-   * Lista todos os pedidos com filtros opcionais.
-   *
-   * @param orderId     ID específico do pedido (opcional)
-   * @param status      Status do pedido (opcional)
-   * @param createdById ID do usuário que criou o pedido (opcional)
-   * @param lastUserId  ID do usuário que fez a última modificação (opcional)
-   * @return Lista de pedidos.
-   */
+
   @Operation(description = "Lista todos os pedidos com filtros opcionais.")
   @GetMapping
   public ResponseEntity<List<OrderResponse>> getAllOrders(
@@ -99,12 +86,6 @@ public class OrderController {
     }
   }
 
-  /**
-   * Busca um pedido pelo ID.
-   *
-   * @param id ID do pedido.
-   * @return Dados do pedido ou 404 se não encontrado.
-   */
   @Operation(description = "Busca um pedido pelo ID.")
   @GetMapping("/{id}")
   public ResponseEntity<OrderResponse> getOrderById(
@@ -132,12 +113,7 @@ public class OrderController {
     }
   }
 
-  /**
-   * Remove um pedido pelo ID.
-   *
-   * @param id ID do pedido.
-   * @return Sem conteúdo em caso de sucesso.
-   */
+
   @Operation(description = "Remove um pedido pelo ID.")
   @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
   @PatchMapping("/cancel/{id}")
@@ -155,12 +131,6 @@ public class OrderController {
     }
   }
 
-  /**
-   * Aprova um pedido pelo ID.
-   *
-   * @param id ID do pedido.
-   * @return 200 OK em caso de sucesso.
-   */
   @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
   @PatchMapping("/approve/{id}")
   public ResponseEntity<Void> approveOrder(
@@ -177,12 +147,7 @@ public class OrderController {
     }
   }
 
-  /**
-   * Processa um pedido pelo ID.
-   *
-   * @param id ID do pedido.
-   * @return 200 OK em caso de sucesso.
-   */
+
   @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
   @PatchMapping("/process/{id}")
   public ResponseEntity<Void> processOrder(
@@ -199,12 +164,6 @@ public class OrderController {
     }
   }
 
-  /**
-   * Completa um pedido pelo ID.
-   *
-   * @param id ID do pedido.
-   * @return 200 OK em caso de sucesso.
-   */
   @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
   @PatchMapping("/complete/{id}")
   public ResponseEntity<Void> completeOrder(

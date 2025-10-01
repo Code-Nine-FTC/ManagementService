@@ -29,12 +29,7 @@ public class SectionController {
 
   @Autowired private SectionService sectionService;
 
-  /**
-   * Cria uma nova seção/departamento.
-   *
-   * @param newSection Dados da seção a ser criada.
-   * @return Mensagem de sucesso ou erro.
-   */
+
   @Operation(description = "Cria uma nova seção/departamento.")
   @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Dados da seção a ser criada")
   @PostMapping
@@ -51,12 +46,7 @@ public class SectionController {
     }
   }
 
-  /**
-   * Busca uma seção pelo ID.
-   *
-   * @param id ID da seção.
-   * @return Dados da seção ou mensagem de erro.
-   */
+
   @Operation(description = "Busca uma seção pelo ID.")
   @GetMapping("/{id}")
   @PreAuthorize("hasRole('ADMIN')")
@@ -72,15 +62,6 @@ public class SectionController {
     }
   }
 
-  /**
-   * Lista todas as seções, com filtros opcionais.
-   *
-   * @param sectionId ID da seção (opcional)
-   * @param lastUserId ID do último usuário (opcional)
-   * @param roleAccess Nível de acesso por role (opcional)
-   * @param isActive Status ativo/inativo (opcional)
-   * @return Lista de seções.
-   */
   @Operation(description = "Lista todas as seções, com filtros opcionais.")
   @GetMapping
   @PreAuthorize("hasRole('ADMIN')")
@@ -106,13 +87,7 @@ public class SectionController {
     }
   }
 
-  /**
-   * Atualiza uma seção existente.
-   *
-   * @param id ID da seção.
-   * @param updatedSection Novos dados da seção.
-   * @return Mensagem de sucesso ou erro.
-   */
+
   @Operation(description = "Atualiza uma seção existente.")
   @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Novos dados da seção")
   @PutMapping("/{id}")
@@ -133,50 +108,4 @@ public class SectionController {
     }
   }
 
-  /**
-   * Desabilita uma seção.
-   *
-   * @param id ID da seção.
-   * @return Mensagem de sucesso ou erro.
-   */
-  @Operation(description = "Desabilita uma seção.")
-  @PatchMapping("/{id}")
-  @PreAuthorize("hasRole('ADMIN')")
-  public ResponseEntity<?> disableSection(
-      @Parameter(description = "ID da seção a ser desabilitada", example = "1") @PathVariable
-          Long id) {
-    try {
-      User lastUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-      sectionService.disableSection(id, lastUser);
-      return ResponseEntity.ok("Section disabled successfully");
-    } catch (NullPointerException e) {
-      return ResponseEntity.status(404).body(e.getMessage());
-    } catch (Exception e) {
-      return ResponseEntity.status(500).body("Error disabling section: " + e.getMessage());
-    }
-  }
-
-  /**
-   * Remove uma seção completamente do sistema.
-   *
-   * @param id ID da seção.
-   * @return Mensagem de sucesso ou erro.
-   */
-  @Operation(description = "Remove uma seção completamente do sistema.")
-  @DeleteMapping("/{id}")
-  @PreAuthorize("hasRole('ADMIN')")
-  public ResponseEntity<?> deleteSection(
-      @Parameter(description = "ID da seção a ser removida", example = "1") @PathVariable Long id) {
-    try {
-      User lastUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-      sectionService.deleteSection(id, lastUser);
-      return ResponseEntity.ok("Section deleted successfully");
-    } catch (IllegalStateException e) {
-      return ResponseEntity.status(409).body(e.getMessage());
-    } catch (NullPointerException e) {
-      return ResponseEntity.status(404).body(e.getMessage());
-    } catch (Exception e) {
-      return ResponseEntity.status(500).body("Error deleting section: " + e.getMessage());
-    }
-  }
 }

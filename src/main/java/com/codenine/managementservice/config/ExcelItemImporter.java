@@ -17,9 +17,12 @@ import com.codenine.managementservice.repository.*;
 @Component
 public class ExcelItemImporter {
 
-  @Autowired private ItemTypeRepository itemTypeRepository;
-  @Autowired private SectionRepository sectionRepository;
-  @Autowired private ItemRepository itemRepository;
+  @Autowired
+  private ItemTypeRepository itemTypeRepository;
+  @Autowired
+  private SectionRepository sectionRepository;
+  @Autowired
+  private ItemRepository itemRepository;
 
   @Transactional
   public void importItemTypesFromExcel(String excelPath, Long sectionId, User lastUser)
@@ -32,10 +35,13 @@ public class ExcelItemImporter {
 
       Set<String> tipos = new HashSet<>();
       for (Row row : sheet) {
-        if (row.getRowNum() <= 1) continue; // pula linha 0 (título) e linha 1 (cabeçalho)
+        if (row.getRowNum() <= 1)
+          continue; // pula linha 0 (título) e linha 1 (cabeçalho)
         String apres = getStringCellValue(row.getCell(2));
-        if (apres == null || apres.isEmpty()) continue;
-        if (apres.equals("*")) apres = "Outros";
+        if (apres == null || apres.isEmpty())
+          continue;
+        if (apres.equals("*"))
+          apres = "Outros";
         tipos.add(apres);
       }
 
@@ -54,7 +60,7 @@ public class ExcelItemImporter {
 
   @Transactional
   public void importItemsExcel(
-      String excelPath, Long sectionId, User lastUser, SupplierCompany supplier) throws Exception {
+      String excelPath, Long sectionId, User lastUser) throws Exception {
 
     try (FileInputStream fis = new FileInputStream(excelPath);
         Workbook workbook = new XSSFWorkbook(fis)) {
@@ -63,7 +69,8 @@ public class ExcelItemImporter {
       Section section = sectionRepository.findById(sectionId).orElseThrow();
 
       for (Row row : sheet) {
-        if (row.getRowNum() <= 1) continue; // pula título e cabeçalho
+        if (row.getRowNum() <= 1)
+          continue; // pula título e cabeçalho
 
         try {
           String itemName = getStringCellValue(row.getCell(0));
@@ -82,7 +89,8 @@ public class ExcelItemImporter {
             continue;
           }
 
-          if ("*".equals(apres)) apres = "Outros";
+          if ("*".equals(apres))
+            apres = "Outros";
 
           ItemType itemType = itemTypeRepository.findByNameAndSectionId(apres, section.getId());
           if (itemType == null) {
@@ -101,7 +109,6 @@ public class ExcelItemImporter {
           item.setMinimumStock(10);
           item.setItemType(itemType);
           item.setMeasure("unidade"); // valor padrão nunca nulo
-          item.setSupplier(supplier);
           item.setQrCode(lote);
 
           if (validade != null && !validade.isEmpty()) {
@@ -110,9 +117,8 @@ public class ExcelItemImporter {
               try {
                 int month = Integer.parseInt(parts[0]);
                 int year = Integer.parseInt(parts[1]);
-                LocalDateTime expireDate =
-                    LocalDateTime.of(year, month, 1, 0, 0)
-                        .withDayOfMonth(java.time.YearMonth.of(year, month).lengthOfMonth());
+                LocalDateTime expireDate = LocalDateTime.of(year, month, 1, 0, 0)
+                    .withDayOfMonth(java.time.YearMonth.of(year, month).lengthOfMonth());
                 item.setExpireDate(expireDate);
               } catch (NumberFormatException e) {
                 System.err.println("⚠ Validade inválida na linha " + (row.getRowNum() + 1));
@@ -138,22 +144,29 @@ public class ExcelItemImporter {
   }
 
   private String getStringCellValue(Cell cell) {
-    if (cell == null) return null;
-    if (cell.getCellType() == CellType.STRING) return cell.getStringCellValue().trim();
+    if (cell == null)
+      return null;
+    if (cell.getCellType() == CellType.STRING)
+      return cell.getStringCellValue().trim();
     if (cell.getCellType() == CellType.NUMERIC)
       return String.valueOf((int) cell.getNumericCellValue());
-    if (cell.getCellType() == CellType.BOOLEAN) return String.valueOf(cell.getBooleanCellValue());
-    if (cell.getCellType() == CellType.BLANK) return null;
+    if (cell.getCellType() == CellType.BOOLEAN)
+      return String.valueOf(cell.getBooleanCellValue());
+    if (cell.getCellType() == CellType.BLANK)
+      return null;
     return cell.toString();
   }
 
   private Integer getIntCellValue(Cell cell) {
-    if (cell == null) return null;
+    if (cell == null)
+      return null;
     try {
-      if (cell.getCellType() == CellType.NUMERIC) return (int) cell.getNumericCellValue();
+      if (cell.getCellType() == CellType.NUMERIC)
+        return (int) cell.getNumericCellValue();
       if (cell.getCellType() == CellType.STRING) {
         String value = cell.getStringCellValue().trim();
-        if (value.isEmpty()) return null;
+        if (value.isEmpty())
+          return null;
         return Integer.parseInt(value);
       }
       return null;

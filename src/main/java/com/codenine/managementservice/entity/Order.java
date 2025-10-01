@@ -25,6 +25,9 @@ public class Order {
   @ManyToOne
   private User createdBy;
 
+  @OneToMany
+  private SupplierCompany supplierCompany;
+
   @ManyToOne
   private User lastUser;
 

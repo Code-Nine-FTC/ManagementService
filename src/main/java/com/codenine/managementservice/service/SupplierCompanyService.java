@@ -1,93 +1,51 @@
 package com.codenine.managementservice.service;
 
+import java.time.LocalDateTime;
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.codenine.managementservice.dto.supplier.SupplierCompanyFilterCriteria;
 import com.codenine.managementservice.dto.supplier.SupplierCompanyRequest;
 import com.codenine.managementservice.dto.supplier.SupplierCompanyResponse;
 import com.codenine.managementservice.entity.SupplierCompany;
-import com.codenine.managementservice.repository.ItemRepository;
+import com.codenine.managementservice.entity.User;
 import com.codenine.managementservice.repository.SupplierCompanyRepository;
-import com.codenine.managementservice.repository.UserRepository;
+import com.codenine.managementservice.utils.mapper.SupplierCompanyMapper;
 
 @Service
 public class SupplierCompanyService {
 
-  public SupplierCompanyResponse toResponse(SupplierCompany entity) {
-    if (entity == null) return null;
-    return new SupplierCompanyResponse(
-        entity.getId(),
-        entity.getName(),
-        entity.getEmail(),
-        entity.getPhoneNumber(),
-        entity.getCnpj(),
-        entity.getIsActive(),
-        entity.getRating(),
-        entity.getLastUpdate(),
-        entity.getLastUser() != null ? entity.getLastUser().getName() : null,
-        entity.getItems() != null
-            ? entity.getItems().stream().map(item -> item.getId()).toList()
-            : null);
+  @Autowired
+  private SupplierCompanyRepository supplierCompanyRepository;
+
+  public void createSupplierCompany(SupplierCompanyRequest request, User lastUser) {
+    SupplierCompany entity = SupplierCompanyMapper.toEntity(request, lastUser);
+    supplierCompanyRepository.save(entity);
   }
 
-  @Autowired private UserRepository userRepository;
-  @Autowired private ItemRepository itemRepository;
-
-  public SupplierCompany toEntity(SupplierCompanyRequest req) {
-    if (req == null) return null;
-    SupplierCompany entity = new SupplierCompany();
-    entity.setName(req.name());
-    entity.setEmail(req.email());
-    entity.setPhoneNumber(req.phoneNumber());
-    entity.setCnpj(req.cnpj());
-    entity.setIsActive(req.isActive());
-    entity.setRating(req.rating());
-    entity.setLastUpdate(java.time.LocalDateTime.now());
-    // lastUser
-    if (req.lastUserId() != null) {
-      entity.setLastUser(userRepository.findById(req.lastUserId()).orElse(null));
-    }
-    // items
-    if (req.itemIds() != null && !req.itemIds().isEmpty()) {
-      entity.setItems(itemRepository.findAllById(req.itemIds()));
-    }
-
-    return entity;
-  }
-
-  @Autowired private SupplierCompanyRepository supplierCompanyRepository;
-
-  public SupplierCompanyResponse createSupplierCompany(SupplierCompanyRequest req) {
-    SupplierCompany entity = toEntity(req);
-    SupplierCompany saved = supplierCompanyRepository.save(entity);
-    return toResponse(saved);
-  }
-
-  public SupplierCompanyResponse updateSupplierCompany(Long id, SupplierCompanyRequest req) {
+  public void updateSupplierCompany(Long id, SupplierCompanyRequest request, User lastUser) {
     getSupplierCompanyById(id);
-    SupplierCompany entity = toEntity(req);
-    entity.setId(id);
-    SupplierCompany updated = supplierCompanyRepository.save(entity);
-    return toResponse(updated);
+    SupplierCompany entity = SupplierCompanyMapper.toUpdate(getSupplierCompanyById(id), request, lastUser);
+    supplierCompanyRepository.save(entity);
   }
 
   public SupplierCompanyResponse getSupplierCompany(Long id) {
-    return toResponse(getSupplierCompanyById(id));
+    return supplierCompanyRepository.findAllSupplierCompanyResponses(id, null).stream().findFirst()
+        .orElseThrow(() -> new NullPointerException("SupplierCompany not found with id: " + id));
   }
 
-  public java.util.List<SupplierCompanyResponse> getAllSupplierCompanies() {
-    return supplierCompanyRepository.findAllSupplierCompanyResponses(null, null, null);
+  public List<SupplierCompanyResponse> getAllSupplierCompanies(SupplierCompanyFilterCriteria filter) {
+    return supplierCompanyRepository.findAllSupplierCompanyResponses(filter.supplierId(), filter.isActive());
   }
 
-  public java.util.List<SupplierCompanyResponse> getSupplierCompaniesWithFilters(
-      Long supplierId, Boolean isActive, Long lastUserId) {
-    return supplierCompanyRepository.findAllSupplierCompanyResponses(
-        supplierId, isActive, lastUserId);
-  }
-
-  public void deleteSupplierCompany(Long id) {
-    SupplierCompany existing = getSupplierCompanyById(id);
-    supplierCompanyRepository.delete(existing);
+  public void switchSupplierCompanyActive(Long id, User lastUser) {
+    SupplierCompany entity = getSupplierCompanyById(id);
+    entity.setIsActive(!entity.getIsActive());
+    entity.setLastUpdate(LocalDateTime.now());
+    entity.setLastUser(lastUser);
+    supplierCompanyRepository.save(entity);
   }
 
   private SupplierCompany getSupplierCompanyById(Long id) {

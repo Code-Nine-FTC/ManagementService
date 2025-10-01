@@ -5,7 +5,5 @@ public record OrderItemResponse(
         Long ordemId,
         Long itemId,
         String itemName,
-        Integer quantity,
-        Long supplierId,
-        String supplierName) {
+        Integer quantity) {
 }

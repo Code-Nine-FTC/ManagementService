@@ -3,6 +3,7 @@ package com.codenine.managementservice.service;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import org.apache.logging.log4j.util.Supplier;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -14,10 +15,12 @@ import com.codenine.managementservice.dto.order.OrderStatus;
 import com.codenine.managementservice.entity.Item;
 import com.codenine.managementservice.entity.Order;
 import com.codenine.managementservice.entity.Section;
+import com.codenine.managementservice.entity.SupplierCompany;
 import com.codenine.managementservice.entity.User;
 import com.codenine.managementservice.repository.ItemRepository;
 import com.codenine.managementservice.repository.OrderRepository;
 import com.codenine.managementservice.repository.SectionRepository;
+import com.codenine.managementservice.repository.SupplierCompanyRepository;
 import com.codenine.managementservice.utils.mapper.OrderMapper;
 
 import jakarta.persistence.EntityNotFoundException;
@@ -34,23 +37,40 @@ public class OrderService {
   @Autowired
   private SectionRepository sectionRepository;
 
+  @Autowired
+  private SupplierCompanyRepository supplierCompanyRepository;
+
   public void createOrder(OrderRequest request, User lastUser) {
+    SupplierCompany supplier =
+        supplierCompanyRepository
+            .findById(request.supplierId())
+            .orElseThrow(
+                () ->
+                    new IllegalArgumentException(
+                        "Fornecedor com ID " + request.supplierId() + " não encontrado."));
     List<Item> items = itemRepository.findAllById(request.itemQuantities().keySet());
     if (items.size() != request.itemQuantities().keySet().size())
       throw new IllegalArgumentException("Um ou mais IDs de item são inválidos.");
     Section section = sectionRepository.findById(lastUser.getSections().get(0).getId()).orElse(null);
-    Order order = OrderMapper.toEntity(request, lastUser, items, section);
+    Order order = OrderMapper.toEntity(request, lastUser, items, section, supplier);
 
     orderRepository.save(order);
   }
 
   public void updateOrder(Long orderId, OrderRequest request, User lastUser) {
+    SupplierCompany supplier =
+        supplierCompanyRepository
+            .findById(request.supplierId())
+            .orElseThrow(
+                () ->
+                    new IllegalArgumentException(
+                        "Fornecedor com ID " + request.supplierId() + " não encontrado."));
     Order order = getOrderById(orderId);
     List<Item> items = itemRepository.findAllById(request.itemQuantities().keySet());
     if (items.size() != request.itemQuantities().keySet().size())
       throw new IllegalArgumentException("Um ou mais IDs de item são inválidos.");
 
-    order = OrderMapper.toUpdate(order, request, lastUser, items);
+    order = OrderMapper.toUpdate(order, request, lastUser, items, supplier);
 
     orderRepository.save(order);
   }

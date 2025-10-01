@@ -10,5 +10,10 @@ public record OrderResponse(
         String createdByName,
         Long lastUserId,
         String lastUserName,
-        LocalDateTime createdAt) {
+        LocalDateTime createdAt,
+        LocalDateTime updatedAt,
+        Long sectionId,
+        String sectionName,
+        Long supplierId,
+        String supplierName) {
 }

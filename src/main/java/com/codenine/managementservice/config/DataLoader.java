@@ -24,24 +24,30 @@ public class DataLoader implements CommandLineRunner {
   private User _user_adm;
 
   private List<Section> sections;
-  private SupplierCompany _supplier_mig;
 
-  private List<String> itemExcelFiles =
-      List.of("src/main/resources/almoxarifado.xlsx", "src/main/resources/farmacia.xlsx");
+  private List<String> itemExcelFiles = List.of("src/main/resources/almoxarifado.xlsx",
+      "src/main/resources/farmacia.xlsx");
 
-  @Autowired private UserRepository userRepository;
+  @Autowired
+  private UserRepository userRepository;
 
-  @Autowired private SectionRepository sectionRepository;
+  @Autowired
+  private SectionRepository sectionRepository;
 
-  @Autowired private ItemRepository itemRepository;
+  @Autowired
+  private ItemRepository itemRepository;
 
-  @Autowired private ItemTypeRepository itemTypeRepository;
+  @Autowired
+  private ItemTypeRepository itemTypeRepository;
 
-  @Autowired private SupplierCompanyRepository supplierCompanyRepository;
+  @Autowired
+  private SupplierCompanyRepository supplierCompanyRepository;
 
-  @Autowired private PasswordEncoder passwordEncoder;
+  @Autowired
+  private PasswordEncoder passwordEncoder;
 
-  @Autowired private ExcelItemImporter excelItemImporter;
+  @Autowired
+  private ExcelItemImporter excelItemImporter;
 
   private final Random random = new Random();
 
@@ -117,10 +123,9 @@ public class DataLoader implements CommandLineRunner {
   private void createTypeItemsFromExcel() {
     try {
       for (Section section : this.sections) {
-        String filePath =
-            section.getTitle().equalsIgnoreCase("Almoxarifado")
-                ? "src/main/resources/almoxarifado.xlsx"
-                : "src/main/resources/farmacia.xlsx";
+        String filePath = section.getTitle().equalsIgnoreCase("Almoxarifado")
+            ? "src/main/resources/almoxarifado.xlsx"
+            : "src/main/resources/farmacia.xlsx";
         excelItemImporter.importItemTypesFromExcel(filePath, section.getId(), this._user_adm);
       }
       System.out.println("Itens importados do Excel com sucesso.");
@@ -132,12 +137,11 @@ public class DataLoader implements CommandLineRunner {
   private void createItemsFromExcel() {
     try {
       for (Section section : this.sections) {
-        String filePath =
-            section.getTitle().equalsIgnoreCase("Almoxarifado")
-                ? "src/main/resources/almoxarifado.xlsx"
-                : "src/main/resources/farmacia.xlsx";
+        String filePath = section.getTitle().equalsIgnoreCase("Almoxarifado")
+            ? "src/main/resources/almoxarifado.xlsx"
+            : "src/main/resources/farmacia.xlsx";
         excelItemImporter.importItemsExcel(
-            filePath, section.getId(), this._user_adm, this._supplier_mig);
+            filePath, section.getId(), this._user_adm);
       }
       System.out.println("Itens importados do Excel com sucesso.");
     } catch (Exception e) {
@@ -148,21 +152,21 @@ public class DataLoader implements CommandLineRunner {
   private List<SupplierCompany> createSuppliers() {
     List<SupplierCompany> suppliers = new ArrayList<>();
     String[] supplierNames = {
-      "Indústria Militar Brasileira",
-      "Fábrica de Munições Caçapava",
-      "Hospital Militar Regional",
-      "Oficina de Manutenção Militar"
+        "Indústria Militar Brasileira",
+        "Fábrica de Munições Caçapava",
+        "Hospital Militar Regional",
+        "Oficina de Manutenção Militar"
     };
 
     String[] cnpjs = {
-      "11.222.333/0001-44", "22.333.444/0001-55", "33.444.555/0001-66", "44.555.666/0001-77"
+        "11.222.333/0001-44", "22.333.444/0001-55", "33.444.555/0001-66", "44.555.666/0001-77"
     };
 
     String[] emails = {
-      "contato@imb.mil.br", "contato@fmc.mil.br", "contato@hmr.mil.br", "contato@omm.mil.br"
+        "contato@imb.mil.br", "contato@fmc.mil.br", "contato@hmr.mil.br", "contato@omm.mil.br"
     };
 
-    String[] phones = {"(11) 3456-7890", "(12) 3456-7891", "(13) 3456-7892", "(14) 3456-7893"};
+    String[] phones = { "(11) 3456-7890", "(12) 3456-7891", "(13) 3456-7892", "(14) 3456-7893" };
 
     for (int i = 0; i < supplierNames.length; i++) {
       SupplierCompany supplier = new SupplierCompany();
@@ -175,18 +179,6 @@ public class DataLoader implements CommandLineRunner {
       supplier.setLastUser(this._user_adm);
       suppliers.add(supplier);
     }
-    SupplierCompany migrationSupplier = new SupplierCompany();
-    migrationSupplier.setName("Usuario de Migração");
-    migrationSupplier.setCnpj("99.999.999/0001-99");
-    migrationSupplier.setEmail("migration@supplier.com");
-    migrationSupplier.setPhoneNumber("(99) 9999-9999");
-    migrationSupplier.setIsActive(true);
-    migrationSupplier.setLastUpdate(LocalDateTime.now());
-    migrationSupplier.setLastUser(this._user_adm);
-    suppliers.add(migrationSupplier);
-
-    supplierCompanyRepository.save(migrationSupplier);
-    this._supplier_mig = migrationSupplier;
 
     return supplierCompanyRepository.saveAll(suppliers);
   }
@@ -194,8 +186,8 @@ public class DataLoader implements CommandLineRunner {
   private List<User> createUsers(List<Section> sections) {
     List<User> users = new ArrayList<>();
     String[] names = {
-      "Capitão Silva", "Sargento Souza", "Tenente Lima", "Soldado Pereira", "Major Costa",
-      "Coronel Ramos", "Sargento Oliveira", "Soldado Santos", "Tenente Braga", "Capitão Almeida"
+        "Capitão Silva", "Sargento Souza", "Tenente Lima", "Soldado Pereira", "Major Costa",
+        "Coronel Ramos", "Sargento Oliveira", "Soldado Santos", "Tenente Braga", "Capitão Almeida"
     };
 
     for (int i = 0; i < names.length; i++) {

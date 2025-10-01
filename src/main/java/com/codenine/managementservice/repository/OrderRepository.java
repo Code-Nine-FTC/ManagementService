@@ -21,15 +21,22 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
         cb.name,
         lu.id,
         lu.name,
-        o.createdAt
+        o.createdAt,
+        o.updatedAt,
+        sec.id,
+        sec.name,
+        su.id,
+        su.name
       )
       FROM Order o
       LEFT JOIN o.createdBy cb
       LEFT JOIN o.lastUser lu
       LEFT JOIN o.section sec
+      left JOIN o.supplierCompany su
       WHERE (:orderId IS NULL OR o.id = :orderId)
         AND (:status IS NULL OR o.status = :status)
         AND (:sectionId IS NULL OR sec.id = :sectionId)
+        AND (:supplierId IS NULL OR su.id = :supplierId)
 
       """)
   List<OrderResponse> findAllOrderResponses(
@@ -44,9 +51,7 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
           o.id as ordemId,
           oi.item.id,
           oi.item.name,
-          oi.quantity,
-          oi.item.supplier.id,
-          oi.item.supplier.name
+          oi.quantity
       )
       from Order o
       join o.orderItems oi
