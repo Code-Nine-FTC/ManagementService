@@ -118,7 +118,7 @@ public class OrderService {
     orderRepository.save(order);
   }
 
-  public void completeOrder(Long orderId, User lastUser) {
+  public void completeOrder(Long orderId, User lastUser, LocalDateTime withdrawDay) {
     Order order = getOrderById(orderId);
     order.setStatus(OrderStatus.COMPLETED.name());
     order.setWithdrawDay(LocalDateTime.now());

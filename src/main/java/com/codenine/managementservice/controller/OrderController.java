@@ -1,5 +1,6 @@
 package com.codenine.managementservice.controller;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.apache.tomcat.util.http.parser.Authorization;
@@ -168,10 +169,11 @@ public class OrderController {
   @PatchMapping("/complete/{id}")
   public ResponseEntity<Void> completeOrder(
       @Parameter(description = "ID do pedido a ser completado", example = "1") @PathVariable Long id,
+      @RequestBody LocalDateTime withdrawDay,
       Authorization authorization) {
     try {
       User lastUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-      orderService.completeOrder(id, lastUser);
+      orderService.completeOrder(id, lastUser, withdrawDay);
       return ResponseEntity.ok().build();
     } catch (IllegalArgumentException e) {
       return ResponseEntity.unprocessableEntity().build();
