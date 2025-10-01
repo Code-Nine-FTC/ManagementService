@@ -22,9 +22,9 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
         lu.id,
         lu.name,
         o.createdAt,
-        o.updatedAt,
+        o.lastUpdate,
         sec.id,
-        sec.name,
+        sec.title,
         su.id,
         su.name
       )

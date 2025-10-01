@@ -35,7 +35,7 @@ public class SupplierCompany {
   @ManyToOne
   private User lastUser;
 
-  @ManyToOne
+  @OneToMany(mappedBy = "supplierCompany")
   private List<Order> orders;
 
 }
