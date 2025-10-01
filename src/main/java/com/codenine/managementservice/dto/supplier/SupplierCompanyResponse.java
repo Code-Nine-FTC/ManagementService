@@ -1,7 +1,6 @@
 package com.codenine.managementservice.dto.supplier;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 public record SupplierCompanyResponse(
     Long id,
@@ -12,5 +11,5 @@ public record SupplierCompanyResponse(
     Boolean isActive,
     Integer rating,
     LocalDateTime lastUpdate,
-    String lastUserName,
-    List<Long> itemIds) {}
+    Long lastUserId,
+    String lastUserName) {}

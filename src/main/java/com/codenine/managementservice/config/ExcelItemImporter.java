@@ -53,8 +53,7 @@ public class ExcelItemImporter {
   }
 
   @Transactional
-  public void importItemsExcel(
-      String excelPath, Long sectionId, User lastUser, SupplierCompany supplier) throws Exception {
+  public void importItemsExcel(String excelPath, Long sectionId, User lastUser) throws Exception {
 
     try (FileInputStream fis = new FileInputStream(excelPath);
         Workbook workbook = new XSSFWorkbook(fis)) {
@@ -101,7 +100,6 @@ public class ExcelItemImporter {
           item.setMinimumStock(10);
           item.setItemType(itemType);
           item.setMeasure("unidade"); // valor padrão nunca nulo
-          item.setSupplier(supplier);
           item.setQrCode(lote);
 
           if (validade != null && !validade.isEmpty()) {

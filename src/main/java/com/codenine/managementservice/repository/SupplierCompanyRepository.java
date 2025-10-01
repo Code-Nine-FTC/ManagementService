@@ -22,17 +22,14 @@ public interface SupplierCompanyRepository extends JpaRepository<SupplierCompany
           sc.isActive,
           sc.rating,
           sc.lastUpdate,
-          u.name,
-          null
+          u.id,
+          u.name
       )
       FROM SupplierCompany sc
-      LEFT JOIN sc.lastUser u
+      JOIN sc.lastUser u
       WHERE (:supplierId IS NULL OR sc.id = :supplierId)
         AND (:isActive IS NULL OR sc.isActive = :isActive)
-        AND (:lastUserId IS NULL OR u.id = :lastUserId)
       """)
   List<SupplierCompanyResponse> findAllSupplierCompanyResponses(
-      @Param("supplierId") Long supplierId,
-      @Param("isActive") Boolean isActive,
-      @Param("lastUserId") Long lastUserId);
+      @Param("supplierId") Long supplierId, @Param("isActive") Boolean isActive);
 }

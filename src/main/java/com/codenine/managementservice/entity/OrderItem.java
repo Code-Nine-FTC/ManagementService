@@ -13,9 +13,7 @@ import lombok.Data;
 @Data
 @Table(name = "order_item")
 public class OrderItem {
-  @Id
-  @GeneratedValue
-  private Long id;
+  @Id @GeneratedValue private Long id;
 
   @ManyToOne(cascade = CascadeType.ALL)
   private Order order;
@@ -26,6 +24,5 @@ public class OrderItem {
 
   private Integer quantity;
 
-  @ManyToOne
-  private User lastUser;
+  @ManyToOne private User lastUser;
 }

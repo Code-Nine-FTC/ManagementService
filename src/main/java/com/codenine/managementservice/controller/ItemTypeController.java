@@ -27,12 +27,6 @@ public class ItemTypeController {
 
   @Autowired private ItemTypeService itemTypeService;
 
-  /**
-   * Cria um novo tipo de item.
-   *
-   * @param newItemType Dados do tipo de item a ser criado.
-   * @return Mensagem de sucesso ou erro.
-   */
   @Operation(description = "Cria um novo tipo de item.")
   @io.swagger.v3.oas.annotations.parameters.RequestBody(
       description = "Dados do tipo de item a ser criado")
@@ -47,12 +41,6 @@ public class ItemTypeController {
     return ResponseEntity.status(201).body("Item type created successfully");
   }
 
-  /**
-   * Busca um tipo de item pelo ID.
-   *
-   * @param id ID do tipo de item.
-   * @return Dados do tipo de item ou mensagem de erro.
-   */
   @Operation(description = "Busca um tipo de item pelo ID.")
   @GetMapping("/{id}")
   public ResponseEntity<?> getItemType(
@@ -68,14 +56,6 @@ public class ItemTypeController {
     }
   }
 
-  /**
-   * Lista todos os tipos de item, com filtros opcionais.
-   *
-   * @param itemTypeId ID do tipo de item (opcional)
-   * @param sectionId ID da seção (opcional)
-   * @param lastUserId ID do último usuário (opcional)
-   * @return Lista de tipos de item.
-   */
   @Operation(description = "Lista todos os tipos de item, com filtros opcionais.")
   @GetMapping
   public ResponseEntity<?> getAllItemTypes(
@@ -96,13 +76,6 @@ public class ItemTypeController {
     }
   }
 
-  /**
-   * Atualiza um tipo de item existente.
-   *
-   * @param id ID do tipo de item.
-   * @param newItemType Novos dados do tipo de item.
-   * @return Mensagem de sucesso ou erro.
-   */
   @Operation(description = "Atualiza um tipo de item existente.")
   @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Novos dados do tipo de item")
   @PutMapping("/{id}")
@@ -121,12 +94,6 @@ public class ItemTypeController {
     }
   }
 
-  /**
-   * Desabilita um tipo de item.
-   *
-   * @param id ID do tipo de item.
-   * @return Mensagem de sucesso ou erro.
-   */
   @Operation(description = "Desabilita um tipo de item.")
   @PatchMapping("/disable/{id}")
   public ResponseEntity<?> disableItemType(

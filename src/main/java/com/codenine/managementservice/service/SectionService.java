@@ -47,25 +47,6 @@ public class SectionService {
         filterCriteria.roleAccess(), filterCriteria.isActive());
   }
 
-  public void disableSection(Long id, User lastUser) {
-    Section section = getSectionById(id);
-    section.setIsActive(false);
-    section.setLastUser(lastUser);
-    section.setLastUpdate(java.time.LocalDateTime.now());
-    sectionRepository.save(section);
-  }
-
-  public void deleteSection(Long id, User lastUser) {
-    Section section = getSectionById(id);
-    if (section.getItemTypes() != null && !section.getItemTypes().isEmpty()) {
-      throw new IllegalStateException("Cannot delete section with associated item types.");
-    }
-    if (section.getUsers() != null && !section.getUsers().isEmpty()) {
-      throw new IllegalStateException("Cannot delete section with associated users.");
-    }
-    sectionRepository.delete(section);
-  }
-
   private Section getSectionById(Long id) {
     return sectionRepository
         .findById(id)
