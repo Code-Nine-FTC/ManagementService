@@ -18,7 +18,11 @@ import com.codenine.managementservice.entity.User;
 public class OrderMapper {
 
   public static Order toEntity(
-      OrderRequest orderRequest, User lastUser, List<Item> items, Section section, SupplierCompany supplier) {
+      OrderRequest orderRequest,
+      User lastUser,
+      List<Item> items,
+      Section section,
+      SupplierCompany supplier) {
     Map<Long, Item> itemMap =
         items.stream().collect(Collectors.toMap(Item::getId, Function.identity()));
     Order order = new Order();
@@ -52,7 +56,12 @@ public class OrderMapper {
     return order;
   }
 
-  public static Order toUpdate(Order order, OrderRequest request, User lastUser, List<Item> items, SupplierCompany supplier) {
+  public static Order toUpdate(
+      Order order,
+      OrderRequest request,
+      User lastUser,
+      List<Item> items,
+      SupplierCompany supplier) {
     if (supplier != null) order.setSupplierCompany(supplier);
     if (!request.itemQuantities().isEmpty()) {
       Map<Long, Item> itemMap =

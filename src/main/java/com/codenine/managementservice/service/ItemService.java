@@ -19,18 +19,18 @@ import com.codenine.managementservice.utils.mapper.ItemMapper;
 
 @Service
 public class ItemService {
-  @Autowired
-  private ItemRepository itemRepository;
+  @Autowired private ItemRepository itemRepository;
 
-  @Autowired
-  private ItemTypeRepository itemTypeRepository;
+  @Autowired private ItemTypeRepository itemTypeRepository;
 
   public void createItem(ItemRequest itemRequest, User lastUser) {
-    ItemType itemType = itemTypeRepository
-        .findById(itemRequest.itemTypeId())
-        .orElseThrow(
-            () -> new NullPointerException(
-                "ItemType not found with id: " + itemRequest.itemTypeId()));
+    ItemType itemType =
+        itemTypeRepository
+            .findById(itemRequest.itemTypeId())
+            .orElseThrow(
+                () ->
+                    new NullPointerException(
+                        "ItemType not found with id: " + itemRequest.itemTypeId()));
     Item newItem = ItemMapper.toEntity(itemRequest, lastUser, itemType);
     itemRepository.save(newItem);
   }
@@ -44,7 +44,7 @@ public class ItemService {
 
   public List<ItemResponse> getItemsByFilter(ItemFilterCriteria filterCriteria) {
     return itemRepository.findAllItemResponses(
-      filterCriteria.itemCode(),
+        filterCriteria.itemCode(),
         filterCriteria.sectionId(),
         filterCriteria.itemTypeId(),
         filterCriteria.isActive(),
@@ -55,11 +55,13 @@ public class ItemService {
     Item item = getItemById(id);
     ItemType itemType = null;
     if (itemRequest.itemTypeId() != null) {
-      itemType = itemTypeRepository
-          .findById(itemRequest.itemTypeId())
-          .orElseThrow(
-              () -> new NullPointerException(
-                  "ItemType not found with id: " + itemRequest.itemTypeId()));
+      itemType =
+          itemTypeRepository
+              .findById(itemRequest.itemTypeId())
+              .orElseThrow(
+                  () ->
+                      new NullPointerException(
+                          "ItemType not found with id: " + itemRequest.itemTypeId()));
     }
     ItemMapper.updateEntity(item, itemRequest, lastUser, itemType);
     itemRepository.save(item);

@@ -44,7 +44,6 @@ public class ItemController {
     return ResponseEntity.status(201).body("Item created successfully");
   }
 
-
   @Operation(description = "Busca um item pelo ID.")
   @GetMapping("/{id}")
   public ResponseEntity<?> getItem(
@@ -76,9 +75,7 @@ public class ItemController {
     try {
       var items =
           itemService.getItemsByFilter(
-              new ItemFilterCriteria(
-                  itemCode,
-                   sectionId, itemTypeId,  isActive, itemId));
+              new ItemFilterCriteria(itemCode, sectionId, itemTypeId, isActive, itemId));
       return ResponseEntity.ok(items);
     } catch (Exception e) {
       return ResponseEntity.status(500).body("Error retrieving items: " + e.getMessage());
@@ -122,7 +119,6 @@ public class ItemController {
     }
   }
 
-
   @Operation(description = "Arquiva um item.")
   @RequestBody(description = "Dados do arquivo")
   @PatchMapping("/archive/{id}")
@@ -141,7 +137,6 @@ public class ItemController {
     }
   }
 
-
   @Operation(description = "Cria um registro de perda de item.")
   @RequestBody(description = "Dados da perda do item")
   @PostMapping("/loss")
@@ -156,7 +151,6 @@ public class ItemController {
     }
     return ResponseEntity.status(201).body("Item loss created successfully");
   }
-
 
   @Operation(description = "Atualiza um registro de perda de item existente.")
   @RequestBody(description = "Novos dados da perda do item")

@@ -27,7 +27,6 @@ public class ItemTypeController {
 
   @Autowired private ItemTypeService itemTypeService;
 
-
   @Operation(description = "Cria um novo tipo de item.")
   @io.swagger.v3.oas.annotations.parameters.RequestBody(
       description = "Dados do tipo de item a ser criado")
@@ -41,7 +40,6 @@ public class ItemTypeController {
     }
     return ResponseEntity.status(201).body("Item type created successfully");
   }
-
 
   @Operation(description = "Busca um tipo de item pelo ID.")
   @GetMapping("/{id}")
@@ -95,7 +93,6 @@ public class ItemTypeController {
       return ResponseEntity.status(500).body("Error updating item type: " + e.getMessage());
     }
   }
-
 
   @Operation(description = "Desabilita um tipo de item.")
   @PatchMapping("/disable/{id}")

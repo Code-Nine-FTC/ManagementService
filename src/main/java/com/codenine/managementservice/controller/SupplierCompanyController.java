@@ -22,17 +22,21 @@ import io.swagger.v3.oas.annotations.Parameter;
 @RequestMapping("/suppliers")
 public class SupplierCompanyController {
 
-  @Autowired
-  private SupplierCompanyService supplierCompanyService;
+  @Autowired private SupplierCompanyService supplierCompanyService;
 
   @Operation(description = "Lista todas as empresas fornecedoras com filtros opcionais.")
   @GetMapping
   public ResponseEntity<?> getAllSuppliers(
-      @Parameter(description = "ID específico do fornecedor", example = "1") @RequestParam(required = false) Long supplierId,
-      @Parameter(description = "Status ativo/inativo", example = "true") @RequestParam(required = false) Boolean isActive) {
+      @Parameter(description = "ID específico do fornecedor", example = "1")
+          @RequestParam(required = false)
+          Long supplierId,
+      @Parameter(description = "Status ativo/inativo", example = "true")
+          @RequestParam(required = false)
+          Boolean isActive) {
     try {
-      List<SupplierCompanyResponse> responses = supplierCompanyService
-          .getAllSupplierCompanies(new SupplierCompanyFilterCriteria(supplierId, isActive));
+      List<SupplierCompanyResponse> responses =
+          supplierCompanyService.getAllSupplierCompanies(
+              new SupplierCompanyFilterCriteria(supplierId, isActive));
       return ResponseEntity.ok(responses);
     } catch (Exception e) {
       return ResponseEntity.internalServerError().build();
@@ -42,7 +46,8 @@ public class SupplierCompanyController {
   @Operation(description = "Busca uma empresa fornecedora pelo ID.")
   @GetMapping("/{id}")
   public ResponseEntity<?> getSupplier(
-      @Parameter(description = "ID do fornecedor a ser buscado", example = "1") @PathVariable Long id) {
+      @Parameter(description = "ID do fornecedor a ser buscado", example = "1") @PathVariable
+          Long id) {
     try {
       SupplierCompanyResponse response = supplierCompanyService.getSupplierCompany(id);
       return ResponseEntity.ok(response);
@@ -52,11 +57,13 @@ public class SupplierCompanyController {
   }
 
   @Operation(description = "Cria uma nova empresa fornecedora.")
-  @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Dados do fornecedor a ser criado")
+  @io.swagger.v3.oas.annotations.parameters.RequestBody(
+      description = "Dados do fornecedor a ser criado")
   @PreAuthorize("hasRole('ADMIN')")
   @PostMapping
   public ResponseEntity<?> createSupplier(
-      @org.springframework.web.bind.annotation.RequestBody SupplierCompanyRequest supplierCompanyRequest) {
+      @org.springframework.web.bind.annotation.RequestBody
+          SupplierCompanyRequest supplierCompanyRequest) {
     try {
       User lastUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
       supplierCompanyService.createSupplierCompany(supplierCompanyRequest, lastUser);
@@ -71,8 +78,10 @@ public class SupplierCompanyController {
   @PreAuthorize("hasRole('ADMIN')")
   @PutMapping("/{id}")
   public ResponseEntity<?> updateSupplier(
-      @Parameter(description = "ID do fornecedor a ser atualizado", example = "1") @PathVariable Long id,
-      @org.springframework.web.bind.annotation.RequestBody SupplierCompanyRequest supplierCompanyRequest,
+      @Parameter(description = "ID do fornecedor a ser atualizado", example = "1") @PathVariable
+          Long id,
+      @org.springframework.web.bind.annotation.RequestBody
+          SupplierCompanyRequest supplierCompanyRequest,
       Authorization authorization) {
     try {
       User lastUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
@@ -87,7 +96,8 @@ public class SupplierCompanyController {
   @PreAuthorize("hasRole('ADMIN')")
   @PatchMapping("/switch/{id}")
   public ResponseEntity<Void> deleteSupplier(
-      @Parameter(description = "ID do fornecedor a ser desativado", example = "1") @PathVariable Long id,
+      @Parameter(description = "ID do fornecedor a ser desativado", example = "1") @PathVariable
+          Long id,
       Authorization authorization) {
     try {
       User lastUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();

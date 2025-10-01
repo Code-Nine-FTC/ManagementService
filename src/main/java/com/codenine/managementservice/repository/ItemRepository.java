@@ -10,7 +10,8 @@ import com.codenine.managementservice.dto.item.ItemResponse;
 import com.codenine.managementservice.entity.Item;
 
 public interface ItemRepository extends JpaRepository<Item, Long> {
-  @Query("""
+  @Query(
+      """
           SELECT new com.codenine.managementservice.dto.item.ItemResponse(
               i.id,
               i.name,
@@ -37,7 +38,7 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
             and (:itemCode IS NULL OR i.itemCode = :itemCode)
       """)
   List<ItemResponse> findAllItemResponses(
-    @Param("itemCode") String itemCode,
+      @Param("itemCode") String itemCode,
       @Param("sectionId") Long sectionId,
       @Param("itemTypeId") Long itemTypeId,
       @Param("isActive") Boolean isActive,

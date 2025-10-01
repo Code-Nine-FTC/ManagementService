@@ -27,7 +27,6 @@ public class SectionController {
 
   @Autowired private SectionService sectionService;
 
-
   @Operation(description = "Cria uma nova seção/departamento.")
   @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Dados da seção a ser criada")
   @PostMapping
@@ -43,7 +42,6 @@ public class SectionController {
       return ResponseEntity.status(500).body("Error creating section: " + e.getMessage());
     }
   }
-
 
   @Operation(description = "Busca uma seção pelo ID.")
   @GetMapping("/{id}")
@@ -85,7 +83,6 @@ public class SectionController {
     }
   }
 
-
   @Operation(description = "Atualiza uma seção existente.")
   @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Novos dados da seção")
   @PutMapping("/{id}")
@@ -105,5 +102,4 @@ public class SectionController {
       return ResponseEntity.status(500).body("Error updating section: " + e.getMessage());
     }
   }
-
 }

@@ -27,17 +27,13 @@ import jakarta.persistence.EntityNotFoundException;
 @Service
 public class OrderService {
 
-  @Autowired
-  private OrderRepository orderRepository;
+  @Autowired private OrderRepository orderRepository;
 
-  @Autowired
-  private ItemRepository itemRepository;
+  @Autowired private ItemRepository itemRepository;
 
-  @Autowired
-  private SectionRepository sectionRepository;
+  @Autowired private SectionRepository sectionRepository;
 
-  @Autowired
-  private SupplierCompanyRepository supplierCompanyRepository;
+  @Autowired private SupplierCompanyRepository supplierCompanyRepository;
 
   public void createOrder(OrderRequest request, User lastUser) {
     SupplierCompany supplier =
@@ -50,7 +46,8 @@ public class OrderService {
     List<Item> items = itemRepository.findAllById(request.itemQuantities().keySet());
     if (items.size() != request.itemQuantities().keySet().size())
       throw new IllegalArgumentException("Um ou mais IDs de item são inválidos.");
-    Section section = sectionRepository.findById(lastUser.getSections().get(0).getId()).orElse(null);
+    Section section =
+        sectionRepository.findById(lastUser.getSections().get(0).getId()).orElse(null);
     Order order = OrderMapper.toEntity(request, lastUser, items, section, supplier);
 
     orderRepository.save(order);

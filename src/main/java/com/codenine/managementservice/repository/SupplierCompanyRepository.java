@@ -11,7 +11,8 @@ import com.codenine.managementservice.entity.SupplierCompany;
 
 public interface SupplierCompanyRepository extends JpaRepository<SupplierCompany, Long> {
 
-  @Query("""
+  @Query(
+      """
       SELECT new com.codenine.managementservice.dto.supplier.SupplierCompanyResponse(
           sc.id,
           sc.name,
@@ -30,6 +31,5 @@ public interface SupplierCompanyRepository extends JpaRepository<SupplierCompany
         AND (:isActive IS NULL OR sc.isActive = :isActive)
       """)
   List<SupplierCompanyResponse> findAllSupplierCompanyResponses(
-      @Param("supplierId") Long supplierId,
-      @Param("isActive") Boolean isActive);
+      @Param("supplierId") Long supplierId, @Param("isActive") Boolean isActive);
 }

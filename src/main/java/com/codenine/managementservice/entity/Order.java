@@ -17,9 +17,7 @@ import lombok.Data;
 @Entity
 @Table(name = "orders")
 public class Order {
-  @GeneratedValue
-  @Id
-  private Long id;
+  @GeneratedValue @Id private Long id;
 
   private LocalDateTime withdrawDay;
 
@@ -31,19 +29,16 @@ public class Order {
 
   private LocalDateTime expireAt;
 
-  @ManyToOne
-  private User createdBy;
+  @ManyToOne private User createdBy;
 
   @ManyToOne
   @JoinColumn(name = "supplier_company_id")
   private SupplierCompany supplierCompany;
 
-  @ManyToOne
-  private User lastUser;
+  @ManyToOne private User lastUser;
 
   @OneToMany(mappedBy = "order", cascade = CascadeType.ALL)
   private List<OrderItem> orderItems;
 
-  @ManyToOne
-  private Section section;
+  @ManyToOne private Section section;
 }

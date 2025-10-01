@@ -12,7 +12,8 @@ import com.codenine.managementservice.entity.Order;
 
 public interface OrderRepository extends JpaRepository<Order, Long> {
 
-  @Query("""
+  @Query(
+      """
       SELECT distinct new com.codenine.managementservice.dto.order.OrderResponse(
         o.id,
         o.withdrawDay,
@@ -45,7 +46,8 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
       @Param("supplierId") Long supplierId,
       @Param("sectionId") Long sectionId);
 
-  @Query("""
+  @Query(
+      """
       select new com.codenine.managementservice.dto.order.OrderItemResponse(
           oi.id,
           o.id as ordemId,

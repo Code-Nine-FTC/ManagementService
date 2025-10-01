@@ -17,8 +17,7 @@ import com.codenine.managementservice.utils.mapper.SupplierCompanyMapper;
 @Service
 public class SupplierCompanyService {
 
-  @Autowired
-  private SupplierCompanyRepository supplierCompanyRepository;
+  @Autowired private SupplierCompanyRepository supplierCompanyRepository;
 
   public void createSupplierCompany(SupplierCompanyRequest request, User lastUser) {
     SupplierCompany entity = SupplierCompanyMapper.toEntity(request, lastUser);
@@ -27,17 +26,21 @@ public class SupplierCompanyService {
 
   public void updateSupplierCompany(Long id, SupplierCompanyRequest request, User lastUser) {
     getSupplierCompanyById(id);
-    SupplierCompany entity = SupplierCompanyMapper.toUpdate(getSupplierCompanyById(id), request, lastUser);
+    SupplierCompany entity =
+        SupplierCompanyMapper.toUpdate(getSupplierCompanyById(id), request, lastUser);
     supplierCompanyRepository.save(entity);
   }
 
   public SupplierCompanyResponse getSupplierCompany(Long id) {
-    return supplierCompanyRepository.findAllSupplierCompanyResponses(id, null).stream().findFirst()
+    return supplierCompanyRepository.findAllSupplierCompanyResponses(id, null).stream()
+        .findFirst()
         .orElseThrow(() -> new NullPointerException("SupplierCompany not found with id: " + id));
   }
 
-  public List<SupplierCompanyResponse> getAllSupplierCompanies(SupplierCompanyFilterCriteria filter) {
-    return supplierCompanyRepository.findAllSupplierCompanyResponses(filter.supplierId(), filter.isActive());
+  public List<SupplierCompanyResponse> getAllSupplierCompanies(
+      SupplierCompanyFilterCriteria filter) {
+    return supplierCompanyRepository.findAllSupplierCompanyResponses(
+        filter.supplierId(), filter.isActive());
   }
 
   public void switchSupplierCompanyActive(Long id, User lastUser) {
