@@ -70,11 +70,14 @@ public class ItemController {
           @RequestParam(required = false)
           Boolean isActive,
       @Parameter(description = "ID do item", example = "5") @RequestParam(required = false)
-          Long itemId) {
+          Long itemId,
+      @Parameter(description = "Código do item", example = "ABC123") @RequestParam(required = false)
+          String itemCode) {
     try {
       var items =
           itemService.getItemsByFilter(
               new ItemFilterCriteria(
+                  itemCode,
                    sectionId, itemTypeId,  isActive, itemId));
       return ResponseEntity.ok(items);
     } catch (Exception e) {

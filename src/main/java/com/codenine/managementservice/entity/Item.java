@@ -18,6 +18,8 @@ public class Item {
   @Column(nullable = false)
   private String name;
 
+  private String itemCode;
+
   private String measure;
 
   private LocalDateTime expireDate;

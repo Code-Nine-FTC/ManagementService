@@ -10,6 +10,7 @@ public class ItemMapper {
       ItemRequest dto, User lastUser, ItemType itemType) {
     Item item = new Item();
     item.setName(dto.name());
+    item.setItemCode(dto.itemCode());
     item.setCurrentStock(dto.currentStock());
     item.setMeasure(dto.measure());
     item.setExpireDate(dto.expireDate());
@@ -28,6 +29,8 @@ public class ItemMapper {
       Item item, ItemRequest dto, User lastUser, ItemType itemType) {
     if (dto.name() != null)
       item.setName(dto.name());
+    if (dto.itemCode() != null)
+      item.setItemCode(dto.itemCode());
     if (dto.currentStock() != null)
       item.setCurrentStock(dto.currentStock());
     if (dto.measure() != null)

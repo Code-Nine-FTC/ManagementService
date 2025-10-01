@@ -34,8 +34,10 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
             AND (:itemTypeId IS NULL OR it.id = :itemTypeId)
             AND (:isActive IS NULL OR i.isActive = :isActive)
             AND (:itemId IS NULL OR i.id = :itemId)
+            and (:itemCode IS NULL OR i.itemCode = :itemCode)
       """)
   List<ItemResponse> findAllItemResponses(
+    @Param("itemCode") String itemCode,
       @Param("sectionId") Long sectionId,
       @Param("itemTypeId") Long itemTypeId,
       @Param("isActive") Boolean isActive,

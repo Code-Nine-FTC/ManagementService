@@ -37,13 +37,14 @@ public class ItemService {
 
   public ItemResponse getItem(Long id) {
     getItemById(id);
-    return itemRepository.findAllItemResponses(null, null, null, id).stream()
+    return itemRepository.findAllItemResponses(null, null, null, null, id).stream()
         .findFirst()
         .orElse(null);
   }
 
   public List<ItemResponse> getItemsByFilter(ItemFilterCriteria filterCriteria) {
     return itemRepository.findAllItemResponses(
+      filterCriteria.itemCode(),
         filterCriteria.sectionId(),
         filterCriteria.itemTypeId(),
         filterCriteria.isActive(),
