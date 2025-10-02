@@ -93,7 +93,7 @@ public class OrderService {
   }
 
   public OrderResponse getOrderResponseById(Long orderId) {
-    return orderRepository.findAllOrderResponses(orderId, null, orderId, null).stream()
+    return orderRepository.findAllOrderResponses(orderId, null, null, null).stream()
         .findFirst()
         .orElseThrow(
             () -> new EntityNotFoundException("Ordem com ID " + orderId + " não encontrada."));
