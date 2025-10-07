@@ -12,21 +12,27 @@ import com.codenine.managementservice.entity.Item;
 import com.codenine.managementservice.entity.Order;
 import com.codenine.managementservice.entity.OrderItem;
 import com.codenine.managementservice.entity.Section;
+import com.codenine.managementservice.entity.SupplierCompany;
 import com.codenine.managementservice.entity.User;
 
 public class OrderMapper {
 
   public static Order toEntity(
-      OrderRequest orderRequest, User lastUser, List<Item> items, Section section) {
+      OrderRequest orderRequest,
+      User lastUser,
+      List<Item> items,
+      Section section,
+      SupplierCompany supplier) {
     Map<Long, Item> itemMap =
         items.stream().collect(Collectors.toMap(Item::getId, Function.identity()));
     Order order = new Order();
-    order.setWithdrawDay(orderRequest.withdrawDay());
+    order.setCreatedAt(LocalDateTime.now());
+    order.setExpireAt(LocalDateTime.now().plusDays(30));
     order.setCreatedBy(lastUser);
     order.setLastUser(lastUser);
     order.setSection(section);
+    order.setSupplierCompany(supplier);
     order.setStatus(OrderStatus.PENDING.name());
-    order.setCreatedAt(LocalDateTime.now());
 
     List<OrderItem> orderItems =
         orderRequest.itemQuantities().entrySet().stream()
@@ -50,8 +56,13 @@ public class OrderMapper {
     return order;
   }
 
-  public static Order toUpdate(Order order, OrderRequest request, User lastUser, List<Item> items) {
-    if (request.withdrawDay() != null) order.setWithdrawDay(request.withdrawDay());
+  public static Order toUpdate(
+      Order order,
+      OrderRequest request,
+      User lastUser,
+      List<Item> items,
+      SupplierCompany supplier) {
+    if (supplier != null) order.setSupplierCompany(supplier);
     if (!request.itemQuantities().isEmpty()) {
       Map<Long, Item> itemMap =
           items.stream().collect(Collectors.toMap(Item::getId, Function.identity()));
@@ -74,7 +85,7 @@ public class OrderMapper {
               .collect(Collectors.toList());
       order.setOrderItems(orderItems);
     }
-    if (!request.itemQuantities().isEmpty() || request.withdrawDay() != null) {
+    if (!request.itemQuantities().isEmpty()) {
       order.setLastUser(lastUser);
       order.setLastUpdate(LocalDateTime.now());
     }

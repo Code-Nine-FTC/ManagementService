@@ -18,6 +18,8 @@ public class Item {
   @Column(nullable = false)
   private String name;
 
+  private String itemCode;
+
   private String measure;
 
   private LocalDateTime expireDate;
@@ -38,8 +40,6 @@ public class Item {
   private String archiveInfo;
 
   @ManyToOne private User lastUser;
-
-  @ManyToOne private SupplierCompany supplier;
 
   @ManyToOne
   @JoinTable(

@@ -8,8 +8,6 @@ public record ItemResponse(
     Integer currentStock,
     String measure,
     LocalDateTime expireDate,
-    Long supplierId,
-    String supplierName,
     Long sectionId,
     String sectionName,
     Long itemTypeId,

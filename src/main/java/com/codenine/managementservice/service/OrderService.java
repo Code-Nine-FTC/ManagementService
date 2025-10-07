@@ -14,10 +14,12 @@ import com.codenine.managementservice.dto.order.OrderStatus;
 import com.codenine.managementservice.entity.Item;
 import com.codenine.managementservice.entity.Order;
 import com.codenine.managementservice.entity.Section;
+import com.codenine.managementservice.entity.SupplierCompany;
 import com.codenine.managementservice.entity.User;
 import com.codenine.managementservice.repository.ItemRepository;
 import com.codenine.managementservice.repository.OrderRepository;
 import com.codenine.managementservice.repository.SectionRepository;
+import com.codenine.managementservice.repository.SupplierCompanyRepository;
 import com.codenine.managementservice.utils.mapper.OrderMapper;
 
 import jakarta.persistence.EntityNotFoundException;
@@ -25,32 +27,46 @@ import jakarta.persistence.EntityNotFoundException;
 @Service
 public class OrderService {
 
-  @Autowired
-  private OrderRepository orderRepository;
+  @Autowired private OrderRepository orderRepository;
 
-  @Autowired
-  private ItemRepository itemRepository;
+  @Autowired private ItemRepository itemRepository;
 
-  @Autowired
-  private SectionRepository sectionRepository;
+  @Autowired private SectionRepository sectionRepository;
+
+  @Autowired private SupplierCompanyRepository supplierCompanyRepository;
 
   public void createOrder(OrderRequest request, User lastUser) {
+    SupplierCompany supplier =
+        supplierCompanyRepository
+            .findById(request.supplierId())
+            .orElseThrow(
+                () ->
+                    new IllegalArgumentException(
+                        "Fornecedor com ID " + request.supplierId() + " não encontrado."));
     List<Item> items = itemRepository.findAllById(request.itemQuantities().keySet());
     if (items.size() != request.itemQuantities().keySet().size())
       throw new IllegalArgumentException("Um ou mais IDs de item são inválidos.");
-    Section section = sectionRepository.findById(lastUser.getSections().get(0).getId()).orElse(null);
-    Order order = OrderMapper.toEntity(request, lastUser, items, section);
+    Section section =
+        sectionRepository.findById(lastUser.getSections().get(0).getId()).orElse(null);
+    Order order = OrderMapper.toEntity(request, lastUser, items, section, supplier);
 
     orderRepository.save(order);
   }
 
   public void updateOrder(Long orderId, OrderRequest request, User lastUser) {
+    SupplierCompany supplier =
+        supplierCompanyRepository
+            .findById(request.supplierId())
+            .orElseThrow(
+                () ->
+                    new IllegalArgumentException(
+                        "Fornecedor com ID " + request.supplierId() + " não encontrado."));
     Order order = getOrderById(orderId);
     List<Item> items = itemRepository.findAllById(request.itemQuantities().keySet());
     if (items.size() != request.itemQuantities().keySet().size())
       throw new IllegalArgumentException("Um ou mais IDs de item são inválidos.");
 
-    order = OrderMapper.toUpdate(order, request, lastUser, items);
+    order = OrderMapper.toUpdate(order, request, lastUser, items, supplier);
 
     orderRepository.save(order);
   }
@@ -77,7 +93,7 @@ public class OrderService {
   }
 
   public OrderResponse getOrderResponseById(Long orderId) {
-    return orderRepository.findAllOrderResponses(orderId, null, orderId, null).stream()
+    return orderRepository.findAllOrderResponses(orderId, null, null, null).stream()
         .findFirst()
         .orElseThrow(
             () -> new EntityNotFoundException("Ordem com ID " + orderId + " não encontrada."));
@@ -99,9 +115,10 @@ public class OrderService {
     orderRepository.save(order);
   }
 
-  public void completeOrder(Long orderId, User lastUser) {
+  public void completeOrder(Long orderId, User lastUser, LocalDateTime withdrawDay) {
     Order order = getOrderById(orderId);
     order.setStatus(OrderStatus.COMPLETED.name());
+    order.setWithdrawDay(LocalDateTime.now());
     order.setLastUser(lastUser);
     order.setLastUpdate(LocalDateTime.now());
     orderRepository.save(order);
