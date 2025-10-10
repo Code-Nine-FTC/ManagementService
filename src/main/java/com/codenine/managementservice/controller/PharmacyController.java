@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import com.codenine.managementservice.service.ItemService;
 import com.codenine.managementservice.service.PharmacyService;
 import com.codenine.managementservice.service.PharmacyService.ExpiryLists;
 import com.codenine.managementservice.service.PharmacyService.ExpirySummary;
@@ -21,6 +22,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 public class PharmacyController {
 
   @Autowired private PharmacyService pharmacyService;
+
+  @Autowired private ItemService itemService;
 
   @Operation(
       summary = "Resumo de itens vencidos e próximos do vencimento",
@@ -68,6 +71,24 @@ public class PharmacyController {
       return ResponseEntity.ok(lists);
     } catch (Exception e) {
       return ResponseEntity.status(500).build();
+    }
+  }
+
+  @Operation(
+      summary = "Excluir item vencido ou a vencer",
+      description =
+          "Exclui permanentemente um item vencido ou próximo do vencimento do banco de dados. Requer permissão de ADMIN ou MANAGER.")
+  @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+  @DeleteMapping("/items/{id}")
+  public ResponseEntity<?> deleteExpiredItem(
+      @Parameter(description = "ID do item a ser excluído", example = "1") @PathVariable Long id) {
+    try {
+      itemService.deleteItem(id);
+      return ResponseEntity.ok().body("Item excluído com sucesso");
+    } catch (NullPointerException e) {
+      return ResponseEntity.status(404).body(e.getMessage());
+    } catch (Exception e) {
+      return ResponseEntity.status(500).body("Erro ao excluir item: " + e.getMessage());
     }
   }
 }
