@@ -14,5 +14,6 @@ public record ItemResponse(
     String itemTypeName,
     Integer minimumStock,
     String qrCode,
+    String itemCode,
     String lastUserName,
     LocalDateTime lastUpdate) {}
