@@ -42,7 +42,8 @@ public class AnalyticsController {
           @RequestParam(defaultValue = "false")
           boolean onlyCompleted) {
     if (endDate.isBefore(startDate)) return ResponseEntity.badRequest().build();
-    return ResponseEntity.ok(analyticsService.getTopMaterials(startDate, endDate, limit, onlyCompleted));
+    return ResponseEntity.ok(
+        analyticsService.getTopMaterials(startDate, endDate, limit, onlyCompleted));
   }
 
   @Operation(summary = "Demanda agregada por grupo")

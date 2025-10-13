@@ -64,7 +64,7 @@ public interface AnalyticsRepository extends JpaRepository<OrderItem, Long> {
   @Query(
       value =
           """
-          SELECT 
+          SELECT
             it.id as group_id,
             it.name as group_name,
             date_trunc(:step, COALESCE(o.withdraw_day, o.created_at)) as bucket,

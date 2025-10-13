@@ -32,7 +32,8 @@ public class AnalyticsService {
       LocalDate startDate, LocalDate endDate, int limit, boolean onlyCompleted) {
     LocalDateTime start = startDate.atStartOfDay();
     LocalDateTime end = endDate.plusDays(1).atStartOfDay().minusNanos(1);
-    return analyticsRepository.findTopMaterials(start, end, onlyCompleted, PageRequest.of(0, limit));
+    return analyticsRepository.findTopMaterials(
+        start, end, onlyCompleted, PageRequest.of(0, limit));
   }
 
   public List<GroupDemandResponse> getGroupDemand(
@@ -69,7 +70,8 @@ public class AnalyticsService {
       Long pedidos = r[3] != null ? ((Number) r[3]).longValue() : 0L;
       Long quantidade = r[4] != null ? ((Number) r[4]).longValue() : 0L;
 
-      // We aggregate quantity (quantidade) for series (could also choose pedidos). Using quantidade.
+      // We aggregate quantity (quantidade) for series (could also choose pedidos). Using
+      // quantidade.
       String cat = bucket.format(fmt);
       categorySet.add(cat);
       seriesBuilders
