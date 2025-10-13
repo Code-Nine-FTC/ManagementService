@@ -83,6 +83,11 @@ public class ItemService {
     itemRepository.save(item);
   }
 
+  public void deleteItem(Long id) {
+    Item item = getItemById(id);
+    itemRepository.delete(item);
+  }
+
   private Item getItemById(Long id) {
     return itemRepository
         .findById(id)
