@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 
+import com.codenine.managementservice.utils.CryptUtil;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,8 +21,9 @@ public class ExcelItemImporter {
   @Autowired private ItemTypeRepository itemTypeRepository;
   @Autowired private SectionRepository sectionRepository;
   @Autowired private ItemRepository itemRepository;
+  @Autowired private CryptUtil cryptUtil;
 
-  @Transactional
+    @Transactional
   public void importItemTypesFromExcel(String excelPath, Long sectionId, User lastUser)
       throws Exception {
     try (FileInputStream fis = new FileInputStream(excelPath);
@@ -100,7 +102,6 @@ public class ExcelItemImporter {
           item.setMinimumStock(10);
           item.setItemType(itemType);
           item.setMeasure("unidade"); // valor padrão nunca nulo
-          item.setQrCode(lote);
 
           if (validade != null && !validade.isEmpty()) {
             String[] parts = validade.split("/");
@@ -119,6 +120,9 @@ public class ExcelItemImporter {
           }
           item.setIsActive(true);
           try {
+            Item savedId = itemRepository.save(item);
+            String qrCode = cryptUtil.encrypt(savedId.getId().toString());
+            item.setQrCode("/items/qr?code=" + qrCode);
             itemRepository.save(item);
           } catch (Exception e) {
             System.err.println(

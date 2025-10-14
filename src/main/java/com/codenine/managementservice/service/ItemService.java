@@ -37,7 +37,7 @@ public class ItemService {
     Item newItem = ItemMapper.toEntity(itemRequest, lastUser, itemType);
     Item savedItem = itemRepository.save(newItem);
     String qrCode = cryptUtil.encrypt(savedItem.getId().toString());
-    savedItem.setQrCode("/items?code=" + qrCode);
+    savedItem.setQrCode("/items/qr?code=" + qrCode);
     itemRepository.save(savedItem);
   }
 
