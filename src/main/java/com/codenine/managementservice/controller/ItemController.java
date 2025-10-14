@@ -1,5 +1,7 @@
 package com.codenine.managementservice.controller;
 
+import java.time.LocalDateTime;
+
 import org.apache.tomcat.util.http.parser.Authorization;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.couchbase.CouchbaseProperties.Authentication;
@@ -11,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import com.codenine.managementservice.dto.item.ArchiveItem;
 import com.codenine.managementservice.dto.item.ItemFilterCriteria;
 import com.codenine.managementservice.dto.item.ItemRequest;
+import com.codenine.managementservice.dto.itemLoss.ItemLossFilterCriteria;
 import com.codenine.managementservice.dto.itemLoss.ItemLossRequest;
 import com.codenine.managementservice.entity.User;
 import com.codenine.managementservice.service.ItemLossService;
@@ -168,6 +171,32 @@ public class ItemController {
       return ResponseEntity.status(404).body(e.getMessage());
     } catch (Exception e) {
       return ResponseEntity.status(500).body("Error updating item loss: " + e.getMessage());
+    }
+  }
+
+  @Operation(description = "Busca registros de perda de item com base em critérios de filtro.")
+  @GetMapping("/loss")
+  public ResponseEntity<?> getItemLossByFilter(
+      @Parameter(description = "ID do item", example = "2") @RequestParam(required = false)
+          Long itemId,
+      @Parameter(description = "ID do usuário que registrou a perda", example = "3")
+          @RequestParam(required = false)
+          Long recordedById,
+      @Parameter(description = "Data de início para o filtro", example = "2023-01-01T00:00:00")
+          @RequestParam(required = false)
+          LocalDateTime startDate,
+      @Parameter(description = "Data de fim para o filtro", example = "2023-12-31T23:59:59")
+          @RequestParam(required = false)
+          LocalDateTime endDate,
+      @Parameter(description = "ID da perda do item", example = "5") @RequestParam(required = false)
+          Long itemLossId) {
+    try {
+      var itemLosses =
+          itemLossService.getItemLossByFilter(
+              new ItemLossFilterCriteria(itemId, recordedById, startDate, endDate, itemLossId));
+      return ResponseEntity.ok(itemLosses);
+    } catch (Exception e) {
+      return ResponseEntity.status(500).body("Error retrieving item losses: " + e.getMessage());
     }
   }
 }
