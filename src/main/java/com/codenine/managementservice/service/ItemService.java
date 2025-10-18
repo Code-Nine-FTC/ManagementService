@@ -3,6 +3,7 @@ package com.codenine.managementservice.service;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import com.codenine.managementservice.utils.CryptUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -25,6 +26,8 @@ public class ItemService {
   @Autowired private ItemTypeRepository itemTypeRepository;
 
   @Autowired private ItemLossService itemLossService;
+  
+  @Autowired private CryptUtil cryptUtil;
 
   public void createItem(ItemRequest itemRequest, User lastUser) {
     ItemType itemType =
@@ -35,7 +38,10 @@ public class ItemService {
                     new NullPointerException(
                         "ItemType not found with id: " + itemRequest.itemTypeId()));
     Item newItem = ItemMapper.toEntity(itemRequest, lastUser, itemType);
-    itemRepository.save(newItem);
+    Item savedItem = itemRepository.save(newItem);
+    String qrCode = cryptUtil.encrypt(savedItem.getId().toString());
+    savedItem.setQrCode("/items/qr?code=" + qrCode);
+    itemRepository.save(savedItem);
   }
 
   public ItemResponse getItem(Long id) {
@@ -103,6 +109,17 @@ public class ItemService {
                   lossHistory);
             })
         .toList();
+  }
+
+  public ItemResponse getEncryptedItem(String qrCode) {
+    String decryptedId = cryptUtil.decrypt(qrCode);
+    Long itemId;
+    try {
+      itemId = Long.valueOf(decryptedId);
+        return getItem(itemId);
+    } catch (NumberFormatException e) {
+      throw new IllegalArgumentException("Invalid QR code");
+    }
   }
 
   public void updateItem(Long id, ItemRequest itemRequest, User lastUser) {
