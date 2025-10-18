@@ -10,6 +10,7 @@ import com.codenine.managementservice.dto.item.ArchiveItem;
 import com.codenine.managementservice.dto.item.ItemFilterCriteria;
 import com.codenine.managementservice.dto.item.ItemRequest;
 import com.codenine.managementservice.dto.item.ItemResponse;
+import com.codenine.managementservice.dto.itemLoss.ItemLossFilterCriteria;
 import com.codenine.managementservice.entity.Item;
 import com.codenine.managementservice.entity.ItemType;
 import com.codenine.managementservice.entity.User;
@@ -22,6 +23,8 @@ public class ItemService {
   @Autowired private ItemRepository itemRepository;
 
   @Autowired private ItemTypeRepository itemTypeRepository;
+
+  @Autowired private ItemLossService itemLossService;
 
   public void createItem(ItemRequest itemRequest, User lastUser) {
     ItemType itemType =
@@ -37,18 +40,69 @@ public class ItemService {
 
   public ItemResponse getItem(Long id) {
     getItemById(id);
-    return itemRepository.findAllItemResponses(null, null, null, null, id).stream()
-        .findFirst()
-        .orElse(null);
+    var itemResponse =
+        itemRepository.findAllItemResponses(null, null, null, null, id).stream()
+            .findFirst()
+            .orElse(null);
+
+    if (itemResponse == null) {
+      return null;
+    }
+
+    var lossHistory =
+        itemLossService.getItemLossByFilter(new ItemLossFilterCriteria(id, null, null, null, null));
+
+    return new ItemResponse(
+        itemResponse.itemId(),
+        itemResponse.name(),
+        itemResponse.currentStock(),
+        itemResponse.measure(),
+        itemResponse.expireDate(),
+        itemResponse.sectionId(),
+        itemResponse.sectionName(),
+        itemResponse.itemTypeId(),
+        itemResponse.itemTypeName(),
+        itemResponse.minimumStock(),
+        itemResponse.qrCode(),
+        itemResponse.itemCode(),
+        itemResponse.lastUserName(),
+        itemResponse.lastUpdate(),
+        lossHistory);
   }
 
   public List<ItemResponse> getItemsByFilter(ItemFilterCriteria filterCriteria) {
-    return itemRepository.findAllItemResponses(
-        filterCriteria.itemCode(),
-        filterCriteria.sectionId(),
-        filterCriteria.itemTypeId(),
-        filterCriteria.isActive(),
-        filterCriteria.itemId());
+    var items =
+        itemRepository.findAllItemResponses(
+            filterCriteria.itemCode(),
+            filterCriteria.sectionId(),
+            filterCriteria.itemTypeId(),
+            filterCriteria.isActive(),
+            filterCriteria.itemId());
+
+    return items.stream()
+        .map(
+            item -> {
+              var lossHistory =
+                  itemLossService.getItemLossByFilter(
+                      new ItemLossFilterCriteria(item.itemId(), null, null, null, null));
+              return new ItemResponse(
+                  item.itemId(),
+                  item.name(),
+                  item.currentStock(),
+                  item.measure(),
+                  item.expireDate(),
+                  item.sectionId(),
+                  item.sectionName(),
+                  item.itemTypeId(),
+                  item.itemTypeName(),
+                  item.minimumStock(),
+                  item.qrCode(),
+                  item.itemCode(),
+                  item.lastUserName(),
+                  item.lastUpdate(),
+                  lossHistory);
+            })
+        .toList();
   }
 
   public void updateItem(Long id, ItemRequest itemRequest, User lastUser) {

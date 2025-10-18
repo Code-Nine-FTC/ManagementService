@@ -27,16 +27,15 @@ public interface ItemLossRepository extends JpaRepository<ItemLoss, Long> {
             lu.name
         )
         from ItemLoss il
-        join il.item i
-        join il.recordedBy rb
-        join il.lastUser lu
-        where (
-            (:itemId is null or il.item.id = :itemId) and
-            (:recordedById is null or il.recordedBy.id = :recordedById) and
-            (:startDate is null or il.createDate >= :startDate) and
-            (:endDate is null or il.createDate <= :endDate) and
-            (:itemLossId is null or il.id = :itemLossId)
-        )
+        left join il.item i
+        left join il.recordedBy rb
+        left join il.lastUser lu
+        where 1=1
+            and (:itemId is null or i.id = :itemId)
+            and (:recordedById is null or rb.id = :recordedById)
+            and (cast(:startDate as timestamp) is null or il.createDate >= :startDate)
+            and (cast(:endDate as timestamp) is null or il.createDate <= :endDate)
+            and (:itemLossId is null or il.id = :itemLossId)
     """)
   List<ItemLossResponse> findAllByFilter(
       @Param("itemId") Long itemId,
