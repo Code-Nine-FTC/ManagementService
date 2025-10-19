@@ -44,5 +44,5 @@ public class Order {
   @ManyToOne private Section section;
 
   @OneToOne(mappedBy = "order", cascade = CascadeType.ALL)
-  private PurchaseOrders purchaseOrders;
+  private PurchaseOrder purchaseOrder;
 }
