@@ -10,6 +10,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.Data;
 
@@ -41,4 +42,7 @@ public class Order {
   private List<OrderItem> orderItems;
 
   @ManyToOne private Section section;
+
+  @OneToOne(mappedBy = "order", cascade = CascadeType.ALL)
+  private PurchaseOrders purchaseOrders;
 }
