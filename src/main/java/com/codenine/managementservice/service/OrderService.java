@@ -14,12 +14,10 @@ import com.codenine.managementservice.dto.order.OrderStatus;
 import com.codenine.managementservice.entity.Item;
 import com.codenine.managementservice.entity.Order;
 import com.codenine.managementservice.entity.Section;
-import com.codenine.managementservice.entity.SupplierCompany;
 import com.codenine.managementservice.entity.User;
 import com.codenine.managementservice.repository.ItemRepository;
 import com.codenine.managementservice.repository.OrderRepository;
 import com.codenine.managementservice.repository.SectionRepository;
-import com.codenine.managementservice.repository.SupplierCompanyRepository;
 import com.codenine.managementservice.utils.mapper.OrderMapper;
 
 import jakarta.persistence.EntityNotFoundException;
@@ -33,40 +31,31 @@ public class OrderService {
 
   @Autowired private SectionRepository sectionRepository;
 
-  @Autowired private SupplierCompanyRepository supplierCompanyRepository;
+  // SupplierCompany linkage removed
 
-  public void createOrder(OrderRequest request, User lastUser) {
-    SupplierCompany supplier =
-        supplierCompanyRepository
-            .findById(request.supplierId())
-            .orElseThrow(
-                () ->
-                    new IllegalArgumentException(
-                        "Fornecedor com ID " + request.supplierId() + " não encontrado."));
+  public Long createOrder(OrderRequest request, User lastUser) {
     List<Item> items = itemRepository.findAllById(request.itemQuantities().keySet());
     if (items.size() != request.itemQuantities().keySet().size())
       throw new IllegalArgumentException("Um ou mais IDs de item são inválidos.");
-    Section section =
-        sectionRepository.findById(lastUser.getSections().get(0).getId()).orElse(null);
-    Order order = OrderMapper.toEntity(request, lastUser, items, section, supplier);
+    // Resolve seção com segurança: se o usuário não tiver seções, mantém null (sem quebrar)
+    Section section = null;
+    if (lastUser.getSections() != null && !lastUser.getSections().isEmpty()) {
+      Long sectionId = lastUser.getSections().get(0).getId();
+      section = sectionRepository.findById(sectionId).orElse(null);
+    }
+  Order order = OrderMapper.toEntity(request, lastUser, items, section);
 
-    orderRepository.save(order);
+    Order saved = orderRepository.save(order);
+    return saved.getId();
   }
 
   public void updateOrder(Long orderId, OrderRequest request, User lastUser) {
-    SupplierCompany supplier =
-        supplierCompanyRepository
-            .findById(request.supplierId())
-            .orElseThrow(
-                () ->
-                    new IllegalArgumentException(
-                        "Fornecedor com ID " + request.supplierId() + " não encontrado."));
     Order order = getOrderById(orderId);
     List<Item> items = itemRepository.findAllById(request.itemQuantities().keySet());
     if (items.size() != request.itemQuantities().keySet().size())
       throw new IllegalArgumentException("Um ou mais IDs de item são inválidos.");
 
-    order = OrderMapper.toUpdate(order, request, lastUser, items, supplier);
+  order = OrderMapper.toUpdate(order, request, lastUser, items);
 
     orderRepository.save(order);
   }
@@ -81,9 +70,8 @@ public class OrderService {
 
   public List<OrderResponse> getAllOrders(OrderFilterCriteria criteria) {
     return orderRepository.findAllOrderResponses(
-        criteria.userId() != null ? criteria.userId() : null,
+        criteria.orderId() != null ? criteria.orderId() : null,
         criteria.status() != null ? criteria.status().name() : null,
-        criteria.supplierId() != null ? criteria.supplierId() : null,
         criteria.sectionId() != null ? criteria.sectionId() : null);
   }
 
@@ -93,7 +81,7 @@ public class OrderService {
   }
 
   public OrderResponse getOrderResponseById(Long orderId) {
-    return orderRepository.findAllOrderResponses(orderId, null, null, null).stream()
+    return orderRepository.findAllOrderResponses(orderId, null, null).stream()
         .findFirst()
         .orElseThrow(
             () -> new EntityNotFoundException("Ordem com ID " + orderId + " não encontrada."));
@@ -118,7 +106,7 @@ public class OrderService {
   public void completeOrder(Long orderId, User lastUser, LocalDateTime withdrawDay) {
     Order order = getOrderById(orderId);
     order.setStatus(OrderStatus.COMPLETED.name());
-    order.setWithdrawDay(LocalDateTime.now());
+    order.setWithdrawDay(withdrawDay != null ? withdrawDay : LocalDateTime.now());
     order.setLastUser(lastUser);
     order.setLastUpdate(LocalDateTime.now());
     orderRepository.save(order);

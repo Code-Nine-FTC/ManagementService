@@ -31,9 +31,7 @@ public class Order {
 
   @ManyToOne private User createdBy;
 
-  @ManyToOne
-  @JoinColumn(name = "supplier_company_id")
-  private SupplierCompany supplierCompany;
+  // Supplier linkage removed
 
   @ManyToOne private User lastUser;
 

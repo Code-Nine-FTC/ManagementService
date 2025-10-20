@@ -42,8 +42,8 @@ public class OrderController {
       Authorization authorization) {
     try {
       User lastUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-      orderService.createOrder(request, lastUser);
-      return ResponseEntity.ok().build();
+      Long id = orderService.createOrder(request, lastUser);
+      return ResponseEntity.status(201).body(java.util.Map.of("id", id));
     } catch (IllegalArgumentException e) {
       return ResponseEntity.unprocessableEntity().build();
     } catch (Exception e) {
@@ -74,14 +74,12 @@ public class OrderController {
       @Parameter(description = "Status do pedido", example = "PENDING")
           @RequestParam(required = false)
           OrderStatus status,
-      @Parameter(description = "Id do fornecedor", example = "1") @RequestParam(required = false)
-          Long supplierId,
       @Parameter(description = "Id da seção", example = "1") @RequestParam(required = false)
           Long sectionId) {
     try {
-      List<OrderResponse> responses =
-          orderService.getAllOrders(
-              new OrderFilterCriteria(orderId, status, supplierId, sectionId));
+       List<OrderResponse> responses =
+         orderService.getAllOrders(
+           new OrderFilterCriteria(orderId, status, null, sectionId));
       return ResponseEntity.ok(responses);
     } catch (IllegalArgumentException e) {
       return ResponseEntity.unprocessableEntity().build();

@@ -12,17 +12,12 @@ import com.codenine.managementservice.entity.Item;
 import com.codenine.managementservice.entity.Order;
 import com.codenine.managementservice.entity.OrderItem;
 import com.codenine.managementservice.entity.Section;
-import com.codenine.managementservice.entity.SupplierCompany;
 import com.codenine.managementservice.entity.User;
 
 public class OrderMapper {
 
   public static Order toEntity(
-      OrderRequest orderRequest,
-      User lastUser,
-      List<Item> items,
-      Section section,
-      SupplierCompany supplier) {
+    OrderRequest orderRequest, User lastUser, List<Item> items, Section section) {
     Map<Long, Item> itemMap =
         items.stream().collect(Collectors.toMap(Item::getId, Function.identity()));
     Order order = new Order();
@@ -31,7 +26,6 @@ public class OrderMapper {
     order.setCreatedBy(lastUser);
     order.setLastUser(lastUser);
     order.setSection(section);
-    order.setSupplierCompany(supplier);
     order.setStatus(OrderStatus.PENDING.name());
 
     List<OrderItem> orderItems =
@@ -57,12 +51,7 @@ public class OrderMapper {
   }
 
   public static Order toUpdate(
-      Order order,
-      OrderRequest request,
-      User lastUser,
-      List<Item> items,
-      SupplierCompany supplier) {
-    if (supplier != null) order.setSupplierCompany(supplier);
+      Order order, OrderRequest request, User lastUser, List<Item> items) {
     if (!request.itemQuantities().isEmpty()) {
       Map<Long, Item> itemMap =
           items.stream().collect(Collectors.toMap(Item::getId, Function.identity()));

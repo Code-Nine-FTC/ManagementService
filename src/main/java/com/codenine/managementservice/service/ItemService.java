@@ -29,7 +29,7 @@ public class ItemService {
   
   @Autowired private CryptUtil cryptUtil;
 
-  public void createItem(ItemRequest itemRequest, User lastUser) {
+  public Long createItem(ItemRequest itemRequest, User lastUser) {
     ItemType itemType =
         itemTypeRepository
             .findById(itemRequest.itemTypeId())
@@ -42,6 +42,7 @@ public class ItemService {
     String qrCode = cryptUtil.encrypt(savedItem.getId().toString());
     savedItem.setQrCode("/items/qr?code=" + qrCode);
     itemRepository.save(savedItem);
+    return savedItem.getId();
   }
 
   public ItemResponse getItem(Long id) {
