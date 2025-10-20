@@ -4,9 +4,10 @@ import java.time.Instant;
 
 import com.codenine.managementservice.dto.notification.NotificationSeverity;
 import com.codenine.managementservice.dto.notification.NotificationType;
+import lombok.Data;
 
 import jakarta.persistence.*;
-
+@Data
 @Entity
 @Table(name = "notifications")
 public class Notification {
@@ -47,84 +48,4 @@ public class Notification {
   @Column(nullable = false)
   private Boolean acknowledged = false;
 
-  // Getters and Setters
-  public Long getId() {
-    return id;
-  }
-
-  public void setId(Long id) {
-    this.id = id;
-  }
-
-  public NotificationType getType() {
-    return type;
-  }
-
-  public void setType(NotificationType type) {
-    this.type = type;
-  }
-
-  public NotificationSeverity getSeverity() {
-    return severity;
-  }
-
-  public void setSeverity(NotificationSeverity severity) {
-    this.severity = severity;
-  }
-
-  public String getMessage() {
-    return message;
-  }
-
-  public void setMessage(String message) {
-    this.message = message;
-  }
-
-  public Item getItem() {
-    return item;
-  }
-
-  public void setItem(Item item) {
-    this.item = item;
-  }
-
-  public Order getOrder() {
-    return order;
-  }
-
-  public void setOrder(Order order) {
-    this.order = order;
-  }
-
-  public Transfer getTransfer() {
-    return transfer;
-  }
-
-  public void setTransfer(Transfer transfer) {
-    this.transfer = transfer;
-  }
-
-  public Instant getCreatedAt() {
-    return createdAt;
-  }
-
-  public void setCreatedAt(Instant createdAt) {
-    this.createdAt = createdAt;
-  }
-
-  public Instant getExpiresAt() {
-    return expiresAt;
-  }
-
-  public void setExpiresAt(Instant expiresAt) {
-    this.expiresAt = expiresAt;
-  }
-
-  public Boolean getAcknowledged() {
-    return acknowledged;
-  }
-
-  public void setAcknowledged(Boolean acknowledged) {
-    this.acknowledged = acknowledged;
-  }
 }
