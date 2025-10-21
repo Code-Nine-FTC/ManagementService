@@ -64,22 +64,21 @@ public interface AnalyticsRepository extends JpaRepository<OrderItem, Long> {
   @Query(
       value =
           """
-          SELECT
-            it.id as group_id,
-            it.name as group_name,
-            date_trunc(:step, COALESCE(o.withdraw_day, o.created_at)) as bucket,
-            COUNT(oi.id) as pedidos,
-            SUM(oi.quantity) as quantidade
-          FROM order_item oi
-          JOIN orders o ON oi.order_id = o.id
-          JOIN items i ON oi.item_id = i.id
-          JOIN items_type it ON i.id = ANY (SELECT item_id FROM item_item_type WHERE item_id = i.id) OR i.item_code IS NOT NULL
-          LEFT JOIN item_item_type iit ON iit.item_id = i.id
-          LEFT JOIN items_type it2 ON iit.item_type_id = it2.id
-          WHERE (COALESCE(o.withdraw_day, o.created_at) BETWEEN :startDate AND :endDate)
-            AND (:onlyCompleted = false OR o.status = 'COMPLETED')
-          GROUP BY it.id, it.name, bucket
-          ORDER BY bucket ASC, it.name ASC
+              SELECT
+                  it.id as group_id,
+                  it.name as group_name,
+                  date_trunc(:step, COALESCE(o.withdraw_day, o.created_at)) as bucket,
+                  COUNT(oi.id) as pedidos,
+                  SUM(oi.quantity) as quantidade
+              FROM order_item oi
+              JOIN orders o ON oi.order_id = o.id
+              JOIN items i ON oi.item_id = i.id
+              JOIN item_item_type iit ON iit.item_id = i.id
+              JOIN items_type it ON iit.item_type_id = it.id
+              WHERE (COALESCE(o.withdraw_day, o.created_at) BETWEEN :startDate AND :endDate)
+                AND (:onlyCompleted = false OR o.status = 'COMPLETED')
+              GROUP BY it.id, it.name, bucket
+              ORDER BY bucket ASC, it.name ASC
           """,
       nativeQuery = true)
   List<Object[]> findGroupDemandSeries(
