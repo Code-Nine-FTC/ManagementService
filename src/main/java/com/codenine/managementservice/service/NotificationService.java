@@ -3,11 +3,13 @@ package com.codenine.managementservice.service;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.codenine.managementservice.dto.notification.NotificationResponse;
 import com.codenine.managementservice.dto.notification.NotificationSeverity;
 import com.codenine.managementservice.dto.notification.NotificationType;
 import com.codenine.managementservice.entity.Item;
@@ -89,9 +91,30 @@ public class NotificationService {
   }
 
   @Transactional
-  public List<Notification> getUnacknowledgedNotifications() {
+  public List<NotificationResponse> getUnacknowledgedNotifications() {
     Instant now = Instant.now();
-    return notificationRepository.findByAcknowledgedFalseAndExpiresAtAfterOrderByCreatedAtDesc(now);
+    List<Notification> notifications = 
+        notificationRepository.findByAcknowledgedFalseAndExpiresAtAfterOrderByCreatedAtDesc(now);
+    
+    return notifications.stream()
+        .map(this::toResponse)
+        .collect(Collectors.toList());
+  }
+
+  private NotificationResponse toResponse(Notification n) {
+    return new NotificationResponse(
+        n.getId(),
+        n.getType(),
+        n.getMessage(),
+        n.getSeverity(),
+        n.getItem() != null ? n.getItem().getId() : null,
+        n.getItem() != null ? n.getItem().getName() : null,
+        n.getOrder() != null ? n.getOrder().getId() : null,
+        n.getTransfer() != null ? n.getTransfer().getId() : null,
+        n.getCreatedAt(),
+        n.getExpiresAt(),
+        n.getAcknowledged()
+    );
   }
 
   @Transactional

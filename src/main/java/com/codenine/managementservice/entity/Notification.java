@@ -4,12 +4,14 @@ import java.time.Instant;
 
 import com.codenine.managementservice.dto.notification.NotificationSeverity;
 import com.codenine.managementservice.dto.notification.NotificationType;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;
 
 import jakarta.persistence.*;
 @Data
 @Entity
 @Table(name = "notifications")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Notification {
 
   @Id
@@ -27,16 +29,19 @@ public class Notification {
   @Column(nullable = false, length = 500)
   private String message;
 
-  @ManyToOne
+  @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "item_id")
+  @JsonIgnoreProperties({"notifications", "orderItems"})
   private Item item;
 
-  @ManyToOne
+  @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "order_id")
+  @JsonIgnoreProperties({"notifications", "orderItems", "lastUser", "createdBy"})
   private Order order;
 
-  @ManyToOne
+  @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "transfer_id")
+  @JsonIgnoreProperties({"notifications", "lastUser"})
   private Transfer transfer;
 
   @Column(nullable = false)
