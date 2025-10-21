@@ -20,4 +20,8 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
   boolean existsByTypeAndTransferAndExpiresAtAfter(NotificationType type, Transfer transfer, Instant now);
 
   List<Notification> findByAcknowledgedFalseAndExpiresAtAfterOrderByCreatedAtDesc(Instant now);
+
+  boolean existsByTypeAndOrderAndCreatedAtAfter(NotificationType type, Order order, Instant timeLimit);
+
+  boolean existsByTypeAndTransferAndCreatedAtAfter(NotificationType type, Transfer transfer, Instant timeLimit);
 }

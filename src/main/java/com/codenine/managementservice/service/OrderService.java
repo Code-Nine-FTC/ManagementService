@@ -91,7 +91,7 @@ public class OrderService {
     orderRepository.save(order);
     
     notificationService.createNotification(
-        NotificationType.ORDER_STATUS_CHANGED,
+        NotificationType.ORDER_CANCELLED,
         "Pedido #" + orderId + " foi cancelado",
         NotificationSeverity.CRITICAL,
         null,
@@ -127,9 +127,9 @@ public class OrderService {
     orderRepository.save(order);
     
     notificationService.createNotification(
-        NotificationType.ORDER_STATUS_CHANGED,
+        NotificationType.ORDER_APPROVED,
         "Pedido #" + orderId + " foi aprovado",
-        NotificationSeverity.INFO,
+        NotificationSeverity.APPROVED,
         null,
         order,
         7776000L);
@@ -143,9 +143,9 @@ public class OrderService {
     orderRepository.save(order);
     
     notificationService.createNotification(
-        NotificationType.ORDER_STATUS_CHANGED,
+        NotificationType.ORDER_PROCESSING,
         "Pedido #" + orderId + " está sendo processado",
-        NotificationSeverity.INFO,
+        NotificationSeverity.PROCESSING,
         null,
         order,
         7776000L);
@@ -154,18 +154,18 @@ public class OrderService {
   public void completeOrder(Long orderId, User lastUser, LocalDateTime withdrawDay) {
     Order order = getOrderById(orderId);
     order.setStatus(OrderStatus.COMPLETED.name());
-    order.setWithdrawDay(LocalDateTime.now());
+    order.setWithdrawDay(withdrawDay);
     order.setLastUser(lastUser);
     order.setLastUpdate(LocalDateTime.now());
     orderRepository.save(order);
     
     notificationService.createNotification(
-        NotificationType.ORDER_STATUS_CHANGED,
+        NotificationType.ORDER_COMPLETED,
         "Pedido #" + orderId + " foi concluído",
         NotificationSeverity.SUCCESS,
         null,
         order,
-        7776000L);
+        7776000L); // 90 dias
   }
 
   private Order getOrderById(Long id) {

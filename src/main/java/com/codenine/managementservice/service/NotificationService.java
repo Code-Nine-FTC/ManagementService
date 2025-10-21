@@ -34,12 +34,15 @@ public class NotificationService {
     Instant now = Instant.now();
     Instant expiresAt = now.plus(expiresInSeconds, ChronoUnit.SECONDS);
 
-    boolean exists =
-        (item != null)
-            ? notificationRepository.existsByTypeAndItemAndExpiresAtAfter(type, item, now)
-            : notificationRepository.existsByTypeAndOrderAndExpiresAtAfter(type, order, now);
-
-    if (exists) return;
+    if (type == NotificationType.OUT_OF_STOCK || 
+        type == NotificationType.LOW_STOCK || 
+        type == NotificationType.CRITICAL_STOCK) {
+      boolean exists = notificationRepository.existsByTypeAndItemAndExpiresAtAfter(type, item, now);
+      if (exists) return;
+    } else if (type == NotificationType.ORDER_CREATED) {
+      boolean exists = notificationRepository.existsByTypeAndOrderAndExpiresAtAfter(type, order, now);
+      if (exists) return;
+    }
 
     Notification n = new Notification();
     n.setType(type);
@@ -64,9 +67,14 @@ public class NotificationService {
     Instant now = Instant.now();
     Instant expiresAt = now.plus(expiresInSeconds, ChronoUnit.SECONDS);
 
-    boolean exists = notificationRepository.existsByTypeAndTransferAndExpiresAtAfter(type, transfer, now);
-
-    if (exists) return;
+    if (type == NotificationType.TRANSFER_DEADLINE_NEAR || 
+        type == NotificationType.TRANSFER_OVERDUE) {
+      boolean exists = notificationRepository.existsByTypeAndTransferAndExpiresAtAfter(type, transfer, now);
+      if (exists) return;
+    } else if (type == NotificationType.TRANSFER_CREATED) {
+      boolean exists = notificationRepository.existsByTypeAndTransferAndExpiresAtAfter(type, transfer, now);
+      if (exists) return;
+    }
 
     Notification n = new Notification();
     n.setType(type);
