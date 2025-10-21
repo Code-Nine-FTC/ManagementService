@@ -7,7 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import com.codenine.managementservice.entity.Notification;
+import com.codenine.managementservice.dto.notification.NotificationResponse;
 import com.codenine.managementservice.service.NotificationService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -22,9 +22,9 @@ public class NotificationController {
   @Operation(description = "Lista todas as notificações não reconhecidas")
   @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'USER')")
   @GetMapping("/unacknowledged")
-  public ResponseEntity<List<Notification>> getUnacknowledgedNotifications() {
+  public ResponseEntity<List<NotificationResponse>> getUnacknowledgedNotifications() {
     try {
-      List<Notification> notifications = notificationService.getUnacknowledgedNotifications();
+      List<NotificationResponse> notifications = notificationService.getUnacknowledgedNotifications();
       return ResponseEntity.ok(notifications);
     } catch (Exception e) {
       return ResponseEntity.internalServerError().build();

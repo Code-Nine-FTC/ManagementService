@@ -3,11 +3,13 @@ package com.codenine.managementservice.service;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.codenine.managementservice.dto.notification.NotificationResponse;
 import com.codenine.managementservice.dto.notification.NotificationSeverity;
 import com.codenine.managementservice.dto.notification.NotificationType;
 import com.codenine.managementservice.entity.Item;
@@ -34,12 +36,15 @@ public class NotificationService {
     Instant now = Instant.now();
     Instant expiresAt = now.plus(expiresInSeconds, ChronoUnit.SECONDS);
 
-    boolean exists =
-        (item != null)
-            ? notificationRepository.existsByTypeAndItemAndExpiresAtAfter(type, item, now)
-            : notificationRepository.existsByTypeAndOrderAndExpiresAtAfter(type, order, now);
-
-    if (exists) return;
+    if (type == NotificationType.OUT_OF_STOCK || 
+        type == NotificationType.LOW_STOCK || 
+        type == NotificationType.CRITICAL_STOCK) {
+      boolean exists = notificationRepository.existsByTypeAndItemAndExpiresAtAfter(type, item, now);
+      if (exists) return;
+    } else if (type == NotificationType.ORDER_CREATED) {
+      boolean exists = notificationRepository.existsByTypeAndOrderAndExpiresAtAfter(type, order, now);
+      if (exists) return;
+    }
 
     Notification n = new Notification();
     n.setType(type);
@@ -64,9 +69,14 @@ public class NotificationService {
     Instant now = Instant.now();
     Instant expiresAt = now.plus(expiresInSeconds, ChronoUnit.SECONDS);
 
-    boolean exists = notificationRepository.existsByTypeAndTransferAndExpiresAtAfter(type, transfer, now);
-
-    if (exists) return;
+    if (type == NotificationType.TRANSFER_DEADLINE_NEAR || 
+        type == NotificationType.TRANSFER_OVERDUE) {
+      boolean exists = notificationRepository.existsByTypeAndTransferAndExpiresAtAfter(type, transfer, now);
+      if (exists) return;
+    } else if (type == NotificationType.TRANSFER_CREATED) {
+      boolean exists = notificationRepository.existsByTypeAndTransferAndExpiresAtAfter(type, transfer, now);
+      if (exists) return;
+    }
 
     Notification n = new Notification();
     n.setType(type);
@@ -81,9 +91,30 @@ public class NotificationService {
   }
 
   @Transactional
-  public List<Notification> getUnacknowledgedNotifications() {
+  public List<NotificationResponse> getUnacknowledgedNotifications() {
     Instant now = Instant.now();
-    return notificationRepository.findByAcknowledgedFalseAndExpiresAtAfterOrderByCreatedAtDesc(now);
+    List<Notification> notifications = 
+        notificationRepository.findByAcknowledgedFalseAndExpiresAtAfterOrderByCreatedAtDesc(now);
+    
+    return notifications.stream()
+        .map(this::toResponse)
+        .collect(Collectors.toList());
+  }
+
+  private NotificationResponse toResponse(Notification n) {
+    return new NotificationResponse(
+        n.getId(),
+        n.getType(),
+        n.getMessage(),
+        n.getSeverity(),
+        n.getItem() != null ? n.getItem().getId() : null,
+        n.getItem() != null ? n.getItem().getName() : null,
+        n.getOrder() != null ? n.getOrder().getId() : null,
+        n.getTransfer() != null ? n.getTransfer().getId() : null,
+        n.getCreatedAt(),
+        n.getExpiresAt(),
+        n.getAcknowledged()
+    );
   }
 
   @Transactional

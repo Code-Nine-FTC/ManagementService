@@ -39,11 +39,11 @@ public class TransferService {
     transferRepository.save(transfer);
     
     notificationService.createNotificationForTransfer(
-        NotificationType.TRANSFER_STATUS_CHANGED,
+        NotificationType.TRANSFER_CANCELLED,
         "Transferência #" + transferId + " foi cancelada",
         NotificationSeverity.CRITICAL,
         transfer,
-        7776000L); // 90 dias
+        7776000L);
   }
 
   public void completeTransfer(Long transferId, User lastUser) {
@@ -54,11 +54,11 @@ public class TransferService {
     transferRepository.save(transfer);
     
     notificationService.createNotificationForTransfer(
-        NotificationType.TRANSFER_STATUS_CHANGED,
+        NotificationType.TRANSFER_COMPLETED,
         "Transferência #" + transferId + " foi concluída",
         NotificationSeverity.SUCCESS,
         transfer,
-        7776000L); // 90 dias
+        7776000L);
   }
 
   private Transfer getTransferById(Long id) {
