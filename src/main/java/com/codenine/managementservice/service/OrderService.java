@@ -1,6 +1,7 @@
 package com.codenine.managementservice.service;
 
 import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,16 +35,33 @@ public class OrderService {
   // SupplierCompany linkage removed
 
   public Long createOrder(OrderRequest request, User lastUser) {
+    // Validar número do pedido
+    if (request.orderNumber() == null || request.orderNumber().isBlank()) {
+      throw new IllegalArgumentException("orderNumber é obrigatório");
+    }
+    if (orderRepository.existsByOrderNumber(request.orderNumber())) {
+      // Usaremos IllegalStateException para diferenciar no controller e retornar 409
+      throw new IllegalStateException("Número do pedido já existente");
+    }
+
     List<Item> items = itemRepository.findAllById(request.itemQuantities().keySet());
     if (items.size() != request.itemQuantities().keySet().size())
       throw new IllegalArgumentException("Um ou mais IDs de item são inválidos.");
-    // Resolve seção com segurança: se o usuário não tiver seções, mantém null (sem quebrar)
+    // Resolve seção: prioridade para sectionId do request; caso contrário, fallback para a primeira seção do usuário
     Section section = null;
-    if (lastUser.getSections() != null && !lastUser.getSections().isEmpty()) {
+    if (request.sectionId() != null) {
+      section = sectionRepository.findById(request.sectionId()).orElse(null);
+    } else if (lastUser.getSections() != null && !lastUser.getSections().isEmpty()) {
       Long sectionId = lastUser.getSections().get(0).getId();
       section = sectionRepository.findById(sectionId).orElse(null);
     }
-  Order order = OrderMapper.toEntity(request, lastUser, items, section);
+
+    Order order = OrderMapper.toEntity(request, lastUser, items, section);
+    // withdrawDay (yyyy-MM-dd) opcional
+    if (request.withdrawDay() != null && !request.withdrawDay().isBlank()) {
+      LocalDate d = LocalDate.parse(request.withdrawDay());
+      order.setWithdrawDay(d.atStartOfDay());
+    }
 
     Order saved = orderRepository.save(order);
     return saved.getId();
@@ -51,11 +69,33 @@ public class OrderService {
 
   public void updateOrder(Long orderId, OrderRequest request, User lastUser) {
     Order order = getOrderById(orderId);
-    List<Item> items = itemRepository.findAllById(request.itemQuantities().keySet());
-    if (items.size() != request.itemQuantities().keySet().size())
-      throw new IllegalArgumentException("Um ou mais IDs de item são inválidos.");
+    // Não permitimos alteração do número do pedido neste momento
+    // Se enviado e diferente, rejeita
+    if (request.orderNumber() != null && !request.orderNumber().isBlank()
+        && (order.getOrderNumber() == null || !order.getOrderNumber().equals(request.orderNumber()))) {
+      throw new IllegalArgumentException("Alteração do número do pedido não é permitida.");
+    }
 
-  order = OrderMapper.toUpdate(order, request, lastUser, items);
+    if (request.itemQuantities() != null && !request.itemQuantities().isEmpty()) {
+      List<Item> items = itemRepository.findAllById(request.itemQuantities().keySet());
+      if (items.size() != request.itemQuantities().keySet().size())
+        throw new IllegalArgumentException("Um ou mais IDs de item são inválidos.");
+      order = OrderMapper.toUpdate(order, request, lastUser, items);
+    }
+
+    if (request.withdrawDay() != null && !request.withdrawDay().isBlank()) {
+      LocalDate d = LocalDate.parse(request.withdrawDay());
+      order.setWithdrawDay(d.atStartOfDay());
+      order.setLastUser(lastUser);
+      order.setLastUpdate(LocalDateTime.now());
+    }
+
+    if (request.sectionId() != null) {
+      Section section = sectionRepository.findById(request.sectionId()).orElse(null);
+      order.setSection(section);
+      order.setLastUser(lastUser);
+      order.setLastUpdate(LocalDateTime.now());
+    }
 
     orderRepository.save(order);
   }

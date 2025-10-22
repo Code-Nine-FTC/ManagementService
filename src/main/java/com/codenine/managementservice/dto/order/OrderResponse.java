@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 
 public record OrderResponse(
     Long id,
+    String orderNumber,
     LocalDateTime withdrawDay,
     String status,
     Long createdById,

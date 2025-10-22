@@ -2,4 +2,14 @@ package com.codenine.managementservice.dto.order;
 
 import java.util.Map;
 
-public record OrderRequest(Map<Long, Integer> itemQuantities, Long supplierId) {}
+// DTO usado tanto para criação quanto para atualização de pedidos.
+// Campos:
+// - orderNumber: obrigatório na criação (manual), ignorado na atualização se enviado
+// - itemQuantities: mapa itemId -> quantidade; opcional na atualização
+// - sectionId: opcional; se informado na criação, define a seção do pedido
+// - withdrawDay: opcional; no formato yyyy-MM-dd para atualização/definição
+public record OrderRequest(
+	String orderNumber,
+	Map<Long, Integer> itemQuantities,
+	Long sectionId,
+	String withdrawDay) {}

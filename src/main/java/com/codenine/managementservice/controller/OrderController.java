@@ -42,10 +42,17 @@ public class OrderController {
       Authorization authorization) {
     try {
       User lastUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+      if (request.orderNumber() == null || request.orderNumber().isBlank()) {
+        return ResponseEntity.badRequest().body(java.util.Map.of("error", "orderNumber é obrigatório"));
+      }
       Long id = orderService.createOrder(request, lastUser);
-      return ResponseEntity.status(201).body(java.util.Map.of("id", id));
+      OrderResponse created = orderService.getOrderResponseById(id);
+      return ResponseEntity.status(201).body(created);
     } catch (IllegalArgumentException e) {
       return ResponseEntity.unprocessableEntity().build();
+    } catch (IllegalStateException e) {
+      // Número de pedido duplicado
+      return ResponseEntity.status(409).body(java.util.Map.of("error", "Número do pedido já existente. Escolha outro."));
     } catch (Exception e) {
       return ResponseEntity.internalServerError().build();
     }

@@ -16,6 +16,7 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
       """
       SELECT distinct new com.codenine.managementservice.dto.order.OrderResponse(
         o.id,
+        o.orderNumber,
         o.withdrawDay,
         o.status,
         cb.id,
@@ -55,4 +56,6 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
       where o.id = :orderId
         """)
   List<OrderItemResponse> findAllOrderItemResponsesByOrderId(@Param("orderId") Long orderId);
+
+  boolean existsByOrderNumber(String orderNumber);
 }

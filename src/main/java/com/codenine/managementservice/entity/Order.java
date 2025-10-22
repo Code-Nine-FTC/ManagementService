@@ -19,6 +19,10 @@ import lombok.Data;
 public class Order {
   @GeneratedValue @Id private Long id;
 
+  // Número manual do pedido (único e obrigatório)
+  @jakarta.persistence.Column(name = "order_number", unique = true, nullable = false, length = 50)
+  private String orderNumber;
+
   private LocalDateTime withdrawDay;
 
   private String status;
