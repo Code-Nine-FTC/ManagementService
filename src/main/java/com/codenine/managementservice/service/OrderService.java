@@ -6,6 +6,8 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.codenine.managementservice.dto.notification.NotificationSeverity;
+import com.codenine.managementservice.dto.notification.NotificationType;
 import com.codenine.managementservice.dto.order.OrderFilterCriteria;
 import com.codenine.managementservice.dto.order.OrderItemResponse;
 import com.codenine.managementservice.dto.order.OrderRequest;
@@ -35,6 +37,8 @@ public class OrderService {
 
   @Autowired private SupplierCompanyRepository supplierCompanyRepository;
 
+  @Autowired private NotificationService notificationService;
+
   public void createOrder(OrderRequest request, User lastUser) {
     SupplierCompany supplier =
         supplierCompanyRepository
@@ -51,6 +55,14 @@ public class OrderService {
     Order order = OrderMapper.toEntity(request, lastUser, items, section, supplier);
 
     orderRepository.save(order);
+    
+    notificationService.createNotification(
+        NotificationType.ORDER_CREATED,
+        "Novo pedido #" + order.getId() + " criado com fornecedor " + supplier.getName(),
+        NotificationSeverity.INFO,
+        null,
+        order,
+        7776000L);
   }
 
   public void updateOrder(Long orderId, OrderRequest request, User lastUser) {
@@ -77,6 +89,14 @@ public class OrderService {
     order.setLastUser(lastUser);
     order.setLastUpdate(LocalDateTime.now());
     orderRepository.save(order);
+    
+    notificationService.createNotification(
+        NotificationType.ORDER_CANCELLED,
+        "Pedido #" + orderId + " foi cancelado",
+        NotificationSeverity.CRITICAL,
+        null,
+        order,
+        7776000L);
   }
 
   public List<OrderResponse> getAllOrders(OrderFilterCriteria criteria) {
@@ -105,6 +125,14 @@ public class OrderService {
     order.setLastUser(lastUser);
     order.setLastUpdate(LocalDateTime.now());
     orderRepository.save(order);
+    
+    notificationService.createNotification(
+        NotificationType.ORDER_APPROVED,
+        "Pedido #" + orderId + " foi aprovado",
+        NotificationSeverity.APPROVED,
+        null,
+        order,
+        7776000L);
   }
 
   public void processOrder(Long orderId, User lastUser) {
@@ -113,15 +141,31 @@ public class OrderService {
     order.setLastUser(lastUser);
     order.setLastUpdate(LocalDateTime.now());
     orderRepository.save(order);
+    
+    notificationService.createNotification(
+        NotificationType.ORDER_PROCESSING,
+        "Pedido #" + orderId + " está sendo processado",
+        NotificationSeverity.PROCESSING,
+        null,
+        order,
+        7776000L);
   }
 
   public void completeOrder(Long orderId, User lastUser, LocalDateTime withdrawDay) {
     Order order = getOrderById(orderId);
     order.setStatus(OrderStatus.COMPLETED.name());
-    order.setWithdrawDay(LocalDateTime.now());
+    order.setWithdrawDay(withdrawDay);
     order.setLastUser(lastUser);
     order.setLastUpdate(LocalDateTime.now());
     orderRepository.save(order);
+    
+    notificationService.createNotification(
+        NotificationType.ORDER_COMPLETED,
+        "Pedido #" + orderId + " foi concluído",
+        NotificationSeverity.SUCCESS,
+        null,
+        order,
+        7776000L); // 90 dias
   }
 
   private Order getOrderById(Long id) {
