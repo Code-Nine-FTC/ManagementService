@@ -7,6 +7,8 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.codenine.managementservice.dto.notification.NotificationSeverity;
+import com.codenine.managementservice.dto.notification.NotificationType;
 import com.codenine.managementservice.dto.order.OrderFilterCriteria;
 import com.codenine.managementservice.dto.order.OrderItemResponse;
 import com.codenine.managementservice.dto.order.OrderRequest;
@@ -32,6 +34,8 @@ public class OrderService {
 
   @Autowired private SectionRepository sectionRepository;
 
+  @Autowired private NotificationService notificationService;
+
   // SupplierCompany linkage removed
 
   public Long createOrder(OrderRequest request, User lastUser) {
@@ -43,7 +47,10 @@ public class OrderService {
       // Usaremos IllegalStateException para diferenciar no controller e retornar 409
       throw new IllegalStateException("Número do pedido já existente");
     }
-
+    
+    // Notifications
+    @SuppressWarnings("unused")
+    NotificationService notificationServiceRef = this.notificationService;
     List<Item> items = itemRepository.findAllById(request.itemQuantities().keySet());
     if (items.size() != request.itemQuantities().keySet().size())
       throw new IllegalArgumentException("Um ou mais IDs de item são inválidos.");
@@ -58,15 +65,23 @@ public class OrderService {
     if (section.getSectionType() != null && section.getSectionType() != com.codenine.managementservice.entity.SectionType.CONSUMER) {
       throw new IllegalArgumentException("A seção informada não é do tipo CONSUMER.");
     }
-
     Order order = OrderMapper.toEntity(request, lastUser, items, section);
     // withdrawDay (yyyy-MM-dd) opcional
     if (request.withdrawDay() != null && !request.withdrawDay().isBlank()) {
       LocalDate d = LocalDate.parse(request.withdrawDay());
       order.setWithdrawDay(d.atStartOfDay());
     }
-
     Order saved = orderRepository.save(order);
+    // Notificação de criação de pedido (mensagem sem fornecedor)
+    if (notificationService != null) {
+      notificationService.createNotification(
+          NotificationType.ORDER_CREATED,
+          "Novo pedido #" + saved.getId() + " criado",
+          NotificationSeverity.INFO,
+          null,
+          saved,
+          7776000L);
+    }
     return saved.getId();
   }
 
@@ -113,6 +128,14 @@ public class OrderService {
     order.setLastUser(lastUser);
     order.setLastUpdate(LocalDateTime.now());
     orderRepository.save(order);
+    
+    notificationService.createNotification(
+        NotificationType.ORDER_CANCELLED,
+        "Pedido #" + orderId + " foi cancelado",
+        NotificationSeverity.CRITICAL,
+        null,
+        order,
+        7776000L);
   }
 
   public List<OrderResponse> getAllOrders(OrderFilterCriteria criteria) {
@@ -140,6 +163,14 @@ public class OrderService {
     order.setLastUser(lastUser);
     order.setLastUpdate(LocalDateTime.now());
     orderRepository.save(order);
+    
+    notificationService.createNotification(
+        NotificationType.ORDER_APPROVED,
+        "Pedido #" + orderId + " foi aprovado",
+        NotificationSeverity.APPROVED,
+        null,
+        order,
+        7776000L);
   }
 
   public void processOrder(Long orderId, User lastUser) {
@@ -148,6 +179,14 @@ public class OrderService {
     order.setLastUser(lastUser);
     order.setLastUpdate(LocalDateTime.now());
     orderRepository.save(order);
+    
+    notificationService.createNotification(
+        NotificationType.ORDER_PROCESSING,
+        "Pedido #" + orderId + " está sendo processado",
+        NotificationSeverity.PROCESSING,
+        null,
+        order,
+        7776000L);
   }
 
   public void completeOrder(Long orderId, User lastUser, LocalDateTime withdrawDay) {
@@ -157,6 +196,14 @@ public class OrderService {
     order.setLastUser(lastUser);
     order.setLastUpdate(LocalDateTime.now());
     orderRepository.save(order);
+    
+    notificationService.createNotification(
+        NotificationType.ORDER_COMPLETED,
+        "Pedido #" + orderId + " foi concluído",
+        NotificationSeverity.SUCCESS,
+        null,
+        order,
+        7776000L); // 90 dias
   }
 
   private Order getOrderById(Long id) {

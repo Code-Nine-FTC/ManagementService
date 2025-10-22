@@ -60,7 +60,7 @@ public class AnalyticsService {
     DateTimeFormatter fmt;
     switch (normalizedStep) {
       case "day" -> fmt = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-      case "week" -> fmt = DateTimeFormatter.ofPattern("YYYY-'W'ww");
+      case "week" -> fmt = DateTimeFormatter.ofPattern("yyyy-'W'ww");
       default -> fmt = DateTimeFormatter.ofPattern("yyyy-MM");
     }
 
