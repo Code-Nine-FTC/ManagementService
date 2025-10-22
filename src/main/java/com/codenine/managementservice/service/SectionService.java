@@ -36,7 +36,7 @@ public class SectionService {
   }
 
   public SectionResponse getSection(Long id) {
-    return sectionRepository.findAllSectionResponses(id, null, null, null).stream()
+    return sectionRepository.findAllSectionResponses(id, null, null, null, null).stream()
         .findFirst()
         .orElseThrow(() -> new NullPointerException("Section not found with id: " + id));
   }
@@ -44,7 +44,7 @@ public class SectionService {
   public List<SectionResponse> getSectionsByFilter(SectionFilterCriteria filterCriteria) {
     return sectionRepository.findAllSectionResponses(
         filterCriteria.sectionId(), filterCriteria.lastUserId(),
-        filterCriteria.roleAccess(), filterCriteria.isActive());
+        filterCriteria.roleAccess(), filterCriteria.isActive(), filterCriteria.sectionType());
   }
 
   private Section getSectionById(Long id) {

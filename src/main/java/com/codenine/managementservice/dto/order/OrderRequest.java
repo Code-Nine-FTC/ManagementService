@@ -6,10 +6,12 @@ import java.util.Map;
 // Campos:
 // - orderNumber: obrigatório na criação (manual), ignorado na atualização se enviado
 // - itemQuantities: mapa itemId -> quantidade; opcional na atualização
-// - sectionId: opcional; se informado na criação, define a seção do pedido
+// - sectionId: (compat) opcional; se informado na criação, define a seção do pedido (consumidora)
+// - consumerSectionId: preferencial; id da seção consumidora do pedido
 // - withdrawDay: opcional; no formato yyyy-MM-dd para atualização/definição
 public record OrderRequest(
 	String orderNumber,
 	Map<Long, Integer> itemQuantities,
 	Long sectionId,
+	Long consumerSectionId,
 	String withdrawDay) {}

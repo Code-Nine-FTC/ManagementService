@@ -47,13 +47,16 @@ public class OrderService {
     List<Item> items = itemRepository.findAllById(request.itemQuantities().keySet());
     if (items.size() != request.itemQuantities().keySet().size())
       throw new IllegalArgumentException("Um ou mais IDs de item são inválidos.");
-    // Resolve seção: prioridade para sectionId do request; caso contrário, fallback para a primeira seção do usuário
+    // Resolve seção consumidora: prioridade para consumerSectionId; senão usa sectionId (compat). Sem fallback para seção do usuário.
     Section section = null;
-    if (request.sectionId() != null) {
-      section = sectionRepository.findById(request.sectionId()).orElse(null);
-    } else if (lastUser.getSections() != null && !lastUser.getSections().isEmpty()) {
-      Long sectionId = lastUser.getSections().get(0).getId();
-      section = sectionRepository.findById(sectionId).orElse(null);
+    Long consumerSectionId = request.consumerSectionId() != null ? request.consumerSectionId() : request.sectionId();
+    if (consumerSectionId == null) {
+      throw new IllegalArgumentException("consumerSectionId é obrigatório para associar o consumo.");
+    }
+    section = sectionRepository.findById(consumerSectionId).orElseThrow(() -> new IllegalArgumentException("Seção consumidora inválida."));
+    // Garantir que é uma seção consumidora
+    if (section.getSectionType() != null && section.getSectionType() != com.codenine.managementservice.entity.SectionType.CONSUMER) {
+      throw new IllegalArgumentException("A seção informada não é do tipo CONSUMER.");
     }
 
     Order order = OrderMapper.toEntity(request, lastUser, items, section);
@@ -90,8 +93,12 @@ public class OrderService {
       order.setLastUpdate(LocalDateTime.now());
     }
 
-    if (request.sectionId() != null) {
-      Section section = sectionRepository.findById(request.sectionId()).orElse(null);
+    Long consumerSectionId = request.consumerSectionId() != null ? request.consumerSectionId() : request.sectionId();
+    if (consumerSectionId != null) {
+      Section section = sectionRepository.findById(consumerSectionId).orElseThrow(() -> new IllegalArgumentException("Seção consumidora inválida."));
+      if (section.getSectionType() != null && section.getSectionType() != com.codenine.managementservice.entity.SectionType.CONSUMER) {
+        throw new IllegalArgumentException("A seção informada não é do tipo CONSUMER.");
+      }
       order.setSection(section);
       order.setLastUser(lastUser);
       order.setLastUpdate(LocalDateTime.now());
