@@ -49,7 +49,8 @@ public class OrderController {
       OrderResponse created = orderService.getOrderResponseById(id);
       return ResponseEntity.status(201).body(created);
     } catch (IllegalArgumentException e) {
-      return ResponseEntity.unprocessableEntity().build();
+      // Validações de input (ex.: seção consumidora inválida/não CONSUMER)
+      return ResponseEntity.badRequest().body(java.util.Map.of("error", e.getMessage()));
     } catch (IllegalStateException e) {
       // Número de pedido duplicado
       return ResponseEntity.status(409).body(java.util.Map.of("error", "Número do pedido já existente. Escolha outro."));
@@ -66,7 +67,7 @@ public class OrderController {
       orderService.updateOrder(id, request, lastUser);
       return ResponseEntity.ok().build();
     } catch (IllegalArgumentException e) {
-      return ResponseEntity.unprocessableEntity().build();
+      return ResponseEntity.badRequest().body(java.util.Map.of("error", e.getMessage()));
     } catch (Exception e) {
       return ResponseEntity.internalServerError().build();
     }

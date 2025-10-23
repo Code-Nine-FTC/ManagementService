@@ -1,5 +1,6 @@
 package com.codenine.managementservice.dto.order;
 
+import java.time.LocalDate;
 import java.util.Map;
 
 // DTO usado tanto para criação quanto para atualização de pedidos.
@@ -11,7 +12,7 @@ import java.util.Map;
 // - withdrawDay: opcional; no formato yyyy-MM-dd para atualização/definição
 public record OrderRequest(
 	String orderNumber,
-	Map<Long, Integer> itemQuantities,
+	Map<String, Integer> itemQuantities,
 	Long sectionId,
 	Long consumerSectionId,
-	String withdrawDay) {}
+	LocalDate withdrawDay) {}

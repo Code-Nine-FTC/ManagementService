@@ -2,6 +2,8 @@ package com.codenine.managementservice.service;
 
 import java.time.LocalDateTime;
 import java.time.LocalDate;
+import java.util.Map;
+import java.util.stream.Collectors;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -51,8 +53,15 @@ public class OrderService {
     // Notifications
     @SuppressWarnings("unused")
     NotificationService notificationServiceRef = this.notificationService;
-    List<Item> items = itemRepository.findAllById(request.itemQuantities().keySet());
-    if (items.size() != request.itemQuantities().keySet().size())
+  // Converter chaves String -> Long para itemQuantities
+  Map<Long, Integer> itemQuantitiesLong =
+    request.itemQuantities() != null
+      ? request.itemQuantities().entrySet().stream()
+        .collect(Collectors.toMap(e -> Long.parseLong(e.getKey()), Map.Entry::getValue))
+      : java.util.Collections.emptyMap();
+
+  List<Item> items = itemRepository.findAllById(itemQuantitiesLong.keySet());
+  if (items.size() != itemQuantitiesLong.keySet().size())
       throw new IllegalArgumentException("Um ou mais IDs de item são inválidos.");
     // Resolve seção consumidora: prioridade para consumerSectionId; senão usa sectionId (compat). Sem fallback para seção do usuário.
     Section section = null;
@@ -65,10 +74,10 @@ public class OrderService {
     if (section.getSectionType() != null && section.getSectionType() != com.codenine.managementservice.entity.SectionType.CONSUMER) {
       throw new IllegalArgumentException("A seção informada não é do tipo CONSUMER.");
     }
-    Order order = OrderMapper.toEntity(request, lastUser, items, section);
-    // withdrawDay (yyyy-MM-dd) opcional
-    if (request.withdrawDay() != null && !request.withdrawDay().isBlank()) {
-      LocalDate d = LocalDate.parse(request.withdrawDay());
+    Order order = OrderMapper.toEntity(request, itemQuantitiesLong, lastUser, items, section);
+    // withdrawDay (LocalDate) opcional
+    if (request.withdrawDay() != null) {
+      LocalDate d = request.withdrawDay();
       order.setWithdrawDay(d.atStartOfDay());
     }
     Order saved = orderRepository.save(order);
@@ -95,14 +104,17 @@ public class OrderService {
     }
 
     if (request.itemQuantities() != null && !request.itemQuantities().isEmpty()) {
-      List<Item> items = itemRepository.findAllById(request.itemQuantities().keySet());
-      if (items.size() != request.itemQuantities().keySet().size())
+      Map<Long, Integer> itemQuantitiesLong =
+          request.itemQuantities().entrySet().stream()
+              .collect(Collectors.toMap(e -> Long.parseLong(e.getKey()), Map.Entry::getValue));
+      List<Item> items = itemRepository.findAllById(itemQuantitiesLong.keySet());
+      if (items.size() != itemQuantitiesLong.keySet().size())
         throw new IllegalArgumentException("Um ou mais IDs de item são inválidos.");
-      order = OrderMapper.toUpdate(order, request, lastUser, items);
+      order = OrderMapper.toUpdate(order, itemQuantitiesLong, lastUser, items);
     }
 
-    if (request.withdrawDay() != null && !request.withdrawDay().isBlank()) {
-      LocalDate d = LocalDate.parse(request.withdrawDay());
+    if (request.withdrawDay() != null) {
+      LocalDate d = request.withdrawDay();
       order.setWithdrawDay(d.atStartOfDay());
       order.setLastUser(lastUser);
       order.setLastUpdate(LocalDateTime.now());

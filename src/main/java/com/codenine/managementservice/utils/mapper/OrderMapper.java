@@ -17,7 +17,7 @@ import com.codenine.managementservice.entity.User;
 public class OrderMapper {
 
   public static Order toEntity(
-    OrderRequest orderRequest, User lastUser, List<Item> items, Section section) {
+    OrderRequest orderRequest, Map<Long,Integer> itemQuantities, User lastUser, List<Item> items, Section section) {
     Map<Long, Item> itemMap =
         items.stream().collect(Collectors.toMap(Item::getId, Function.identity()));
     Order order = new Order();
@@ -29,8 +29,8 @@ public class OrderMapper {
     order.setSection(section);
     order.setStatus(OrderStatus.PENDING.name());
 
-    List<OrderItem> orderItems =
-        orderRequest.itemQuantities().entrySet().stream()
+  List<OrderItem> orderItems =
+    itemQuantities.entrySet().stream()
             .map(
                 entry -> {
                   Long itemId = entry.getKey();
@@ -52,12 +52,12 @@ public class OrderMapper {
   }
 
   public static Order toUpdate(
-      Order order, OrderRequest request, User lastUser, List<Item> items) {
-    if (request.itemQuantities() != null && !request.itemQuantities().isEmpty()) {
+      Order order, Map<Long,Integer> itemQuantities, User lastUser, List<Item> items) {
+    if (itemQuantities != null && !itemQuantities.isEmpty()) {
       Map<Long, Item> itemMap =
           items.stream().collect(Collectors.toMap(Item::getId, Function.identity()));
       List<OrderItem> orderItems =
-          request.itemQuantities().entrySet().stream()
+          itemQuantities.entrySet().stream()
               .map(
                   entry -> {
                     Long itemId = entry.getKey();
@@ -75,7 +75,7 @@ public class OrderMapper {
               .collect(Collectors.toList());
       order.setOrderItems(orderItems);
     }
-    if (request.itemQuantities() != null && !request.itemQuantities().isEmpty()) {
+    if (itemQuantities != null && !itemQuantities.isEmpty()) {
       order.setLastUser(lastUser);
       order.setLastUpdate(LocalDateTime.now());
     }

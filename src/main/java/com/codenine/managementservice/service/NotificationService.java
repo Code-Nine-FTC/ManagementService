@@ -33,11 +33,11 @@ public class NotificationService {
       Item item,
       Order order,
       Long expiresInSeconds) {
-    Instant now = Instant.now();
-    Instant expiresAt = now.plus(expiresInSeconds, ChronoUnit.SECONDS);
+  Instant now = Instant.now();
+  Instant expiresAt = now.plus(expiresInSeconds, ChronoUnit.SECONDS);
 
-    if (type == NotificationType.OUT_OF_STOCK || 
-        type == NotificationType.LOW_STOCK || 
+    if (type == NotificationType.OUT_OF_STOCK ||
+        type == NotificationType.LOW_STOCK ||
         type == NotificationType.CRITICAL_STOCK) {
       boolean exists = notificationRepository.existsByTypeAndItemAndExpiresAtAfter(type, item, now);
       if (exists) return;
@@ -52,8 +52,8 @@ public class NotificationService {
     n.setSeverity(severity);
     n.setItem(item);
     n.setOrder(order);
-    n.setCreatedAt(now);
-    n.setExpiresAt(expiresAt);
+  n.setCreatedAt(now);
+  n.setExpiresAt(expiresAt);
     n.setAcknowledged(false);
 
     notificationRepository.save(n);
@@ -66,8 +66,8 @@ public class NotificationService {
       NotificationSeverity severity,
       Transfer transfer,
       Long expiresInSeconds) {
-    Instant now = Instant.now();
-    Instant expiresAt = now.plus(expiresInSeconds, ChronoUnit.SECONDS);
+  Instant now = Instant.now();
+  Instant expiresAt = now.plus(expiresInSeconds, ChronoUnit.SECONDS);
 
     if (type == NotificationType.TRANSFER_DEADLINE_NEAR || 
         type == NotificationType.TRANSFER_OVERDUE) {
@@ -83,8 +83,8 @@ public class NotificationService {
     n.setMessage(message);
     n.setSeverity(severity);
     n.setTransfer(transfer);
-    n.setCreatedAt(now);
-    n.setExpiresAt(expiresAt);
+  n.setCreatedAt(now);
+  n.setExpiresAt(expiresAt);
     n.setAcknowledged(false);
 
     notificationRepository.save(n);
@@ -92,9 +92,9 @@ public class NotificationService {
 
   @Transactional
   public List<NotificationResponse> getUnacknowledgedNotifications() {
-    Instant now = Instant.now();
-    List<Notification> notifications = 
-        notificationRepository.findByAcknowledgedFalseAndExpiresAtAfterOrderByCreatedAtDesc(now);
+  Instant now = Instant.now();
+  List<Notification> notifications =
+    notificationRepository.findByAcknowledgedFalseAndExpiresAtAfterOrderByCreatedAtDesc(now);
     
     return notifications.stream()
         .map(this::toResponse)
@@ -127,9 +127,9 @@ public class NotificationService {
 
   @Transactional
   public void acknowledgeAllNotifications() {
-    Instant now = Instant.now();
-    List<Notification> notifications = 
-        notificationRepository.findByAcknowledgedFalseAndExpiresAtAfterOrderByCreatedAtDesc(now);
+  Instant now = Instant.now();
+  List<Notification> notifications =
+    notificationRepository.findByAcknowledgedFalseAndExpiresAtAfterOrderByCreatedAtDesc(now);
     notifications.forEach(n -> n.setAcknowledged(true));
     notificationRepository.saveAll(notifications);
   }
