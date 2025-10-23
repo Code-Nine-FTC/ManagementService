@@ -24,12 +24,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.PutMapping;
-
-
-
 
 
 @RestController
@@ -101,13 +99,31 @@ public class PurchaseOrderController {
     }
 
 
+    @PatchMapping("/{id}/status")
+    public ResponseEntity<?> updatePurchaseOrderStatus(@PathVariable Long id, @RequestParam Status status, Authorization authorization) {
+        try {
+            User lastUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+            purchaseOrderService.updateOrderStatus(id, status, lastUser);
+            return ResponseEntity.ok().build();
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.notFound().build();  
+        }
+    }
 
-
-
-    
-    
-
-
+    @PostMapping("/{id}/send-email")
+    public ResponseEntity<?> sendPurchaseOrderEmail(@PathVariable Long id, @RequestParam EmailStatus emailStatus, Authorization authorization) {
+        try {
+            User lastUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+            
+            return ResponseEntity.ok().build();
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.notFound().build();
+        }
 
 
 }
+    }

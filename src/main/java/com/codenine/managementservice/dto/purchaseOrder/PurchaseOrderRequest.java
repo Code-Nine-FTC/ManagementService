@@ -6,7 +6,7 @@ public record PurchaseOrderRequest(
         String issuingBody,
         String commitmentNoteNumber,
         Integer year,
-        Integer processNumber,
+        String processNumber,
         Float totalValue,
         LocalDateTime issueDate,
         Long orderId,

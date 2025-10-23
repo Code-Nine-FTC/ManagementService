@@ -27,7 +27,7 @@ public class PurchaseOrder {
     private String issuingBody;
     private String commitmentNoteNumber;
     private Integer year;
-    private Integer processNumber;
+    private String processNumber;
     private Float totalValue;
     private LocalDateTime issueDate;
     @Enumerated(EnumType.STRING)
@@ -36,6 +36,11 @@ public class PurchaseOrder {
     private EmailStatus emailStatus = EmailStatus.NOT_SENT;
     private LocalDateTime createdAt = LocalDateTime.now();
     private LocalDateTime lastUpdate = LocalDateTime.now();
+
+
+    @ManyToOne
+    @JoinColumn(name = "user_id", nullable = true)
+    private User sender;
 
     @OneToOne
     private Order order;

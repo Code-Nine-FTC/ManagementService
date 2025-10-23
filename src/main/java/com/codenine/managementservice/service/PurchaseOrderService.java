@@ -5,6 +5,7 @@ import java.util.List;
 
 import org.springframework.stereotype.Service;
 
+import com.codenine.managementservice.dto.purchaseOrder.EmailStatus;
 import com.codenine.managementservice.dto.purchaseOrder.PurchaseOrderFilterCriteria;
 import com.codenine.managementservice.dto.purchaseOrder.PurchaseOrderRequest;
 import com.codenine.managementservice.dto.purchaseOrder.PurchaseOrderResponse;
@@ -31,6 +32,7 @@ public class PurchaseOrderService {
 
     private final SupplierCompanyRepository supplierCompanyRepository;
 
+    private final EmailService emailService;
 
     public void createPurchaseOrder(PurchaseOrderRequest request, User lastUser) {
         Order order = orderRepository.findById(request.orderId())
@@ -90,5 +92,15 @@ public class PurchaseOrderService {
                 .orElseThrow(() -> new IllegalArgumentException("Purchase Order not found with id: " + id));
     }
 
+    public void sendEmail(Long purchaseOrderId, User lastUser) {
+        PurchaseOrder purchaseOrder = validateExistence(purchaseOrderId);
+        SupplierCompany supplier = purchaseOrder.getSupplierCompany();
+        emailService.sendCommitmentNoteEmail(purchaseOrder, supplier, supplier.getEmail());
+        purchaseOrder.setEmailStatus(EmailStatus.SENT);
+        purchaseOrder.setLastUser(lastUser);
+        purchaseOrder.setSender(lastUser);
+        purchaseOrder.setLastUpdate(LocalDateTime.now());
+        purchaseOrderRepository.save(purchaseOrder);
+    }
 
 }

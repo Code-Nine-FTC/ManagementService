@@ -3,6 +3,7 @@ package com.codenine.managementservice.repository;
 import com.codenine.managementservice.dto.purchaseOrder.PurchaseOrderResponse;
 import com.codenine.managementservice.entity.PurchaseOrder;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -16,7 +17,7 @@ public interface PurchaseOrderRepository extends JpaRepository<PurchaseOrder, Lo
     @Query(
         """
         SELECT new com.codenine.managementservice.dto.purchaseOrder.PurchaseOrderResponse(
-            po.id as purchaseOrderId,
+            po.id,
             po.issuingBody,
             po.commitmentNoteNumber,
             po.year,
@@ -27,23 +28,22 @@ public interface PurchaseOrderRepository extends JpaRepository<PurchaseOrder, Lo
             po.emailStatus,
             po.createdAt,
             po.lastUpdate,
-            o.id as orderId,
-            o.status as orderStatus,
-            sc.id as supplierCompanyId,
-            sc.name as supplierCompanyName,
-            sc.email as supplierCompanyEmail,
-            lu.id as lastUserId,
-            lu.name as lastUserName,
-            cb.id as createdById,
-            cb.name as createdByName
+            o.id,
+            o.status,
+            sc.id,
+            sc.name,
+            sc.email,
+            lu.id,
+            lu.name,
+            cb.id,
+            cb.name
         )
         FROM PurchaseOrder po
-        JOIN FETCH po.order o
-        JOIN FETCH po.supplierCompany sc
-        JOIN FETCH po.lastUser lu
-        JOIN FETCH po.createdBy cb
-        where 1=1
-        and (:supplierCompanyId is null or sc.id = :supplierCompanyId)
+        JOIN po.order o
+        JOIN po.supplierCompany sc
+        JOIN po.lastUser lu
+        JOIN po.createdBy cb
+        where (:supplierCompanyId is null or sc.id = :supplierCompanyId)
         and (:orderId is null or o.id = :orderId)
         and (:status is null or po.status = :status)
         and (:emailStatus is null or po.emailStatus = :emailStatus)
@@ -61,4 +61,7 @@ public interface PurchaseOrderRepository extends JpaRepository<PurchaseOrder, Lo
         @Param("createdBefore") LocalDateTime createdBefore,
         @Param("year") Integer year
     );
+
+    @Query("SELECT po FROM PurchaseOrder po WHERE po.status = 'PENDING' AND po.createdAt < :date")
+    List<PurchaseOrder> findPendingOrdersOlderThan(@Param("date") LocalDate date);
 }
