@@ -98,21 +98,21 @@ public class AnalyticsService {
   }
 
   public List<SectionConsumptionResponse> getSectionConsumption(
-      LocalDate startDate, LocalDate endDate, boolean onlyCompleted, boolean onlyConsumers) {
+      LocalDate startDate, LocalDate endDate, boolean onlyCompleted, boolean onlyConsumers, boolean onlyActive) {
     LocalDateTime start = startDate.atStartOfDay();
     LocalDateTime end = endDate.plusDays(1).atStartOfDay().minusNanos(1);
     SectionType type = onlyConsumers ? SectionType.CONSUMER : null;
-    return analyticsRepository.findSectionConsumption(start, end, onlyCompleted, type);
+    return analyticsRepository.findSectionConsumption(start, end, onlyCompleted, type, onlyActive);
   }
 
   public SectionDemandSeriesResponse getSectionDemandSeries(
-      LocalDate startDate, LocalDate endDate, String step, boolean onlyCompleted, boolean onlyConsumers) {
+      LocalDate startDate, LocalDate endDate, String step, boolean onlyCompleted, boolean onlyConsumers, boolean onlyActive) {
     String normalizedStep = normalizeStep(step);
     LocalDateTime start = startDate.atStartOfDay();
     LocalDateTime end = endDate.plusDays(1).atStartOfDay().minusNanos(1);
 
     List<Object[]> rows =
-        analyticsRepository.findSectionDemandSeries(start, end, onlyCompleted, normalizedStep, onlyConsumers);
+        analyticsRepository.findSectionDemandSeries(start, end, onlyCompleted, normalizedStep, onlyConsumers, onlyActive);
 
     DateTimeFormatter fmt;
     switch (normalizedStep) {

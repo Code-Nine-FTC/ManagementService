@@ -77,6 +77,7 @@ public interface AnalyticsRepository extends JpaRepository<OrderItem, Long> {
       WHERE (COALESCE(o.withdrawDay, o.createdAt) BETWEEN :startDate AND :endDate)
         AND (:onlyCompleted = false OR o.status = 'COMPLETED')
         AND (:type IS NULL OR s.sectionType = :type)
+        AND (:onlyActive = false OR s.isActive = true)
       GROUP BY s.id, s.title
       ORDER BY COUNT(DISTINCT o.id) DESC, SUM(oi.quantity) DESC
       """)
@@ -84,7 +85,8 @@ public interface AnalyticsRepository extends JpaRepository<OrderItem, Long> {
       @Param("startDate") LocalDateTime startDate,
       @Param("endDate") LocalDateTime endDate,
       @Param("onlyCompleted") boolean onlyCompleted,
-      @Param("type") SectionType type);
+      @Param("type") SectionType type,
+      @Param("onlyActive") boolean onlyActive);
 
   @Query(
       value =
@@ -127,6 +129,7 @@ public interface AnalyticsRepository extends JpaRepository<OrderItem, Long> {
           WHERE (COALESCE(o.withdraw_day, o.created_at) BETWEEN :startDate AND :endDate)
             AND (:onlyCompleted = false OR o.status = 'COMPLETED')
             AND (:onlyConsumers = false OR s.section_type = 'CONSUMER')
+            AND (:onlyActive = false OR s.is_active = true)
           GROUP BY s.id, s.title, bucket
           ORDER BY bucket ASC, s.title ASC
           """,
@@ -136,5 +139,6 @@ public interface AnalyticsRepository extends JpaRepository<OrderItem, Long> {
       @Param("endDate") LocalDateTime endDate,
       @Param("onlyCompleted") boolean onlyCompleted,
       @Param("step") String step,
-      @Param("onlyConsumers") boolean onlyConsumers);
+      @Param("onlyConsumers") boolean onlyConsumers,
+      @Param("onlyActive") boolean onlyActive);
 }

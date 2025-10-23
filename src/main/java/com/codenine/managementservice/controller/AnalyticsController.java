@@ -89,10 +89,13 @@ public class AnalyticsController {
           boolean onlyCompleted,
       @Parameter(description = "Somente seções consumidoras", example = "true")
           @RequestParam(defaultValue = "true")
-          boolean onlyConsumers) {
+          boolean onlyConsumers,
+      @Parameter(description = "Somente seções ativas", example = "true")
+          @RequestParam(defaultValue = "true")
+          boolean onlyActiveConsumers) {
     if (endDate.isBefore(startDate)) return ResponseEntity.badRequest().build();
     return ResponseEntity.ok(
-        analyticsService.getSectionConsumption(startDate, endDate, onlyCompleted, onlyConsumers));
+        analyticsService.getSectionConsumption(startDate, endDate, onlyCompleted, onlyConsumers, onlyActiveConsumers));
   }
 
   @Operation(summary = "Série temporal de consumo por seção")
@@ -103,9 +106,10 @@ public class AnalyticsController {
       @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
       @RequestParam(defaultValue = "month") String step,
       @RequestParam(defaultValue = "false") boolean onlyCompleted,
-      @RequestParam(defaultValue = "true") boolean onlyConsumers) {
+    @RequestParam(defaultValue = "true") boolean onlyConsumers,
+    @RequestParam(defaultValue = "true") boolean onlyActiveConsumers) {
     if (endDate.isBefore(startDate)) return ResponseEntity.badRequest().build();
     return ResponseEntity.ok(
-        analyticsService.getSectionDemandSeries(startDate, endDate, step, onlyCompleted, onlyConsumers));
+      analyticsService.getSectionDemandSeries(startDate, endDate, step, onlyCompleted, onlyConsumers, onlyActiveConsumers));
   }
 }
