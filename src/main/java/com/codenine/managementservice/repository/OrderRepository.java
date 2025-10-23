@@ -16,6 +16,7 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
       """
       SELECT distinct new com.codenine.managementservice.dto.order.OrderResponse(
         o.id,
+        o.orderNumber,
         o.withdrawDay,
         o.status,
         cb.id,
@@ -25,25 +26,20 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
         o.createdAt,
         o.lastUpdate,
         sec.id,
-        sec.title,
-        su.id,
-        su.name
+        sec.title
       )
       FROM Order o
       LEFT JOIN o.createdBy cb
       LEFT JOIN o.lastUser lu
       LEFT JOIN o.section sec
-      left JOIN o.supplierCompany su
       WHERE (:orderId IS NULL OR o.id = :orderId)
         AND (:status IS NULL OR o.status = :status)
         AND (:sectionId IS NULL OR sec.id = :sectionId)
-        AND (:supplierId IS NULL OR su.id = :supplierId)
 
       """)
   List<OrderResponse> findAllOrderResponses(
       @Param("orderId") Long orderId,
       @Param("status") String status,
-      @Param("supplierId") Long supplierId,
       @Param("sectionId") Long sectionId);
 
   @Query(
@@ -60,4 +56,6 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
       where o.id = :orderId
         """)
   List<OrderItemResponse> findAllOrderItemResponsesByOrderId(@Param("orderId") Long orderId);
+
+  boolean existsByOrderNumber(String orderNumber);
 }

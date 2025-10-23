@@ -24,6 +24,10 @@ public class Section {
 
   private Boolean isActive = true;
 
+  @Enumerated(EnumType.STRING)
+  @Column(name = "section_type")
+  private SectionType sectionType = SectionType.CONSUMER;
+
   private LocalDateTime createdAt = LocalDateTime.now();
 
   private LocalDateTime lastUpdate = LocalDateTime.now();

@@ -1,7 +1,6 @@
 package com.codenine.managementservice.entity;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 import jakarta.persistence.*;
 import lombok.Data;
@@ -32,6 +31,6 @@ public class SupplierCompany {
 
   @ManyToOne private User lastUser;
 
-  @OneToMany(mappedBy = "supplierCompany")
-  private List<Order> orders;
+  // Order entity no longer references SupplierCompany; remove obsolete mapping to avoid boot errors.
+  // If you need to navigate orders by supplier in the future, reintroduce with a proper owning side.
 }

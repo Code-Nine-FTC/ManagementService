@@ -42,10 +42,18 @@ public class OrderController {
       Authorization authorization) {
     try {
       User lastUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-      orderService.createOrder(request, lastUser);
-      return ResponseEntity.ok().build();
+      if (request.orderNumber() == null || request.orderNumber().isBlank()) {
+        return ResponseEntity.badRequest().body(java.util.Map.of("error", "orderNumber é obrigatório"));
+      }
+      Long id = orderService.createOrder(request, lastUser);
+      OrderResponse created = orderService.getOrderResponseById(id);
+      return ResponseEntity.status(201).body(created);
     } catch (IllegalArgumentException e) {
-      return ResponseEntity.unprocessableEntity().build();
+      // Validações de input (ex.: seção consumidora inválida/não CONSUMER)
+      return ResponseEntity.badRequest().body(java.util.Map.of("error", e.getMessage()));
+    } catch (IllegalStateException e) {
+      // Número de pedido duplicado
+      return ResponseEntity.status(409).body(java.util.Map.of("error", "Número do pedido já existente. Escolha outro."));
     } catch (Exception e) {
       return ResponseEntity.internalServerError().build();
     }
@@ -59,7 +67,7 @@ public class OrderController {
       orderService.updateOrder(id, request, lastUser);
       return ResponseEntity.ok().build();
     } catch (IllegalArgumentException e) {
-      return ResponseEntity.unprocessableEntity().build();
+      return ResponseEntity.badRequest().body(java.util.Map.of("error", e.getMessage()));
     } catch (Exception e) {
       return ResponseEntity.internalServerError().build();
     }
@@ -74,14 +82,12 @@ public class OrderController {
       @Parameter(description = "Status do pedido", example = "PENDING")
           @RequestParam(required = false)
           OrderStatus status,
-      @Parameter(description = "Id do fornecedor", example = "1") @RequestParam(required = false)
-          Long supplierId,
       @Parameter(description = "Id da seção", example = "1") @RequestParam(required = false)
           Long sectionId) {
     try {
-      List<OrderResponse> responses =
-          orderService.getAllOrders(
-              new OrderFilterCriteria(orderId, status, supplierId, sectionId));
+       List<OrderResponse> responses =
+         orderService.getAllOrders(
+           new OrderFilterCriteria(orderId, status, null, sectionId));
       return ResponseEntity.ok(responses);
     } catch (IllegalArgumentException e) {
       return ResponseEntity.unprocessableEntity().build();
