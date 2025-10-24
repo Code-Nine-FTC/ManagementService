@@ -7,8 +7,6 @@ import org.springframework.stereotype.Service;
 
 import com.codenine.managementservice.repository.UserRepository;
 
-import lombok.RequiredArgsConstructor;
-
 @Service
 public class CustomUserDetailsService implements UserDetailsService {
 

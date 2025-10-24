@@ -1,8 +1,5 @@
 package com.codenine.managementservice.repository;
 
-import com.codenine.managementservice.dto.purchaseOrder.PurchaseOrderResponse;
-import com.codenine.managementservice.entity.PurchaseOrder;
-
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -11,11 +8,13 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import com.codenine.managementservice.dto.purchaseOrder.PurchaseOrderResponse;
+import com.codenine.managementservice.entity.PurchaseOrder;
 
 public interface PurchaseOrderRepository extends JpaRepository<PurchaseOrder, Long> {
 
-    @Query(
-        """
+  @Query(
+      """
         SELECT new com.codenine.managementservice.dto.purchaseOrder.PurchaseOrderResponse(
             po.id,
             po.issuingBody,
@@ -50,18 +49,16 @@ public interface PurchaseOrderRepository extends JpaRepository<PurchaseOrder, Lo
         and (:createdAfter is null or po.createdAt >= :createdAfter)
         and (:createdBefore is null or po.createdAt <= :createdBefore)
         and (:year is null or po.year = :year)
-        """
-    )
-    List<PurchaseOrderResponse> findAllPurchaseOrders(
-        @Param("supplierCompanyId") Long supplierCompanyId,
-        @Param("orderId") Long orderId,
-        @Param("status") String status,
-        @Param("emailStatus") String emailStatus,
-        @Param("createdAfter") LocalDateTime createdAfter,
-        @Param("createdBefore") LocalDateTime createdBefore,
-        @Param("year") Integer year
-    );
+        """)
+  List<PurchaseOrderResponse> findAllPurchaseOrders(
+      @Param("supplierCompanyId") Long supplierCompanyId,
+      @Param("orderId") Long orderId,
+      @Param("status") String status,
+      @Param("emailStatus") String emailStatus,
+      @Param("createdAfter") LocalDateTime createdAfter,
+      @Param("createdBefore") LocalDateTime createdBefore,
+      @Param("year") Integer year);
 
-    @Query("SELECT po FROM PurchaseOrder po WHERE po.status = 'PENDING' AND po.createdAt < :date")
-    List<PurchaseOrder> findPendingOrdersOlderThan(@Param("date") LocalDate date);
+  @Query("SELECT po FROM PurchaseOrder po WHERE po.status = 'PENDING' AND po.createdAt < :date")
+  List<PurchaseOrder> findPendingOrdersOlderThan(@Param("date") LocalDate date);
 }

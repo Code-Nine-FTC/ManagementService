@@ -15,9 +15,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.codenine.managementservice.dto.section.SectionFilterCriteria;
 import com.codenine.managementservice.dto.section.SectionRequest;
+import com.codenine.managementservice.entity.SectionType;
 import com.codenine.managementservice.entity.User;
 import com.codenine.managementservice.service.SectionService;
-import com.codenine.managementservice.entity.SectionType;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -97,7 +97,8 @@ public class SectionController {
               new SectionFilterCriteria(null, null, null, true, SectionType.CONSUMER));
       return ResponseEntity.ok(sections);
     } catch (Exception e) {
-      return ResponseEntity.status(500).body("Error retrieving consumer sections: " + e.getMessage());
+      return ResponseEntity.status(500)
+          .body("Error retrieving consumer sections: " + e.getMessage());
     }
   }
 

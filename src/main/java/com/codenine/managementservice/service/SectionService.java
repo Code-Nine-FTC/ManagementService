@@ -43,8 +43,11 @@ public class SectionService {
 
   public List<SectionResponse> getSectionsByFilter(SectionFilterCriteria filterCriteria) {
     return sectionRepository.findAllSectionResponses(
-        filterCriteria.sectionId(), filterCriteria.lastUserId(),
-        filterCriteria.roleAccess(), filterCriteria.isActive(), filterCriteria.sectionType());
+        filterCriteria.sectionId(),
+        filterCriteria.lastUserId(),
+        filterCriteria.roleAccess(),
+        filterCriteria.isActive(),
+        filterCriteria.sectionType());
   }
 
   private Section getSectionById(Long id) {

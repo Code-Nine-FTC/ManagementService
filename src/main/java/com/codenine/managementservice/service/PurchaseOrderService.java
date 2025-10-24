@@ -21,86 +21,110 @@ import com.codenine.managementservice.utils.mapper.PurchaseOrderMapper;
 
 import lombok.RequiredArgsConstructor;
 
-
 @Service
 @RequiredArgsConstructor
 public class PurchaseOrderService {
-    
-    private final PurchaseOrderRepository purchaseOrderRepository;
 
-    private final OrderRepository orderRepository;
+  private final PurchaseOrderRepository purchaseOrderRepository;
 
-    private final SupplierCompanyRepository supplierCompanyRepository;
+  private final OrderRepository orderRepository;
 
-    private final EmailService emailService;
+  private final SupplierCompanyRepository supplierCompanyRepository;
 
-    public void createPurchaseOrder(PurchaseOrderRequest request, User lastUser) {
-        Order order = orderRepository.findById(request.orderId())
-                .orElseThrow(() -> new IllegalArgumentException("Order not found with id: " + request.orderId()));
-        SupplierCompany supplierCompany = supplierCompanyRepository.findById(request.supplierCompanyId())
-                .orElseThrow(() -> new IllegalArgumentException("Supplier Company not found with id: " + request.supplierCompanyId()));
+  private final EmailService emailService;
 
-        PurchaseOrder purchaseOrder = PurchaseOrderMapper.toEntity(request, lastUser, order, supplierCompany);
-        purchaseOrderRepository.save(purchaseOrder);
-    }
+  public void createPurchaseOrder(PurchaseOrderRequest request, User lastUser) {
+    Order order =
+        orderRepository
+            .findById(request.orderId())
+            .orElseThrow(
+                () ->
+                    new IllegalArgumentException("Order not found with id: " + request.orderId()));
+    SupplierCompany supplierCompany =
+        supplierCompanyRepository
+            .findById(request.supplierCompanyId())
+            .orElseThrow(
+                () ->
+                    new IllegalArgumentException(
+                        "Supplier Company not found with id: " + request.supplierCompanyId()));
 
-    public List<PurchaseOrderResponse> getPurchaseOrders(PurchaseOrderFilterCriteria filterCriteria) {
-        List<PurchaseOrderResponse> purchaseOrders = purchaseOrderRepository.findAllPurchaseOrders(
+    PurchaseOrder purchaseOrder =
+        PurchaseOrderMapper.toEntity(request, lastUser, order, supplierCompany);
+    purchaseOrderRepository.save(purchaseOrder);
+  }
+
+  public List<PurchaseOrderResponse> getPurchaseOrders(PurchaseOrderFilterCriteria filterCriteria) {
+    List<PurchaseOrderResponse> purchaseOrders =
+        purchaseOrderRepository.findAllPurchaseOrders(
             filterCriteria.supplierCompanyId(),
             filterCriteria.orderId(),
             filterCriteria.status(),
             filterCriteria.emailStatus(),
             filterCriteria.createdAfter(),
             filterCriteria.createdBefore(),
-            filterCriteria.year()
-        );
-        return purchaseOrders;
-    }
+            filterCriteria.year());
+    return purchaseOrders;
+  }
 
-    public PurchaseOrderResponse getPurchaseOrderById(Long id) {
-        validateExistence(id);
-        PurchaseOrderResponse purchaseOrderResponse = purchaseOrderRepository.findAllPurchaseOrders(null, id, null, null, null, null, null).stream().findFirst().orElse(null);
-        return purchaseOrderResponse;
-    }
+  public PurchaseOrderResponse getPurchaseOrderById(Long id) {
+    validateExistence(id);
+    PurchaseOrderResponse purchaseOrderResponse =
+        purchaseOrderRepository
+            .findAllPurchaseOrders(null, id, null, null, null, null, null)
+            .stream()
+            .findFirst()
+            .orElse(null);
+    return purchaseOrderResponse;
+  }
 
-    public void updateOrderStatus(Long id, Status status, User lastUser) {
-        PurchaseOrder purchaseOrder = validateExistence(id);
-        purchaseOrder.setStatus(status);
-        purchaseOrder.setLastUser(lastUser);
-        purchaseOrder.setLastUpdate(LocalDateTime.now());
-        purchaseOrderRepository.save(purchaseOrder);
-    }
+  public void updateOrderStatus(Long id, Status status, User lastUser) {
+    PurchaseOrder purchaseOrder = validateExistence(id);
+    purchaseOrder.setStatus(status);
+    purchaseOrder.setLastUser(lastUser);
+    purchaseOrder.setLastUpdate(LocalDateTime.now());
+    purchaseOrderRepository.save(purchaseOrder);
+  }
 
-    public void updatePurchaseOrder(Long id, PurchaseOrderRequest request, User lastUser) {
-        PurchaseOrder purchaseOrder = validateExistence(id);
-        Order order = purchaseOrder.getOrder();
-        SupplierCompany supplierCompany = purchaseOrder.getSupplierCompany();
-        if (request.orderId() != null){
-            order = orderRepository.findById(request.orderId())
-                    .orElseThrow(() -> new IllegalArgumentException("Order not found with id: " + request.orderId()));
-        }
-        if (request.supplierCompanyId() != null){
-            supplierCompany = supplierCompanyRepository.findById(request.supplierCompanyId())
-                    .orElseThrow(() -> new IllegalArgumentException("Supplier Company not found with id: " + request.supplierCompanyId()));
-        }
-        PurchaseOrderMapper.updateEntity(purchaseOrder, request, lastUser, order, supplierCompany);
-        purchaseOrderRepository.save(purchaseOrder);
+  public void updatePurchaseOrder(Long id, PurchaseOrderRequest request, User lastUser) {
+    PurchaseOrder purchaseOrder = validateExistence(id);
+    Order order = purchaseOrder.getOrder();
+    SupplierCompany supplierCompany = purchaseOrder.getSupplierCompany();
+    if (request.orderId() != null) {
+      order =
+          orderRepository
+              .findById(request.orderId())
+              .orElseThrow(
+                  () ->
+                      new IllegalArgumentException(
+                          "Order not found with id: " + request.orderId()));
     }
-
-    private PurchaseOrder validateExistence(Long id) {
-        return purchaseOrderRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Purchase Order not found with id: " + id));
+    if (request.supplierCompanyId() != null) {
+      supplierCompany =
+          supplierCompanyRepository
+              .findById(request.supplierCompanyId())
+              .orElseThrow(
+                  () ->
+                      new IllegalArgumentException(
+                          "Supplier Company not found with id: " + request.supplierCompanyId()));
     }
+    PurchaseOrderMapper.updateEntity(purchaseOrder, request, lastUser, order, supplierCompany);
+    purchaseOrderRepository.save(purchaseOrder);
+  }
 
-    public void sendEmail(Long purchaseOrderId, User lastUser) {
-        PurchaseOrder purchaseOrder = validateExistence(purchaseOrderId);
-        SupplierCompany supplier = purchaseOrder.getSupplierCompany();
-        emailService.sendCommitmentNoteEmail(purchaseOrder, supplier, supplier.getEmail());
-        purchaseOrder.setEmailStatus(EmailStatus.SENT);
-        purchaseOrder.setLastUser(lastUser);
-        purchaseOrder.setSender(lastUser);
-        purchaseOrder.setLastUpdate(LocalDateTime.now());
-        purchaseOrderRepository.save(purchaseOrder);
-    }
+  private PurchaseOrder validateExistence(Long id) {
+    return purchaseOrderRepository
+        .findById(id)
+        .orElseThrow(() -> new IllegalArgumentException("Purchase Order not found with id: " + id));
+  }
 
+  public void sendEmail(Long purchaseOrderId, User lastUser) {
+    PurchaseOrder purchaseOrder = validateExistence(purchaseOrderId);
+    SupplierCompany supplier = purchaseOrder.getSupplierCompany();
+    emailService.sendCommitmentNoteEmail(purchaseOrder, supplier, supplier.getEmail());
+    purchaseOrder.setEmailStatus(EmailStatus.SENT);
+    purchaseOrder.setLastUser(lastUser);
+    purchaseOrder.setSender(lastUser);
+    purchaseOrder.setLastUpdate(LocalDateTime.now());
+    purchaseOrderRepository.save(purchaseOrder);
+  }
 }

@@ -1,8 +1,9 @@
 package com.codenine.managementservice.utils.converter;
 
+import java.time.Instant;
+
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;
-import java.time.Instant;
 
 @Converter(autoApply = false)
 public class InstantToLongConverter implements AttributeConverter<Instant, Long> {

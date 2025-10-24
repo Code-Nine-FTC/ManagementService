@@ -9,7 +9,4 @@ public record PurchaseOrderFilterCriteria(
     String emailStatus,
     LocalDateTime createdAfter,
     LocalDateTime createdBefore,
-    Integer year
-) {
-    
-}
+    Integer year) {}

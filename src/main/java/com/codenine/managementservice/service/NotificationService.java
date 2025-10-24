@@ -33,16 +33,17 @@ public class NotificationService {
       Item item,
       Order order,
       Long expiresInSeconds) {
-  Instant now = Instant.now();
-  Instant expiresAt = now.plus(expiresInSeconds, ChronoUnit.SECONDS);
+    Instant now = Instant.now();
+    Instant expiresAt = now.plus(expiresInSeconds, ChronoUnit.SECONDS);
 
-    if (type == NotificationType.OUT_OF_STOCK ||
-        type == NotificationType.LOW_STOCK ||
-        type == NotificationType.CRITICAL_STOCK) {
+    if (type == NotificationType.OUT_OF_STOCK
+        || type == NotificationType.LOW_STOCK
+        || type == NotificationType.CRITICAL_STOCK) {
       boolean exists = notificationRepository.existsByTypeAndItemAndExpiresAtAfter(type, item, now);
       if (exists) return;
     } else if (type == NotificationType.ORDER_CREATED) {
-      boolean exists = notificationRepository.existsByTypeAndOrderAndExpiresAtAfter(type, order, now);
+      boolean exists =
+          notificationRepository.existsByTypeAndOrderAndExpiresAtAfter(type, order, now);
       if (exists) return;
     }
 
@@ -52,8 +53,8 @@ public class NotificationService {
     n.setSeverity(severity);
     n.setItem(item);
     n.setOrder(order);
-  n.setCreatedAt(now);
-  n.setExpiresAt(expiresAt);
+    n.setCreatedAt(now);
+    n.setExpiresAt(expiresAt);
     n.setAcknowledged(false);
 
     notificationRepository.save(n);
@@ -66,15 +67,17 @@ public class NotificationService {
       NotificationSeverity severity,
       Transfer transfer,
       Long expiresInSeconds) {
-  Instant now = Instant.now();
-  Instant expiresAt = now.plus(expiresInSeconds, ChronoUnit.SECONDS);
+    Instant now = Instant.now();
+    Instant expiresAt = now.plus(expiresInSeconds, ChronoUnit.SECONDS);
 
-    if (type == NotificationType.TRANSFER_DEADLINE_NEAR || 
-        type == NotificationType.TRANSFER_OVERDUE) {
-      boolean exists = notificationRepository.existsByTypeAndTransferAndExpiresAtAfter(type, transfer, now);
+    if (type == NotificationType.TRANSFER_DEADLINE_NEAR
+        || type == NotificationType.TRANSFER_OVERDUE) {
+      boolean exists =
+          notificationRepository.existsByTypeAndTransferAndExpiresAtAfter(type, transfer, now);
       if (exists) return;
     } else if (type == NotificationType.TRANSFER_CREATED) {
-      boolean exists = notificationRepository.existsByTypeAndTransferAndExpiresAtAfter(type, transfer, now);
+      boolean exists =
+          notificationRepository.existsByTypeAndTransferAndExpiresAtAfter(type, transfer, now);
       if (exists) return;
     }
 
@@ -83,8 +86,8 @@ public class NotificationService {
     n.setMessage(message);
     n.setSeverity(severity);
     n.setTransfer(transfer);
-  n.setCreatedAt(now);
-  n.setExpiresAt(expiresAt);
+    n.setCreatedAt(now);
+    n.setExpiresAt(expiresAt);
     n.setAcknowledged(false);
 
     notificationRepository.save(n);
@@ -92,13 +95,11 @@ public class NotificationService {
 
   @Transactional
   public List<NotificationResponse> getUnacknowledgedNotifications() {
-  Instant now = Instant.now();
-  List<Notification> notifications =
-    notificationRepository.findByAcknowledgedFalseAndExpiresAtAfterOrderByCreatedAtDesc(now);
-    
-    return notifications.stream()
-        .map(this::toResponse)
-        .collect(Collectors.toList());
+    Instant now = Instant.now();
+    List<Notification> notifications =
+        notificationRepository.findByAcknowledgedFalseAndExpiresAtAfterOrderByCreatedAtDesc(now);
+
+    return notifications.stream().map(this::toResponse).collect(Collectors.toList());
   }
 
   private NotificationResponse toResponse(Notification n) {
@@ -113,23 +114,24 @@ public class NotificationService {
         n.getTransfer() != null ? n.getTransfer().getId() : null,
         n.getCreatedAt(),
         n.getExpiresAt(),
-        n.getAcknowledged()
-    );
+        n.getAcknowledged());
   }
 
   @Transactional
   public void acknowledgeNotification(Long notificationId) {
-    Notification notification = notificationRepository.findById(notificationId)
-        .orElseThrow(() -> new EntityNotFoundException("Notificação não encontrada"));
+    Notification notification =
+        notificationRepository
+            .findById(notificationId)
+            .orElseThrow(() -> new EntityNotFoundException("Notificação não encontrada"));
     notification.setAcknowledged(true);
     notificationRepository.save(notification);
   }
 
   @Transactional
   public void acknowledgeAllNotifications() {
-  Instant now = Instant.now();
-  List<Notification> notifications =
-    notificationRepository.findByAcknowledgedFalseAndExpiresAtAfterOrderByCreatedAtDesc(now);
+    Instant now = Instant.now();
+    List<Notification> notifications =
+        notificationRepository.findByAcknowledgedFalseAndExpiresAtAfterOrderByCreatedAtDesc(now);
     notifications.forEach(n -> n.setAcknowledged(true));
     notificationRepository.saveAll(notifications);
   }

@@ -22,5 +22,4 @@ public record PurchaseOrderResponse(
     Long lastUserId,
     String lastUserName,
     Long createdById,
-    String createdByName
-) {}
+    String createdByName) {}

@@ -1,10 +1,10 @@
 package com.codenine.managementservice.service;
 
-import java.time.LocalDateTime;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -49,29 +49,36 @@ public class OrderService {
       // Usaremos IllegalStateException para diferenciar no controller e retornar 409
       throw new IllegalStateException("Número do pedido já existente");
     }
-    
+
     // Notifications
     @SuppressWarnings("unused")
     NotificationService notificationServiceRef = this.notificationService;
-  // Converter chaves String -> Long para itemQuantities
-  Map<Long, Integer> itemQuantitiesLong =
-    request.itemQuantities() != null
-      ? request.itemQuantities().entrySet().stream()
-        .collect(Collectors.toMap(e -> Long.parseLong(e.getKey()), Map.Entry::getValue))
-      : java.util.Collections.emptyMap();
+    // Converter chaves String -> Long para itemQuantities
+    Map<Long, Integer> itemQuantitiesLong =
+        request.itemQuantities() != null
+            ? request.itemQuantities().entrySet().stream()
+                .collect(Collectors.toMap(e -> Long.parseLong(e.getKey()), Map.Entry::getValue))
+            : java.util.Collections.emptyMap();
 
-  List<Item> items = itemRepository.findAllById(itemQuantitiesLong.keySet());
-  if (items.size() != itemQuantitiesLong.keySet().size())
+    List<Item> items = itemRepository.findAllById(itemQuantitiesLong.keySet());
+    if (items.size() != itemQuantitiesLong.keySet().size())
       throw new IllegalArgumentException("Um ou mais IDs de item são inválidos.");
-    // Resolve seção consumidora: prioridade para consumerSectionId; senão usa sectionId (compat). Sem fallback para seção do usuário.
+    // Resolve seção consumidora: prioridade para consumerSectionId; senão usa sectionId (compat).
+    // Sem fallback para seção do usuário.
     Section section = null;
-    Long consumerSectionId = request.consumerSectionId() != null ? request.consumerSectionId() : request.sectionId();
+    Long consumerSectionId =
+        request.consumerSectionId() != null ? request.consumerSectionId() : request.sectionId();
     if (consumerSectionId == null) {
-      throw new IllegalArgumentException("consumerSectionId é obrigatório para associar o consumo.");
+      throw new IllegalArgumentException(
+          "consumerSectionId é obrigatório para associar o consumo.");
     }
-    section = sectionRepository.findById(consumerSectionId).orElseThrow(() -> new IllegalArgumentException("Seção consumidora inválida."));
+    section =
+        sectionRepository
+            .findById(consumerSectionId)
+            .orElseThrow(() -> new IllegalArgumentException("Seção consumidora inválida."));
     // Garantir que é uma seção consumidora
-    if (section.getSectionType() != null && section.getSectionType() != com.codenine.managementservice.entity.SectionType.CONSUMER) {
+    if (section.getSectionType() != null
+        && section.getSectionType() != com.codenine.managementservice.entity.SectionType.CONSUMER) {
       throw new IllegalArgumentException("A seção informada não é do tipo CONSUMER.");
     }
     Order order = OrderMapper.toEntity(request, itemQuantitiesLong, lastUser, items, section);
@@ -98,8 +105,10 @@ public class OrderService {
     Order order = getOrderById(orderId);
     // Não permitimos alteração do número do pedido neste momento
     // Se enviado e diferente, rejeita
-    if (request.orderNumber() != null && !request.orderNumber().isBlank()
-        && (order.getOrderNumber() == null || !order.getOrderNumber().equals(request.orderNumber()))) {
+    if (request.orderNumber() != null
+        && !request.orderNumber().isBlank()
+        && (order.getOrderNumber() == null
+            || !order.getOrderNumber().equals(request.orderNumber()))) {
       throw new IllegalArgumentException("Alteração do número do pedido não é permitida.");
     }
 
@@ -120,10 +129,16 @@ public class OrderService {
       order.setLastUpdate(LocalDateTime.now());
     }
 
-    Long consumerSectionId = request.consumerSectionId() != null ? request.consumerSectionId() : request.sectionId();
+    Long consumerSectionId =
+        request.consumerSectionId() != null ? request.consumerSectionId() : request.sectionId();
     if (consumerSectionId != null) {
-      Section section = sectionRepository.findById(consumerSectionId).orElseThrow(() -> new IllegalArgumentException("Seção consumidora inválida."));
-      if (section.getSectionType() != null && section.getSectionType() != com.codenine.managementservice.entity.SectionType.CONSUMER) {
+      Section section =
+          sectionRepository
+              .findById(consumerSectionId)
+              .orElseThrow(() -> new IllegalArgumentException("Seção consumidora inválida."));
+      if (section.getSectionType() != null
+          && section.getSectionType()
+              != com.codenine.managementservice.entity.SectionType.CONSUMER) {
         throw new IllegalArgumentException("A seção informada não é do tipo CONSUMER.");
       }
       order.setSection(section);
@@ -140,7 +155,7 @@ public class OrderService {
     order.setLastUser(lastUser);
     order.setLastUpdate(LocalDateTime.now());
     orderRepository.save(order);
-    
+
     notificationService.createNotification(
         NotificationType.ORDER_CANCELLED,
         "Pedido #" + orderId + " foi cancelado",
@@ -175,7 +190,7 @@ public class OrderService {
     order.setLastUser(lastUser);
     order.setLastUpdate(LocalDateTime.now());
     orderRepository.save(order);
-    
+
     notificationService.createNotification(
         NotificationType.ORDER_APPROVED,
         "Pedido #" + orderId + " foi aprovado",
@@ -191,7 +206,7 @@ public class OrderService {
     order.setLastUser(lastUser);
     order.setLastUpdate(LocalDateTime.now());
     orderRepository.save(order);
-    
+
     notificationService.createNotification(
         NotificationType.ORDER_PROCESSING,
         "Pedido #" + orderId + " está sendo processado",
@@ -208,7 +223,7 @@ public class OrderService {
     order.setLastUser(lastUser);
     order.setLastUpdate(LocalDateTime.now());
     orderRepository.save(order);
-    
+
     notificationService.createNotification(
         NotificationType.ORDER_COMPLETED,
         "Pedido #" + orderId + " foi concluído",

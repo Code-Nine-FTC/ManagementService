@@ -69,6 +69,7 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
 
   interface OrderStatusCount {
     String getStatus();
+
     Long getTotal();
   }
 
