@@ -1,6 +1,7 @@
 package com.codenine.managementservice.dto.purchaseOrder;
 
 import java.time.LocalDateTime;
+
 public record PurchaseOrderResponse(
     Long id,
     String issuingBody,
@@ -9,12 +10,12 @@ public record PurchaseOrderResponse(
     String processNumber,
     Float totalValue,
     LocalDateTime issueDate,
-    String status,             
-    String emailStatus,   
+    Status status,
+    EmailStatus emailStatus,
     LocalDateTime createdAt,
     LocalDateTime lastUpdate,
     Long orderId,
-    String orderStatus,   
+    String orderStatus,
     Long supplierCompanyId,
     String supplierCompanyName,
     String supplierCompanyEmail,
@@ -22,5 +23,4 @@ public record PurchaseOrderResponse(
     String lastUserName,
     Long createdById,
     String createdByName
-) {
-} 
+) {}
