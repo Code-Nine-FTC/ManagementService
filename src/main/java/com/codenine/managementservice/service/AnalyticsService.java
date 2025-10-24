@@ -21,7 +21,11 @@ import com.codenine.managementservice.dto.analytics.GroupDemandResponse;
 import com.codenine.managementservice.dto.analytics.GroupDemandSeriesResponse;
 import com.codenine.managementservice.dto.analytics.GroupSeriesData;
 import com.codenine.managementservice.dto.analytics.TopMaterialResponse;
+import com.codenine.managementservice.dto.analytics.SectionConsumptionResponse;
+import com.codenine.managementservice.dto.analytics.SectionDemandSeriesResponse;
+import com.codenine.managementservice.dto.analytics.SectionSeriesData;
 import com.codenine.managementservice.repository.AnalyticsRepository;
+import com.codenine.managementservice.entity.SectionType;
 
 @Service
 public class AnalyticsService {
@@ -93,6 +97,60 @@ public class AnalyticsService {
     return new GroupDemandSeriesResponse(categories, series);
   }
 
+  public List<SectionConsumptionResponse> getSectionConsumption(
+      LocalDate startDate, LocalDate endDate, boolean onlyCompleted, boolean onlyConsumers, boolean onlyActive) {
+    LocalDateTime start = startDate.atStartOfDay();
+    LocalDateTime end = endDate.plusDays(1).atStartOfDay().minusNanos(1);
+    SectionType type = onlyConsumers ? SectionType.CONSUMER : null;
+    return analyticsRepository.findSectionConsumption(start, end, onlyCompleted, type, onlyActive);
+  }
+
+  public SectionDemandSeriesResponse getSectionDemandSeries(
+      LocalDate startDate, LocalDate endDate, String step, boolean onlyCompleted, boolean onlyConsumers, boolean onlyActive) {
+    String normalizedStep = normalizeStep(step);
+    LocalDateTime start = startDate.atStartOfDay();
+    LocalDateTime end = endDate.plusDays(1).atStartOfDay().minusNanos(1);
+
+    List<Object[]> rows =
+        analyticsRepository.findSectionDemandSeries(start, end, onlyCompleted, normalizedStep, onlyConsumers, onlyActive);
+
+    DateTimeFormatter fmt;
+    switch (normalizedStep) {
+      case "day" -> fmt = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+      case "week" -> fmt = DateTimeFormatter.ofPattern("YYYY-'W'ww");
+      default -> fmt = DateTimeFormatter.ofPattern("yyyy-MM");
+    }
+
+    Set<String> categorySet = new TreeSet<>();
+    Map<Long, SectionSeriesDataBuilder> seriesBuilders = new LinkedHashMap<>();
+
+    for (Object[] r : rows) {
+      Long sectionId = r[0] != null ? ((Number) r[0]).longValue() : null;
+      String sectionName = (String) r[1];
+      LocalDateTime bucket = ((java.sql.Timestamp) r[2]).toLocalDateTime();
+      Long pedidos = r[3] != null ? ((Number) r[3]).longValue() : 0L;
+      Long quantidade = r[4] != null ? ((Number) r[4]).longValue() : 0L;
+
+      String cat = bucket.format(fmt);
+      categorySet.add(cat);
+      seriesBuilders
+          .computeIfAbsent(sectionId, k -> new SectionSeriesDataBuilder(sectionId, sectionName))
+          .put(cat, quantidade);
+    }
+
+    List<String> categories = new ArrayList<>(categorySet);
+    List<SectionSeriesData> series = new ArrayList<>();
+    for (SectionSeriesDataBuilder b : seriesBuilders.values()) {
+      List<Long> data = new ArrayList<>();
+      for (String c : categories) {
+        data.add(b.values.getOrDefault(c, 0L));
+      }
+      series.add(new SectionSeriesData(b.sectionId, b.name, data));
+    }
+    series.sort(Comparator.comparing(SectionSeriesData::nome, String.CASE_INSENSITIVE_ORDER));
+    return new SectionDemandSeriesResponse(categories, series);
+  }
+
   private String normalizeStep(String raw) {
     if (!StringUtils.hasText(raw)) return "month";
     raw = raw.toLowerCase(Locale.ROOT);
@@ -110,6 +168,21 @@ public class AnalyticsService {
 
     GroupSeriesDataBuilder(Long groupId, String name) {
       this.groupId = groupId;
+      this.name = name;
+    }
+
+    void put(String category, Long value) {
+      values.merge(category, value, Long::sum);
+    }
+  }
+
+  private static class SectionSeriesDataBuilder {
+    Long sectionId;
+    String name;
+    Map<String, Long> values = new LinkedHashMap<>();
+
+    SectionSeriesDataBuilder(Long sectionId, String name) {
+      this.sectionId = sectionId;
       this.name = name;
     }
 

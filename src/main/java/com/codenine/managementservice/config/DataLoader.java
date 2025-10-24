@@ -80,12 +80,14 @@ public class DataLoader implements CommandLineRunner {
     Section almoxarifado = new Section();
     almoxarifado.setTitle("Almoxarifado");
     almoxarifado.setIsActive(true);
+    almoxarifado.setSectionType(SectionType.STORAGE);
     almoxarifado.setCreatedAt(LocalDateTime.now());
     almoxarifado.setLastUpdate(LocalDateTime.now());
 
     Section farmacia = new Section();
     farmacia.setTitle("Farmácia");
     farmacia.setIsActive(true);
+    farmacia.setSectionType(SectionType.STORAGE);
 
     sections.add(almoxarifado);
     sections.add(farmacia);

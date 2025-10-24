@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 
 public record OrderResponse(
     Long id,
+    String orderNumber,
     LocalDateTime withdrawDay,
     String status,
     Long createdById,
@@ -13,6 +14,4 @@ public record OrderResponse(
     LocalDateTime createdAt,
     LocalDateTime updatedAt,
     Long sectionId,
-    String sectionName,
-    Long supplierId,
-    String supplierName) {}
+    String sectionName) {}

@@ -35,16 +35,16 @@ public class ItemController {
   @RequestBody(description = "Dados do item a ser criado")
   @PreAuthorize("@itemSecurity.hasItemManagementPermission(authentication, #entity.itemTypeId())")
   @PostMapping
-  public ResponseEntity<String> createItem(
+  public ResponseEntity<?> createItem(
       @org.springframework.web.bind.annotation.RequestBody ItemRequest entity,
       @Parameter(hidden = true) Authentication authentication) {
     try {
       User lastUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-      itemService.createItem(entity, lastUser);
+      Long id = itemService.createItem(entity, lastUser);
+      return ResponseEntity.status(201).body(java.util.Map.of("id", id));
     } catch (Exception e) {
       return ResponseEntity.status(500).body("Error creating item: " + e.getMessage());
     }
-    return ResponseEntity.status(201).body("Item created successfully");
   }
 
   @Operation(description = "Busca um item pelo ID.")

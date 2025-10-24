@@ -17,6 +17,7 @@ import com.codenine.managementservice.dto.section.SectionFilterCriteria;
 import com.codenine.managementservice.dto.section.SectionRequest;
 import com.codenine.managementservice.entity.User;
 import com.codenine.managementservice.service.SectionService;
+import com.codenine.managementservice.entity.SectionType;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -30,7 +31,7 @@ public class SectionController {
   @Operation(description = "Cria uma nova seção/departamento.")
   @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Dados da seção a ser criada")
   @PostMapping
-  @PreAuthorize("hasRole('ADMIN')")
+  @PreAuthorize("isAuthenticated()")
   public ResponseEntity<?> createSection(@RequestBody SectionRequest newSection) {
     try {
       User lastUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
@@ -45,7 +46,7 @@ public class SectionController {
 
   @Operation(description = "Busca uma seção pelo ID.")
   @GetMapping("/{id}")
-  @PreAuthorize("hasRole('ADMIN')")
+  @PreAuthorize("isAuthenticated()")
   public ResponseEntity<?> getSection(
       @Parameter(description = "ID da seção a ser buscada", example = "1") @PathVariable Long id) {
     try {
@@ -60,7 +61,7 @@ public class SectionController {
 
   @Operation(description = "Lista todas as seções, com filtros opcionais.")
   @GetMapping
-  @PreAuthorize("hasRole('ADMIN')")
+  @PreAuthorize("isAuthenticated()")
   public ResponseEntity<?> getAllSections(
       @Parameter(description = "ID da seção", example = "1") @RequestParam(required = false)
           Long sectionId,
@@ -72,21 +73,38 @@ public class SectionController {
           Integer roleAccess,
       @Parameter(description = "Status ativo/inativo", example = "true")
           @RequestParam(required = false)
-          Boolean isActive) {
+          Boolean isActive,
+      @Parameter(description = "Tipo da seção (STORAGE ou CONSUMER)")
+          @RequestParam(required = false)
+          SectionType sectionType) {
     try {
       var sections =
           sectionService.getSectionsByFilter(
-              new SectionFilterCriteria(sectionId, lastUserId, roleAccess, isActive));
+              new SectionFilterCriteria(sectionId, lastUserId, roleAccess, isActive, sectionType));
       return ResponseEntity.ok(sections);
     } catch (Exception e) {
       return ResponseEntity.status(500).body("Error retrieving sections: " + e.getMessage());
     }
   }
 
+  @Operation(description = "Lista seções consumidoras ativas (para seleção em pedidos).")
+  @GetMapping("/consumers")
+  @PreAuthorize("isAuthenticated()")
+  public ResponseEntity<?> getActiveConsumerSections() {
+    try {
+      var sections =
+          sectionService.getSectionsByFilter(
+              new SectionFilterCriteria(null, null, null, true, SectionType.CONSUMER));
+      return ResponseEntity.ok(sections);
+    } catch (Exception e) {
+      return ResponseEntity.status(500).body("Error retrieving consumer sections: " + e.getMessage());
+    }
+  }
+
   @Operation(description = "Atualiza uma seção existente.")
   @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Novos dados da seção")
   @PutMapping("/{id}")
-  @PreAuthorize("hasRole('ADMIN')")
+  @PreAuthorize("isAuthenticated()")
   public ResponseEntity<?> updateSection(
       @Parameter(description = "ID da seção a ser atualizada", example = "1") @PathVariable Long id,
       @RequestBody SectionRequest updatedSection) {
