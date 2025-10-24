@@ -3,7 +3,6 @@ package com.codenine.managementservice.service;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import com.codenine.managementservice.utils.CryptUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -17,6 +16,7 @@ import com.codenine.managementservice.entity.ItemType;
 import com.codenine.managementservice.entity.User;
 import com.codenine.managementservice.repository.ItemRepository;
 import com.codenine.managementservice.repository.ItemTypeRepository;
+import com.codenine.managementservice.utils.CryptUtil;
 import com.codenine.managementservice.utils.mapper.ItemMapper;
 
 @Service
@@ -26,7 +26,7 @@ public class ItemService {
   @Autowired private ItemTypeRepository itemTypeRepository;
 
   @Autowired private ItemLossService itemLossService;
-  
+
   @Autowired private CryptUtil cryptUtil;
 
   public Long createItem(ItemRequest itemRequest, User lastUser) {
@@ -117,7 +117,7 @@ public class ItemService {
     Long itemId;
     try {
       itemId = Long.valueOf(decryptedId);
-        return getItem(itemId);
+      return getItem(itemId);
     } catch (NumberFormatException e) {
       throw new IllegalArgumentException("Invalid QR code");
     }

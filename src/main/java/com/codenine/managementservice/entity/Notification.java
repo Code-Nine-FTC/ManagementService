@@ -5,9 +5,10 @@ import java.time.Instant;
 import com.codenine.managementservice.dto.notification.NotificationSeverity;
 import com.codenine.managementservice.dto.notification.NotificationType;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import lombok.Data;
 
 import jakarta.persistence.*;
+import lombok.Data;
+
 @Data
 @Entity
 @Table(name = "notifications")
@@ -52,5 +53,4 @@ public class Notification {
 
   @Column(nullable = false)
   private Boolean acknowledged = false;
-
 }

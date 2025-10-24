@@ -43,7 +43,8 @@ public class OrderController {
     try {
       User lastUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
       if (request.orderNumber() == null || request.orderNumber().isBlank()) {
-        return ResponseEntity.badRequest().body(java.util.Map.of("error", "orderNumber é obrigatório"));
+        return ResponseEntity.badRequest()
+            .body(java.util.Map.of("error", "orderNumber é obrigatório"));
       }
       Long id = orderService.createOrder(request, lastUser);
       OrderResponse created = orderService.getOrderResponseById(id);
@@ -53,7 +54,8 @@ public class OrderController {
       return ResponseEntity.badRequest().body(java.util.Map.of("error", e.getMessage()));
     } catch (IllegalStateException e) {
       // Número de pedido duplicado
-      return ResponseEntity.status(409).body(java.util.Map.of("error", "Número do pedido já existente. Escolha outro."));
+      return ResponseEntity.status(409)
+          .body(java.util.Map.of("error", "Número do pedido já existente. Escolha outro."));
     } catch (Exception e) {
       return ResponseEntity.internalServerError().build();
     }
@@ -85,9 +87,8 @@ public class OrderController {
       @Parameter(description = "Id da seção", example = "1") @RequestParam(required = false)
           Long sectionId) {
     try {
-       List<OrderResponse> responses =
-         orderService.getAllOrders(
-           new OrderFilterCriteria(orderId, status, null, sectionId));
+      List<OrderResponse> responses =
+          orderService.getAllOrders(new OrderFilterCriteria(orderId, status, null, sectionId));
       return ResponseEntity.ok(responses);
     } catch (IllegalArgumentException e) {
       return ResponseEntity.unprocessableEntity().build();

@@ -11,7 +11,6 @@ import org.springframework.stereotype.Service;
 import com.codenine.managementservice.dto.notification.NotificationSeverity;
 import com.codenine.managementservice.dto.notification.NotificationType;
 import com.codenine.managementservice.entity.Item;
-import com.codenine.managementservice.entity.Order;
 import com.codenine.managementservice.entity.Transfer;
 import com.codenine.managementservice.repository.ItemRepository;
 import com.codenine.managementservice.repository.OrderRepository;
@@ -39,7 +38,7 @@ public class NotificationScheduler {
     List<Item> items = itemRepository.findAll();
     for (Item item : items) {
       if (item.getMinimumStock() == null) continue;
-      
+
       int min = item.getMinimumStock();
       int current = item.getCurrentStock() == null ? 0 : item.getCurrentStock();
 
@@ -51,8 +50,7 @@ public class NotificationScheduler {
             item,
             null,
             7776000L); // formato de 90 dias de validade da not
-      }
-      else if (current == min) {
+      } else if (current == min) {
         notificationService.createNotification(
             NotificationType.LOW_STOCK,
             "Estoque no mínimo: " + item.getName() + " (atual: " + current + ")",
@@ -70,7 +68,8 @@ public class NotificationScheduler {
 
     for (Transfer transfer : transfers) {
       if (transfer.getDeliveryDate() == null) continue;
-      if ("COMPLETED".equals(transfer.getStatus()) || "CANCELLED".equals(transfer.getStatus())) continue;
+      if ("COMPLETED".equals(transfer.getStatus()) || "CANCELLED".equals(transfer.getStatus()))
+        continue;
 
       LocalDateTime deliveryDate = transfer.getDeliveryDate();
       long daysUntilDelivery = ChronoUnit.DAYS.between(now, deliveryDate);
@@ -82,11 +81,14 @@ public class NotificationScheduler {
             NotificationSeverity.CRITICAL,
             transfer,
             7776000L);
-      }
-      else if (daysUntilDelivery <= 7 && daysUntilDelivery >= 0) {
+      } else if (daysUntilDelivery <= 7 && daysUntilDelivery >= 0) {
         notificationService.createNotificationForTransfer(
             NotificationType.TRANSFER_DEADLINE_NEAR,
-            "Transferência #" + transfer.getId() + " próxima do prazo! Faltam " + daysUntilDelivery + " dias",
+            "Transferência #"
+                + transfer.getId()
+                + " próxima do prazo! Faltam "
+                + daysUntilDelivery
+                + " dias",
             NotificationSeverity.WARNING,
             transfer,
             7776000L);

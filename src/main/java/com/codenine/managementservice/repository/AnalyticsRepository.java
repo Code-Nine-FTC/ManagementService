@@ -9,8 +9,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import com.codenine.managementservice.dto.analytics.GroupDemandResponse;
-import com.codenine.managementservice.dto.analytics.TopMaterialResponse;
 import com.codenine.managementservice.dto.analytics.SectionConsumptionResponse;
+import com.codenine.managementservice.dto.analytics.TopMaterialResponse;
 import com.codenine.managementservice.entity.OrderItem;
 import com.codenine.managementservice.entity.SectionType;
 

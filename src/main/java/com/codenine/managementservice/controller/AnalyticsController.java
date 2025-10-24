@@ -11,9 +11,9 @@ import org.springframework.web.bind.annotation.*;
 
 import com.codenine.managementservice.dto.analytics.GroupDemandResponse;
 import com.codenine.managementservice.dto.analytics.GroupDemandSeriesResponse;
-import com.codenine.managementservice.dto.analytics.TopMaterialResponse;
 import com.codenine.managementservice.dto.analytics.SectionConsumptionResponse;
 import com.codenine.managementservice.dto.analytics.SectionDemandSeriesResponse;
+import com.codenine.managementservice.dto.analytics.TopMaterialResponse;
 import com.codenine.managementservice.service.AnalyticsService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -95,7 +95,8 @@ public class AnalyticsController {
           boolean onlyActiveConsumers) {
     if (endDate.isBefore(startDate)) return ResponseEntity.badRequest().build();
     return ResponseEntity.ok(
-        analyticsService.getSectionConsumption(startDate, endDate, onlyCompleted, onlyConsumers, onlyActiveConsumers));
+        analyticsService.getSectionConsumption(
+            startDate, endDate, onlyCompleted, onlyConsumers, onlyActiveConsumers));
   }
 
   @Operation(summary = "Série temporal de consumo por seção")
@@ -106,10 +107,11 @@ public class AnalyticsController {
       @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
       @RequestParam(defaultValue = "month") String step,
       @RequestParam(defaultValue = "false") boolean onlyCompleted,
-    @RequestParam(defaultValue = "true") boolean onlyConsumers,
-    @RequestParam(defaultValue = "true") boolean onlyActiveConsumers) {
+      @RequestParam(defaultValue = "true") boolean onlyConsumers,
+      @RequestParam(defaultValue = "true") boolean onlyActiveConsumers) {
     if (endDate.isBefore(startDate)) return ResponseEntity.badRequest().build();
     return ResponseEntity.ok(
-      analyticsService.getSectionDemandSeries(startDate, endDate, step, onlyCompleted, onlyConsumers, onlyActiveConsumers));
+        analyticsService.getSectionDemandSeries(
+            startDate, endDate, step, onlyCompleted, onlyConsumers, onlyActiveConsumers));
   }
 }

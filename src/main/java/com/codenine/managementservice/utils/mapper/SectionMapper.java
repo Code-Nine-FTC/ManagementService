@@ -3,8 +3,8 @@ package com.codenine.managementservice.utils.mapper;
 import com.codenine.managementservice.dto.section.SectionRequest;
 import com.codenine.managementservice.dto.section.SectionResponse;
 import com.codenine.managementservice.entity.Section;
-import com.codenine.managementservice.entity.User;
 import com.codenine.managementservice.entity.SectionType;
+import com.codenine.managementservice.entity.User;
 
 public class SectionMapper {
   public static Section toEntity(SectionRequest request, User lastUser) {
@@ -12,7 +12,8 @@ public class SectionMapper {
     section.setTitle(request.title());
     section.setRoleAccess(request.roleAccess());
     section.setIsActive(request.isActive() != null ? request.isActive() : true);
-    section.setSectionType(request.sectionType() != null ? request.sectionType() : SectionType.CONSUMER);
+    section.setSectionType(
+        request.sectionType() != null ? request.sectionType() : SectionType.CONSUMER);
     section.setLastUser(lastUser);
     return section;
   }

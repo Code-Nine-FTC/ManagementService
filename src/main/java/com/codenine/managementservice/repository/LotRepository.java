@@ -9,5 +9,6 @@ import com.codenine.managementservice.entity.Lot;
 
 public interface LotRepository extends JpaRepository<Lot, Long> {
   List<Lot> findByItemOrderByExpireDateAscCreatedAtAsc(Item item);
+
   boolean existsByItemAndCode(Item item, String code);
 }

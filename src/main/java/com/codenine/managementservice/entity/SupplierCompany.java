@@ -31,6 +31,8 @@ public class SupplierCompany {
 
   @ManyToOne private User lastUser;
 
-  // Order entity no longer references SupplierCompany; remove obsolete mapping to avoid boot errors.
-  // If you need to navigate orders by supplier in the future, reintroduce with a proper owning side.
+  // Order entity no longer references SupplierCompany; remove obsolete mapping to avoid boot
+  // errors.
+  // If you need to navigate orders by supplier in the future, reintroduce with a proper owning
+  // side.
 }

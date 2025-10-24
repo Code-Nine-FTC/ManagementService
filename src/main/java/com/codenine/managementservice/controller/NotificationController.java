@@ -24,7 +24,8 @@ public class NotificationController {
   @GetMapping("/unacknowledged")
   public ResponseEntity<List<NotificationResponse>> getUnacknowledgedNotifications() {
     try {
-      List<NotificationResponse> notifications = notificationService.getUnacknowledgedNotifications();
+      List<NotificationResponse> notifications =
+          notificationService.getUnacknowledgedNotifications();
       return ResponseEntity.ok(notifications);
     } catch (Exception e) {
       return ResponseEntity.internalServerError().build();

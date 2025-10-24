@@ -20,12 +20,12 @@ import org.springframework.util.StringUtils;
 import com.codenine.managementservice.dto.analytics.GroupDemandResponse;
 import com.codenine.managementservice.dto.analytics.GroupDemandSeriesResponse;
 import com.codenine.managementservice.dto.analytics.GroupSeriesData;
-import com.codenine.managementservice.dto.analytics.TopMaterialResponse;
 import com.codenine.managementservice.dto.analytics.SectionConsumptionResponse;
 import com.codenine.managementservice.dto.analytics.SectionDemandSeriesResponse;
 import com.codenine.managementservice.dto.analytics.SectionSeriesData;
-import com.codenine.managementservice.repository.AnalyticsRepository;
+import com.codenine.managementservice.dto.analytics.TopMaterialResponse;
 import com.codenine.managementservice.entity.SectionType;
+import com.codenine.managementservice.repository.AnalyticsRepository;
 
 @Service
 public class AnalyticsService {
@@ -98,7 +98,11 @@ public class AnalyticsService {
   }
 
   public List<SectionConsumptionResponse> getSectionConsumption(
-      LocalDate startDate, LocalDate endDate, boolean onlyCompleted, boolean onlyConsumers, boolean onlyActive) {
+      LocalDate startDate,
+      LocalDate endDate,
+      boolean onlyCompleted,
+      boolean onlyConsumers,
+      boolean onlyActive) {
     LocalDateTime start = startDate.atStartOfDay();
     LocalDateTime end = endDate.plusDays(1).atStartOfDay().minusNanos(1);
     SectionType type = onlyConsumers ? SectionType.CONSUMER : null;
@@ -106,13 +110,19 @@ public class AnalyticsService {
   }
 
   public SectionDemandSeriesResponse getSectionDemandSeries(
-      LocalDate startDate, LocalDate endDate, String step, boolean onlyCompleted, boolean onlyConsumers, boolean onlyActive) {
+      LocalDate startDate,
+      LocalDate endDate,
+      String step,
+      boolean onlyCompleted,
+      boolean onlyConsumers,
+      boolean onlyActive) {
     String normalizedStep = normalizeStep(step);
     LocalDateTime start = startDate.atStartOfDay();
     LocalDateTime end = endDate.plusDays(1).atStartOfDay().minusNanos(1);
 
     List<Object[]> rows =
-        analyticsRepository.findSectionDemandSeries(start, end, onlyCompleted, normalizedStep, onlyConsumers, onlyActive);
+        analyticsRepository.findSectionDemandSeries(
+            start, end, onlyCompleted, normalizedStep, onlyConsumers, onlyActive);
 
     DateTimeFormatter fmt;
     switch (normalizedStep) {
