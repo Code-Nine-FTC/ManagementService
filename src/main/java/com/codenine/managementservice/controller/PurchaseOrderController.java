@@ -118,7 +118,7 @@ public class PurchaseOrderController {
 
   @PostMapping("/{id}/send-email")
   public ResponseEntity<?> sendPurchaseOrderEmail(
-      @PathVariable Long id, @RequestParam EmailStatus emailStatus, Authorization authorization) {
+      @PathVariable Long id, Authorization authorization) {
     try {
       User lastUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
       purchaseOrderService.sendEmail(id, lastUser);
