@@ -32,6 +32,8 @@ public interface PurchaseOrderRepository extends JpaRepository<PurchaseOrder, Lo
             sc.id,
             sc.name,
             sc.email,
+      po.sender.id,
+      po.sender.name,
             lu.id,
             lu.name,
             cb.id,

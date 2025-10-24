@@ -19,6 +19,8 @@ public record PurchaseOrderResponse(
     Long supplierCompanyId,
     String supplierCompanyName,
     String supplierCompanyEmail,
+    Long senderId,
+    String senderName,
     Long lastUserId,
     String lastUserName,
     Long createdById,

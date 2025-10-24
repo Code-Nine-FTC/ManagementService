@@ -27,6 +27,22 @@ public class EmailService {
 
   public void sendCommitmentNoteEmail(PurchaseOrder po, SupplierCompany supplier, String toEmail) {
     String subject = "Solicitação de entrega de materiais por Nota de Empenho";
+    // guard against null sender (scheduled jobs or older records may not have sender set)
+    String senderName = "";
+    String senderSection = "";
+    if (po.getSender() != null) {
+      senderName = po.getSender().getName();
+      if (po.getSender().getSections() != null && !po.getSender().getSections().isEmpty())
+        senderSection = po.getSender().getSections().get(0).getTitle();
+    } else if (po.getCreatedBy() != null) {
+      senderName = po.getCreatedBy().getName();
+      if (po.getCreatedBy().getSections() != null && !po.getCreatedBy().getSections().isEmpty())
+        senderSection = po.getCreatedBy().getSections().get(0).getTitle();
+    } else {
+      senderName = "Comando";
+      senderSection = "Cmdo Brigada de Infantaria Aeromóvel";
+    }
+
     String body =
         String.format(
             "<h2>Solicitação de entrega de materiais por Nota de Empenho</h2>"
@@ -44,13 +60,13 @@ public class EmailService {
                 + "<br><p>Atenciosamente,</p>"
                 + "<p><b> %s <br> %s <br>Cmdo Brigada de Infantaria Aeromóvel</b></p>",
             po.getCommitmentNoteNumber(),
-            po.getCreatedAt().toLocalDate(),
+            po.getCreatedAt() != null ? po.getCreatedAt().toLocalDate() : "",
             po.getCommitmentNoteNumber(),
-            po.getCreatedAt().toLocalDate(),
-            supplier.getName(),
-            supplier.getCnpj(),
-            po.getSender().getName(),
-            po.getSender().getSections().get(0).getTitle());
+            po.getCreatedAt() != null ? po.getCreatedAt().toLocalDate() : "",
+            supplier != null ? supplier.getName() : "",
+            supplier != null ? supplier.getCnpj() : "",
+            senderName,
+            senderSection);
     try {
       MimeMessage message = emailSender.createMimeMessage();
       MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
