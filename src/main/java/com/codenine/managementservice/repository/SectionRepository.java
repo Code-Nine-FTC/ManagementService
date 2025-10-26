@@ -8,6 +8,7 @@ import org.springframework.data.repository.query.Param;
 
 import com.codenine.managementservice.dto.section.SectionResponse;
 import com.codenine.managementservice.entity.Section;
+import com.codenine.managementservice.entity.SectionType;
 
 public interface SectionRepository extends JpaRepository<Section, Long> {
 
@@ -18,6 +19,7 @@ public interface SectionRepository extends JpaRepository<Section, Long> {
             s.title,
             s.roleAccess,
             s.isActive,
+            s.sectionType,
             s.createdAt,
             s.lastUpdate,
             u.name
@@ -27,11 +29,13 @@ public interface SectionRepository extends JpaRepository<Section, Long> {
             where (:sectionId IS NULL OR s.id = :sectionId)
             and (:lastUserId IS NULL OR u.id = :lastUserId)
             and (:roleAccess IS NULL OR s.roleAccess = :roleAccess)
-            and (:isActive IS NULL OR s.isActive = :isActive)
+    and (:isActive IS NULL OR s.isActive = :isActive)
+    and (:sectionType IS NULL OR s.sectionType = :sectionType)
             """)
   List<SectionResponse> findAllSectionResponses(
       @Param("sectionId") Long sectionId,
       @Param("lastUserId") Long lastUserId,
       @Param("roleAccess") Integer roleAccess,
-      @Param("isActive") Boolean isActive);
+      @Param("isActive") Boolean isActive,
+      @Param("sectionType") SectionType sectionType);
 }

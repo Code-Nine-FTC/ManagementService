@@ -36,34 +36,18 @@ public class SectionService {
   }
 
   public SectionResponse getSection(Long id) {
-    return sectionRepository.findAllSectionResponses(id, null, null, null).stream()
+    return sectionRepository.findAllSectionResponses(id, null, null, null, null).stream()
         .findFirst()
         .orElseThrow(() -> new NullPointerException("Section not found with id: " + id));
   }
 
   public List<SectionResponse> getSectionsByFilter(SectionFilterCriteria filterCriteria) {
     return sectionRepository.findAllSectionResponses(
-        filterCriteria.sectionId(), filterCriteria.lastUserId(),
-        filterCriteria.roleAccess(), filterCriteria.isActive());
-  }
-
-  public void disableSection(Long id, User lastUser) {
-    Section section = getSectionById(id);
-    section.setIsActive(false);
-    section.setLastUser(lastUser);
-    section.setLastUpdate(java.time.LocalDateTime.now());
-    sectionRepository.save(section);
-  }
-
-  public void deleteSection(Long id, User lastUser) {
-    Section section = getSectionById(id);
-    if (section.getItemTypes() != null && !section.getItemTypes().isEmpty()) {
-      throw new IllegalStateException("Cannot delete section with associated item types.");
-    }
-    if (section.getUsers() != null && !section.getUsers().isEmpty()) {
-      throw new IllegalStateException("Cannot delete section with associated users.");
-    }
-    sectionRepository.delete(section);
+        filterCriteria.sectionId(),
+        filterCriteria.lastUserId(),
+        filterCriteria.roleAccess(),
+        filterCriteria.isActive(),
+        filterCriteria.sectionType());
   }
 
   private Section getSectionById(Long id) {

@@ -1,5 +1,7 @@
 package com.codenine.managementservice.controller;
 
+import java.time.LocalDateTime;
+
 import org.apache.tomcat.util.http.parser.Authorization;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.couchbase.CouchbaseProperties.Authentication;
@@ -11,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import com.codenine.managementservice.dto.item.ArchiveItem;
 import com.codenine.managementservice.dto.item.ItemFilterCriteria;
 import com.codenine.managementservice.dto.item.ItemRequest;
+import com.codenine.managementservice.dto.itemLoss.ItemLossFilterCriteria;
 import com.codenine.managementservice.dto.itemLoss.ItemLossRequest;
 import com.codenine.managementservice.entity.User;
 import com.codenine.managementservice.service.ItemLossService;
@@ -28,34 +31,22 @@ public class ItemController {
 
   @Autowired private ItemLossService itemLossService;
 
-  /**
-   * Cria um novo item.
-   *
-   * @param entity Dados do item a ser criado.
-   * @return Mensagem de sucesso ou erro.
-   */
   @Operation(description = "Cria um novo item.")
   @RequestBody(description = "Dados do item a ser criado")
   @PreAuthorize("@itemSecurity.hasItemManagementPermission(authentication, #entity.itemTypeId())")
   @PostMapping
-  public ResponseEntity<String> createItem(
+  public ResponseEntity<?> createItem(
       @org.springframework.web.bind.annotation.RequestBody ItemRequest entity,
       @Parameter(hidden = true) Authentication authentication) {
     try {
       User lastUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-      itemService.createItem(entity, lastUser);
+      Long id = itemService.createItem(entity, lastUser);
+      return ResponseEntity.status(201).body(java.util.Map.of("id", id));
     } catch (Exception e) {
       return ResponseEntity.status(500).body("Error creating item: " + e.getMessage());
     }
-    return ResponseEntity.status(201).body("Item created successfully");
   }
 
-  /**
-   * Busca um item pelo ID.
-   *
-   * @param id ID do item.
-   * @return Dados do item ou mensagem de erro.
-   */
   @Operation(description = "Busca um item pelo ID.")
   @GetMapping("/{id}")
   public ResponseEntity<?> getItem(
@@ -70,52 +61,47 @@ public class ItemController {
     }
   }
 
-  /**
-   * Lista todos os itens, com filtros opcionais.
-   *
-   * @param supplierId ID do fornecedor (opcional)
-   * @param sectionId ID da seção (opcional)
-   * @param itemTypeId ID do tipo de item (opcional)
-   * @param lastUserId ID do último usuário (opcional)
-   * @param isActive Se o item está ativo (opcional)
-   * @param itemId ID do item (opcional)
-   * @return Lista de itens.
-   */
   @Operation(description = "Lista todos os itens, com filtros opcionais.")
   @GetMapping
   public ResponseEntity<?> getAllItems(
-      @Parameter(description = "ID do fornecedor", example = "1") @RequestParam(required = false)
-          Long supplierId,
       @Parameter(description = "ID da seção", example = "2") @RequestParam(required = false)
           Long sectionId,
       @Parameter(description = "ID do tipo de item", example = "3") @RequestParam(required = false)
           Long itemTypeId,
-      @Parameter(description = "ID do último usuário", example = "4")
-          @RequestParam(required = false)
-          Long lastUserId,
       @Parameter(description = "Se o item está ativo", example = "true")
           @RequestParam(required = false)
           Boolean isActive,
       @Parameter(description = "ID do item", example = "5") @RequestParam(required = false)
-          Long itemId) {
+          Long itemId,
+      @Parameter(description = "Código do item", example = "ABC123") @RequestParam(required = false)
+          String itemCode) {
     try {
       var items =
           itemService.getItemsByFilter(
-              new ItemFilterCriteria(
-                  supplierId, sectionId, itemTypeId, lastUserId, isActive, itemId));
+              new ItemFilterCriteria(itemCode, sectionId, itemTypeId, isActive, itemId));
       return ResponseEntity.ok(items);
     } catch (Exception e) {
       return ResponseEntity.status(500).body("Error retrieving items: " + e.getMessage());
     }
   }
 
-  /**
-   * Atualiza os dados de um item existente.
-   *
-   * @param id ID do item a ser atualizado.
-   * @param entity Novos dados do item.
-   * @return Mensagem de sucesso ou erro.
-   */
+  @Operation(description = "Busca um item pelo código QR criptografado.")
+  @GetMapping("/qr")
+  public ResponseEntity<?> getItemByQrCode(
+      @Parameter(description = "Código QR criptografado", example = "encryptedString") @RequestParam
+          String code) {
+    try {
+      var item = itemService.getEncryptedItem(code);
+      return ResponseEntity.ok(item);
+    } catch (IllegalArgumentException e) {
+      return ResponseEntity.status(400).body(e.getMessage());
+    } catch (NullPointerException e) {
+      return ResponseEntity.status(404).body(e.getMessage());
+    } catch (Exception e) {
+      return ResponseEntity.status(500).body("Error retrieving item: " + e.getMessage());
+    }
+  }
+
   @Operation(description = "Atualiza os dados de um item existente.")
   @RequestBody(description = "Novos dados do item")
   @PreAuthorize("@itemSecurity.hasItemManagementPermission(authentication, #id)")
@@ -135,12 +121,6 @@ public class ItemController {
     }
   }
 
-  /**
-   * Desabilita um item.
-   *
-   * @param id ID do item a ser desabilitado.
-   * @return Mensagem de sucesso ou erro.
-   */
   @Operation(description = "Desabilita um item.")
   @PreAuthorize("@itemSecurity.hasItemManagementPermission(authentication, #id)")
   @PatchMapping("/disable/{id}")
@@ -159,13 +139,6 @@ public class ItemController {
     }
   }
 
-  /**
-   * Arquiva um item.
-   *
-   * @param id ID do item a ser arquivado.
-   * @param archiveItem Dados do arquivo.
-   * @return Mensagem de sucesso ou erro.
-   */
   @Operation(description = "Arquiva um item.")
   @RequestBody(description = "Dados do arquivo")
   @PatchMapping("/archive/{id}")
@@ -184,12 +157,6 @@ public class ItemController {
     }
   }
 
-  /**
-   * Cria um registro de perda de item.
-   *
-   * @param request Dados da perda do item.
-   * @return Mensagem de sucesso ou erro.
-   */
   @Operation(description = "Cria um registro de perda de item.")
   @RequestBody(description = "Dados da perda do item")
   @PostMapping("/loss")
@@ -205,13 +172,6 @@ public class ItemController {
     return ResponseEntity.status(201).body("Item loss created successfully");
   }
 
-  /**
-   * Atualiza um registro de perda de item existente.
-   *
-   * @param id ID da perda do item a ser atualizada.
-   * @param request Novos dados da perda do item.
-   * @return Mensagem de sucesso ou erro.
-   */
   @Operation(description = "Atualiza um registro de perda de item existente.")
   @RequestBody(description = "Novos dados da perda do item")
   @PutMapping("/loss/{id}")
@@ -228,6 +188,32 @@ public class ItemController {
       return ResponseEntity.status(404).body(e.getMessage());
     } catch (Exception e) {
       return ResponseEntity.status(500).body("Error updating item loss: " + e.getMessage());
+    }
+  }
+
+  @Operation(description = "Busca registros de perda de item com base em critérios de filtro.")
+  @GetMapping("/loss")
+  public ResponseEntity<?> getItemLossByFilter(
+      @Parameter(description = "ID do item", example = "2") @RequestParam(required = false)
+          Long itemId,
+      @Parameter(description = "ID do usuário que registrou a perda", example = "3")
+          @RequestParam(required = false)
+          Long recordedById,
+      @Parameter(description = "Data de início para o filtro", example = "2023-01-01T00:00:00")
+          @RequestParam(required = false)
+          LocalDateTime startDate,
+      @Parameter(description = "Data de fim para o filtro", example = "2023-12-31T23:59:59")
+          @RequestParam(required = false)
+          LocalDateTime endDate,
+      @Parameter(description = "ID da perda do item", example = "5") @RequestParam(required = false)
+          Long itemLossId) {
+    try {
+      var itemLosses =
+          itemLossService.getItemLossByFilter(
+              new ItemLossFilterCriteria(itemId, recordedById, startDate, endDate, itemLossId));
+      return ResponseEntity.ok(itemLosses);
+    } catch (Exception e) {
+      return ResponseEntity.status(500).body("Error retrieving item losses: " + e.getMessage());
     }
   }
 }

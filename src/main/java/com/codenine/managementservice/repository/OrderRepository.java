@@ -12,16 +12,21 @@ import com.codenine.managementservice.entity.Order;
 
 public interface OrderRepository extends JpaRepository<Order, Long> {
 
-  @Query("""
+  @Query(
+      """
       SELECT distinct new com.codenine.managementservice.dto.order.OrderResponse(
         o.id,
+        o.orderNumber,
         o.withdrawDay,
         o.status,
         cb.id,
         cb.name,
         lu.id,
         lu.name,
-        o.createdAt
+        o.createdAt,
+        o.lastUpdate,
+        sec.id,
+        sec.title
       )
       FROM Order o
       LEFT JOIN o.createdBy cb
@@ -30,27 +35,68 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
       WHERE (:orderId IS NULL OR o.id = :orderId)
         AND (:status IS NULL OR o.status = :status)
         AND (:sectionId IS NULL OR sec.id = :sectionId)
-
       """)
   List<OrderResponse> findAllOrderResponses(
       @Param("orderId") Long orderId,
       @Param("status") String status,
-      @Param("supplierId") Long supplierId,
       @Param("sectionId") Long sectionId);
 
-  @Query("""
+  @Query(
+      """
+      SELECT distinct new com.codenine.managementservice.dto.order.OrderResponse(
+        o.id,
+        o.orderNumber,
+        o.withdrawDay,
+        o.status,
+        cb.id,
+        cb.name,
+        lu.id,
+        lu.name,
+        o.createdAt,
+        o.lastUpdate,
+        sec.id,
+        sec.title
+      )
+      FROM Order o
+      LEFT JOIN o.createdBy cb
+      LEFT JOIN o.lastUser lu
+      LEFT JOIN o.section sec
+      WHERE (:sectionId IS NULL OR sec.id = :sectionId)
+        AND o.status IN (:statuses)
+      """)
+  List<OrderResponse> findAllOrderResponsesByStatuses(
+      @Param("statuses") List<String> statuses, @Param("sectionId") Long sectionId);
+
+  interface OrderStatusCount {
+    String getStatus();
+
+    Long getTotal();
+  }
+
+  @Query(
+      """
+      SELECT o.status as status, COUNT(o) as total
+      FROM Order o
+      LEFT JOIN o.section sec
+      WHERE (:sectionId IS NULL OR sec.id = :sectionId)
+      GROUP BY o.status
+      """)
+  List<OrderStatusCount> countByStatus(@Param("sectionId") Long sectionId);
+
+  @Query(
+      """
       select new com.codenine.managementservice.dto.order.OrderItemResponse(
           oi.id,
           o.id as ordemId,
           oi.item.id,
           oi.item.name,
-          oi.quantity,
-          oi.item.supplier.id,
-          oi.item.supplier.name
+          oi.quantity
       )
       from Order o
       join o.orderItems oi
       where o.id = :orderId
         """)
   List<OrderItemResponse> findAllOrderItemResponsesByOrderId(@Param("orderId") Long orderId);
+
+  boolean existsByOrderNumber(String orderNumber);
 }
