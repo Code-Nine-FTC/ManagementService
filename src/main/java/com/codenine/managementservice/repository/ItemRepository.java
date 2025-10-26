@@ -2,6 +2,7 @@ package com.codenine.managementservice.repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -257,4 +258,7 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
       @Param("sectionIds") List<Long> sectionIds,
       @Param("now") LocalDateTime now,
       @Param("futureDate") LocalDateTime futureDate);
+
+  Optional<Item> findByNameAndItemTypeSectionId(String name, Long  sectionId);
+
 }
