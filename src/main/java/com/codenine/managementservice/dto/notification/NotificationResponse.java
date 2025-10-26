@@ -13,5 +13,4 @@ public record NotificationResponse(
     Long transferId,
     Instant createdAt,
     Instant expiresAt,
-    Boolean acknowledged
-) {}
+    Boolean acknowledged) {}

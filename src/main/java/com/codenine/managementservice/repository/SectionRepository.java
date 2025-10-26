@@ -36,6 +36,6 @@ public interface SectionRepository extends JpaRepository<Section, Long> {
       @Param("sectionId") Long sectionId,
       @Param("lastUserId") Long lastUserId,
       @Param("roleAccess") Integer roleAccess,
-  @Param("isActive") Boolean isActive,
-  @Param("sectionType") SectionType sectionType);
+      @Param("isActive") Boolean isActive,
+      @Param("sectionType") SectionType sectionType);
 }

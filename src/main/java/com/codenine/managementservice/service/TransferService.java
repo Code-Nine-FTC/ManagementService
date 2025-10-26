@@ -22,7 +22,7 @@ public class TransferService {
 
   public void createTransfer(Transfer transfer) {
     transferRepository.save(transfer);
-    
+
     notificationService.createNotificationForTransfer(
         NotificationType.TRANSFER_CREATED,
         "Nova transferência #" + transfer.getId() + " criada",
@@ -37,7 +37,7 @@ public class TransferService {
     transfer.setLastUser(lastUser);
     transfer.setLastUpdate(LocalDateTime.now());
     transferRepository.save(transfer);
-    
+
     notificationService.createNotificationForTransfer(
         NotificationType.TRANSFER_CANCELLED,
         "Transferência #" + transferId + " foi cancelada",
@@ -52,7 +52,7 @@ public class TransferService {
     transfer.setLastUser(lastUser);
     transfer.setLastUpdate(LocalDateTime.now());
     transferRepository.save(transfer);
-    
+
     notificationService.createNotificationForTransfer(
         NotificationType.TRANSFER_COMPLETED,
         "Transferência #" + transferId + " foi concluída",
@@ -64,6 +64,7 @@ public class TransferService {
   private Transfer getTransferById(Long id) {
     return transferRepository
         .findById(id)
-        .orElseThrow(() -> new EntityNotFoundException("Transferência com ID " + id + " não encontrada."));
+        .orElseThrow(
+            () -> new EntityNotFoundException("Transferência com ID " + id + " não encontrada."));
   }
 }

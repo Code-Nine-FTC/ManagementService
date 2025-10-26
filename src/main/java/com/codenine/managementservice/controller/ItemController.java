@@ -88,17 +88,18 @@ public class ItemController {
   @Operation(description = "Busca um item pelo código QR criptografado.")
   @GetMapping("/qr")
   public ResponseEntity<?> getItemByQrCode(
-      @Parameter(description = "Código QR criptografado", example = "encryptedString") @RequestParam String code) {
-      try {
-          var item = itemService.getEncryptedItem(code);
-          return ResponseEntity.ok(item);
-      } catch (IllegalArgumentException e) {
-          return ResponseEntity.status(400).body(e.getMessage());
-      } catch (NullPointerException e) {
-          return ResponseEntity.status(404).body(e.getMessage());
-      } catch (Exception e) {
-          return ResponseEntity.status(500).body("Error retrieving item: " + e.getMessage());
-      }
+      @Parameter(description = "Código QR criptografado", example = "encryptedString") @RequestParam
+          String code) {
+    try {
+      var item = itemService.getEncryptedItem(code);
+      return ResponseEntity.ok(item);
+    } catch (IllegalArgumentException e) {
+      return ResponseEntity.status(400).body(e.getMessage());
+    } catch (NullPointerException e) {
+      return ResponseEntity.status(404).body(e.getMessage());
+    } catch (Exception e) {
+      return ResponseEntity.status(500).body("Error retrieving item: " + e.getMessage());
+    }
   }
 
   @Operation(description = "Atualiza os dados de um item existente.")

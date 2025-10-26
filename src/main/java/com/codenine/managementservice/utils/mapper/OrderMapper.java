@@ -17,7 +17,11 @@ import com.codenine.managementservice.entity.User;
 public class OrderMapper {
 
   public static Order toEntity(
-    OrderRequest orderRequest, Map<Long,Integer> itemQuantities, User lastUser, List<Item> items, Section section) {
+      OrderRequest orderRequest,
+      Map<Long, Integer> itemQuantities,
+      User lastUser,
+      List<Item> items,
+      Section section) {
     Map<Long, Item> itemMap =
         items.stream().collect(Collectors.toMap(Item::getId, Function.identity()));
     Order order = new Order();
@@ -29,8 +33,8 @@ public class OrderMapper {
     order.setSection(section);
     order.setStatus(OrderStatus.PENDING.name());
 
-  List<OrderItem> orderItems =
-    itemQuantities.entrySet().stream()
+    List<OrderItem> orderItems =
+        itemQuantities.entrySet().stream()
             .map(
                 entry -> {
                   Long itemId = entry.getKey();
@@ -52,7 +56,7 @@ public class OrderMapper {
   }
 
   public static Order toUpdate(
-      Order order, Map<Long,Integer> itemQuantities, User lastUser, List<Item> items) {
+      Order order, Map<Long, Integer> itemQuantities, User lastUser, List<Item> items) {
     if (itemQuantities != null && !itemQuantities.isEmpty()) {
       Map<Long, Item> itemMap =
           items.stream().collect(Collectors.toMap(Item::getId, Function.identity()));

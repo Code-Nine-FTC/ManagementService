@@ -19,18 +19,14 @@ public class Lot {
   @JoinColumn(name = "item_id")
   private Item item;
 
-
   @Column(nullable = false)
   private String code;
 
- 
   private LocalDate expireDate;
-
 
   @Column(nullable = false)
   private Integer quantityOnHand = 0;
 
- 
   private LocalDateTime createdAt = LocalDateTime.now();
   private LocalDateTime updatedAt = LocalDateTime.now();
 }

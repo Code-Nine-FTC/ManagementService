@@ -11,8 +11,8 @@ import java.util.Map;
 // - consumerSectionId: preferencial; id da seção consumidora do pedido
 // - withdrawDay: opcional; no formato yyyy-MM-dd para atualização/definição
 public record OrderRequest(
-	String orderNumber,
-	Map<String, Integer> itemQuantities,
-	Long sectionId,
-	Long consumerSectionId,
-	LocalDate withdrawDay) {}
+    String orderNumber,
+    Map<String, Integer> itemQuantities,
+    Long sectionId,
+    Long consumerSectionId,
+    LocalDate withdrawDay) {}

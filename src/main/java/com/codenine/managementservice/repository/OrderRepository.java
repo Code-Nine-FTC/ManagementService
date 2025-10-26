@@ -35,12 +35,53 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
       WHERE (:orderId IS NULL OR o.id = :orderId)
         AND (:status IS NULL OR o.status = :status)
         AND (:sectionId IS NULL OR sec.id = :sectionId)
-
       """)
   List<OrderResponse> findAllOrderResponses(
       @Param("orderId") Long orderId,
       @Param("status") String status,
       @Param("sectionId") Long sectionId);
+
+  @Query(
+      """
+      SELECT distinct new com.codenine.managementservice.dto.order.OrderResponse(
+        o.id,
+        o.orderNumber,
+        o.withdrawDay,
+        o.status,
+        cb.id,
+        cb.name,
+        lu.id,
+        lu.name,
+        o.createdAt,
+        o.lastUpdate,
+        sec.id,
+        sec.title
+      )
+      FROM Order o
+      LEFT JOIN o.createdBy cb
+      LEFT JOIN o.lastUser lu
+      LEFT JOIN o.section sec
+      WHERE (:sectionId IS NULL OR sec.id = :sectionId)
+        AND o.status IN (:statuses)
+      """)
+  List<OrderResponse> findAllOrderResponsesByStatuses(
+      @Param("statuses") List<String> statuses, @Param("sectionId") Long sectionId);
+
+  interface OrderStatusCount {
+    String getStatus();
+
+    Long getTotal();
+  }
+
+  @Query(
+      """
+      SELECT o.status as status, COUNT(o) as total
+      FROM Order o
+      LEFT JOIN o.section sec
+      WHERE (:sectionId IS NULL OR sec.id = :sectionId)
+      GROUP BY o.status
+      """)
+  List<OrderStatusCount> countByStatus(@Param("sectionId") Long sectionId);
 
   @Query(
       """
