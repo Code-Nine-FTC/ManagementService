@@ -24,7 +24,6 @@ public class DataLoader implements CommandLineRunner {
   private User _user_adm;
 
   private List<Section> sections;
-  private SupplierCompany _supplier_mig;
 
   private List<String> itemExcelFiles =
       List.of("src/main/resources/almoxarifado.xlsx", "src/main/resources/farmacia.xlsx");
@@ -81,12 +80,14 @@ public class DataLoader implements CommandLineRunner {
     Section almoxarifado = new Section();
     almoxarifado.setTitle("Almoxarifado");
     almoxarifado.setIsActive(true);
+    almoxarifado.setSectionType(SectionType.STORAGE);
     almoxarifado.setCreatedAt(LocalDateTime.now());
     almoxarifado.setLastUpdate(LocalDateTime.now());
 
     Section farmacia = new Section();
     farmacia.setTitle("Farmácia");
     farmacia.setIsActive(true);
+    farmacia.setSectionType(SectionType.STORAGE);
 
     sections.add(almoxarifado);
     sections.add(farmacia);
@@ -136,8 +137,7 @@ public class DataLoader implements CommandLineRunner {
             section.getTitle().equalsIgnoreCase("Almoxarifado")
                 ? "src/main/resources/almoxarifado.xlsx"
                 : "src/main/resources/farmacia.xlsx";
-        excelItemImporter.importItemsExcel(
-            filePath, section.getId(), this._user_adm, this._supplier_mig);
+        excelItemImporter.importItemsExcel(filePath, section.getId(), this._user_adm);
       }
       System.out.println("Itens importados do Excel com sucesso.");
     } catch (Exception e) {
@@ -175,18 +175,6 @@ public class DataLoader implements CommandLineRunner {
       supplier.setLastUser(this._user_adm);
       suppliers.add(supplier);
     }
-    SupplierCompany migrationSupplier = new SupplierCompany();
-    migrationSupplier.setName("Usuario de Migração");
-    migrationSupplier.setCnpj("99.999.999/0001-99");
-    migrationSupplier.setEmail("migration@supplier.com");
-    migrationSupplier.setPhoneNumber("(99) 9999-9999");
-    migrationSupplier.setIsActive(true);
-    migrationSupplier.setLastUpdate(LocalDateTime.now());
-    migrationSupplier.setLastUser(this._user_adm);
-    suppliers.add(migrationSupplier);
-
-    supplierCompanyRepository.save(migrationSupplier);
-    this._supplier_mig = migrationSupplier;
 
     return supplierCompanyRepository.saveAll(suppliers);
   }

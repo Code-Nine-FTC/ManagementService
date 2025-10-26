@@ -17,19 +17,24 @@ import com.codenine.managementservice.entity.User;
 public class OrderMapper {
 
   public static Order toEntity(
-      OrderRequest orderRequest, User lastUser, List<Item> items, Section section) {
+      OrderRequest orderRequest,
+      Map<Long, Integer> itemQuantities,
+      User lastUser,
+      List<Item> items,
+      Section section) {
     Map<Long, Item> itemMap =
         items.stream().collect(Collectors.toMap(Item::getId, Function.identity()));
     Order order = new Order();
-    order.setWithdrawDay(orderRequest.withdrawDay());
+    order.setOrderNumber(orderRequest.orderNumber());
+    order.setCreatedAt(LocalDateTime.now());
+    order.setExpireAt(LocalDateTime.now().plusDays(30));
     order.setCreatedBy(lastUser);
     order.setLastUser(lastUser);
     order.setSection(section);
     order.setStatus(OrderStatus.PENDING.name());
-    order.setCreatedAt(LocalDateTime.now());
 
     List<OrderItem> orderItems =
-        orderRequest.itemQuantities().entrySet().stream()
+        itemQuantities.entrySet().stream()
             .map(
                 entry -> {
                   Long itemId = entry.getKey();
@@ -50,13 +55,13 @@ public class OrderMapper {
     return order;
   }
 
-  public static Order toUpdate(Order order, OrderRequest request, User lastUser, List<Item> items) {
-    if (request.withdrawDay() != null) order.setWithdrawDay(request.withdrawDay());
-    if (!request.itemQuantities().isEmpty()) {
+  public static Order toUpdate(
+      Order order, Map<Long, Integer> itemQuantities, User lastUser, List<Item> items) {
+    if (itemQuantities != null && !itemQuantities.isEmpty()) {
       Map<Long, Item> itemMap =
           items.stream().collect(Collectors.toMap(Item::getId, Function.identity()));
       List<OrderItem> orderItems =
-          request.itemQuantities().entrySet().stream()
+          itemQuantities.entrySet().stream()
               .map(
                   entry -> {
                     Long itemId = entry.getKey();
@@ -74,7 +79,7 @@ public class OrderMapper {
               .collect(Collectors.toList());
       order.setOrderItems(orderItems);
     }
-    if (!request.itemQuantities().isEmpty() || request.withdrawDay() != null) {
+    if (itemQuantities != null && !itemQuantities.isEmpty()) {
       order.setLastUser(lastUser);
       order.setLastUpdate(LocalDateTime.now());
     }

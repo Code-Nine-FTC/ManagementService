@@ -1,11 +1,14 @@
 package com.codenine.managementservice.service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.codenine.managementservice.dto.itemLoss.ItemLossFilterCriteria;
 import com.codenine.managementservice.dto.itemLoss.ItemLossRequest;
+import com.codenine.managementservice.dto.itemLoss.ItemLossResponse;
 import com.codenine.managementservice.entity.Item;
 import com.codenine.managementservice.entity.ItemLoss;
 import com.codenine.managementservice.entity.User;
@@ -63,6 +66,21 @@ public class ItemLossService {
       itemRepository.save(item);
     }
     itemLossRepository.save(itemLoss);
+  }
+
+  public ItemLossResponse getItemLoss(Long id) {
+    return itemLossRepository.findAllByFilter(null, null, null, null, id).stream()
+        .findFirst()
+        .orElseThrow(() -> new NullPointerException("ItemLoss not found with id: " + id));
+  }
+
+  public List<ItemLossResponse> getItemLossByFilter(ItemLossFilterCriteria filterCriteria) {
+    return itemLossRepository.findAllByFilter(
+        filterCriteria.itemId(),
+        filterCriteria.recordedById(),
+        filterCriteria.startDate(),
+        filterCriteria.endDate(),
+        filterCriteria.itemLossId());
   }
 
   private ItemLoss getItemLossById(Long id) {

@@ -10,13 +10,13 @@ import com.codenine.managementservice.dto.item.ArchiveItem;
 import com.codenine.managementservice.dto.item.ItemFilterCriteria;
 import com.codenine.managementservice.dto.item.ItemRequest;
 import com.codenine.managementservice.dto.item.ItemResponse;
+import com.codenine.managementservice.dto.itemLoss.ItemLossFilterCriteria;
 import com.codenine.managementservice.entity.Item;
 import com.codenine.managementservice.entity.ItemType;
-import com.codenine.managementservice.entity.SupplierCompany;
 import com.codenine.managementservice.entity.User;
 import com.codenine.managementservice.repository.ItemRepository;
 import com.codenine.managementservice.repository.ItemTypeRepository;
-import com.codenine.managementservice.repository.SupplierCompanyRepository;
+import com.codenine.managementservice.utils.CryptUtil;
 import com.codenine.managementservice.utils.mapper.ItemMapper;
 
 @Service
@@ -25,9 +25,11 @@ public class ItemService {
 
   @Autowired private ItemTypeRepository itemTypeRepository;
 
-  @Autowired private SupplierCompanyRepository supplierCompanyRepository;
+  @Autowired private ItemLossService itemLossService;
 
-  public void createItem(ItemRequest itemRequest, User lastUser) {
+  @Autowired private CryptUtil cryptUtil;
+
+  public Long createItem(ItemRequest itemRequest, User lastUser) {
     ItemType itemType =
         itemTypeRepository
             .findById(itemRequest.itemTypeId())
@@ -35,38 +37,95 @@ public class ItemService {
                 () ->
                     new NullPointerException(
                         "ItemType not found with id: " + itemRequest.itemTypeId()));
-    SupplierCompany supplier =
-        supplierCompanyRepository
-            .findById(itemRequest.supplierId())
-            .orElseThrow(
-                () ->
-                    new NullPointerException(
-                        "SupplierCompany not found with id: " + itemRequest.supplierId()));
-    Item newItem = ItemMapper.toEntity(itemRequest, lastUser, supplier, itemType);
-    itemRepository.save(newItem);
+    Item newItem = ItemMapper.toEntity(itemRequest, lastUser, itemType);
+    Item savedItem = itemRepository.save(newItem);
+    String qrCode = cryptUtil.encrypt(savedItem.getId().toString());
+    savedItem.setQrCode("/items/qr?code=" + qrCode);
+    itemRepository.save(savedItem);
+    return savedItem.getId();
   }
 
   public ItemResponse getItem(Long id) {
     getItemById(id);
-    return itemRepository.findAllItemResponses(null, null, null, null, null, id).stream()
-        .findFirst()
-        .orElse(null);
+    var itemResponse =
+        itemRepository.findAllItemResponses(null, null, null, null, id).stream()
+            .findFirst()
+            .orElse(null);
+
+    if (itemResponse == null) {
+      return null;
+    }
+
+    var lossHistory =
+        itemLossService.getItemLossByFilter(new ItemLossFilterCriteria(id, null, null, null, null));
+
+    return new ItemResponse(
+        itemResponse.itemId(),
+        itemResponse.name(),
+        itemResponse.currentStock(),
+        itemResponse.measure(),
+        itemResponse.expireDate(),
+        itemResponse.sectionId(),
+        itemResponse.sectionName(),
+        itemResponse.itemTypeId(),
+        itemResponse.itemTypeName(),
+        itemResponse.minimumStock(),
+        itemResponse.qrCode(),
+        itemResponse.itemCode(),
+        itemResponse.lastUserName(),
+        itemResponse.lastUpdate(),
+        lossHistory);
   }
 
   public List<ItemResponse> getItemsByFilter(ItemFilterCriteria filterCriteria) {
-    return itemRepository.findAllItemResponses(
-        filterCriteria.supplierId(),
-        filterCriteria.sectionId(),
-        filterCriteria.itemTypeId(),
-        filterCriteria.lastUserId(),
-        filterCriteria.isActive(),
-        filterCriteria.itemId());
+    var items =
+        itemRepository.findAllItemResponses(
+            filterCriteria.itemCode(),
+            filterCriteria.sectionId(),
+            filterCriteria.itemTypeId(),
+            filterCriteria.isActive(),
+            filterCriteria.itemId());
+
+    return items.stream()
+        .map(
+            item -> {
+              var lossHistory =
+                  itemLossService.getItemLossByFilter(
+                      new ItemLossFilterCriteria(item.itemId(), null, null, null, null));
+              return new ItemResponse(
+                  item.itemId(),
+                  item.name(),
+                  item.currentStock(),
+                  item.measure(),
+                  item.expireDate(),
+                  item.sectionId(),
+                  item.sectionName(),
+                  item.itemTypeId(),
+                  item.itemTypeName(),
+                  item.minimumStock(),
+                  item.qrCode(),
+                  item.itemCode(),
+                  item.lastUserName(),
+                  item.lastUpdate(),
+                  lossHistory);
+            })
+        .toList();
+  }
+
+  public ItemResponse getEncryptedItem(String qrCode) {
+    String decryptedId = cryptUtil.decrypt(qrCode);
+    Long itemId;
+    try {
+      itemId = Long.valueOf(decryptedId);
+      return getItem(itemId);
+    } catch (NumberFormatException e) {
+      throw new IllegalArgumentException("Invalid QR code");
+    }
   }
 
   public void updateItem(Long id, ItemRequest itemRequest, User lastUser) {
     Item item = getItemById(id);
     ItemType itemType = null;
-    SupplierCompany supplier = null;
     if (itemRequest.itemTypeId() != null) {
       itemType =
           itemTypeRepository
@@ -76,16 +135,7 @@ public class ItemService {
                       new NullPointerException(
                           "ItemType not found with id: " + itemRequest.itemTypeId()));
     }
-    if (itemRequest.supplierId() != null) {
-      supplier =
-          supplierCompanyRepository
-              .findById(itemRequest.supplierId())
-              .orElseThrow(
-                  () ->
-                      new NullPointerException(
-                          "SupplierCompany not found with id: " + itemRequest.supplierId()));
-    }
-    ItemMapper.updateEntity(item, itemRequest, lastUser, supplier, itemType);
+    ItemMapper.updateEntity(item, itemRequest, lastUser, itemType);
     itemRepository.save(item);
   }
 
@@ -103,6 +153,11 @@ public class ItemService {
     item.setLastUpdate(LocalDateTime.now());
     item.setLastUser(lastUser);
     itemRepository.save(item);
+  }
+
+  public void deleteItem(Long id) {
+    Item item = getItemById(id);
+    itemRepository.delete(item);
   }
 
   private Item getItemById(Long id) {
