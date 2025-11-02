@@ -23,16 +23,43 @@ services:
       - -c
       - effective_cache_size=4GB # Cache estimado do SO
       - -c
-      - maintenance_work_mem=256MB  # usado para VACUUM/CREATE INDEX
+      - maintenance_work_mem=256MB # usado para VACUUM/CREATE INDEX
       - -c
-      - log_min_duration_statement=10000  # log queries >= 10000ms, definido que queries que demorem mais de 10s são problemáticas(Rodando Localhost)
+      - log_min_duration_statement=10000 # log queries >= 10000ms, definido que queries que demorem mais de 10s são problemáticas(Rodando Localhost)
     ports:
       - "5433:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres} -d ${POSTGRES_DB:-teste}"]
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${DB_USER:-postgres} -d ${POSTGRES_DB:-teste}",
+        ]
       interval: 10s
       timeout: 5s
       retries: 5
+
+  ai-trainer:
+    profiles: ["ai"]
+    build:
+      context: ./ai
+    container_name: ai_trainer
+    environment:
+      PGHOST: db
+      PGPORT: 5432
+      PGDATABASE: ${POSTGRES_DB:-teste}
+      PGUSER: ${DB_USER:-postgres}
+      PGPASSWORD: ${DB_PASSWORD:-fatec}
+      TRAIN_WINDOW_DAYS: 120
+      FORECAST_HORIZON_DAYS: 14
+      SCHEDULE_CRON: "10 2 * * *"
+      MODEL_VERSION: sarimax_v1
+      MODE: schedule
+      TZ: America/Sao_Paulo
+      TRAIN_FORCE: "false"
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
 
 volumes:
   db_data:
