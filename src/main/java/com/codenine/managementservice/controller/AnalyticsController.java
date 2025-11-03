@@ -27,7 +27,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 public class AnalyticsController {
 
   @Autowired private AnalyticsService analyticsService;
-    @Autowired private ModelPredictionRepository predictionRepository;
+  @Autowired private ModelPredictionRepository predictionRepository;
 
   @Operation(summary = "Top materiais")
   @GetMapping("/materiais/top")

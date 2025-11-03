@@ -1,5 +1,7 @@
 package com.codenine.managementservice.service;
 
+import java.io.FileWriter;
+import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -52,6 +54,27 @@ public class ItemMonthlySnapshotService {
       snapshot.setCreatedAt(LocalDateTime.now());
 
       snapshotRepository.save(snapshot);
+    }
+    try {
+      exportSnapshotsToCsv("snapshots.csv");
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+  }
+
+  public void exportSnapshotsToCsv(String filePath) throws IOException {
+    List<ItemMonthlySnapshot> snapshots = snapshotRepository.findAll();
+    try (FileWriter writer = new FileWriter(filePath)) {
+      writer.append(
+          "item_id,year_month,stock_quantity,orders_placed,average_consumed,created_at\n");
+      for (ItemMonthlySnapshot snap : snapshots) {
+        writer.append(String.valueOf(snap.getItem().getId())).append(",");
+        writer.append(String.valueOf(snap.getYearMonth())).append(",");
+        writer.append(String.valueOf(snap.getStockQuantity())).append(",");
+        writer.append(String.valueOf(snap.getOrdersPlaced())).append(",");
+        writer.append(String.valueOf(snap.getAverageConsumed())).append(",");
+        writer.append(String.valueOf(snap.getCreatedAt())).append("\n");
+      }
     }
   }
 }

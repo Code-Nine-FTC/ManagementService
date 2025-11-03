@@ -176,9 +176,7 @@ class PredictionNotificationService {
   @Autowired private ModelPredictionRepository predictionRepository;
   @Autowired private NotificationService notificationService;
 
-  /**
-   * Gera notificações com base nas últimas previsões. Agenda diária às 02:20.
-   */
+  /** Gera notificações com base nas últimas previsões. Agenda diária às 02:20. */
   @Scheduled(cron = "0 20 2 * * *")
   @Transactional
   public void notifyFromLatestPredictions() {
@@ -190,8 +188,7 @@ class PredictionNotificationService {
         return;
       }
 
-      List<ModelPrediction> preds =
-          predictionRepository.findByRefDateAndHorizonDays(ref, horizon);
+      List<ModelPrediction> preds = predictionRepository.findByRefDateAndHorizonDays(ref, horizon);
       int count = 0;
 
       for (ModelPrediction p : preds) {
@@ -233,7 +230,13 @@ class PredictionNotificationService {
               String.format(
                   "[IA] Recomendação: '%s'. Previsto %,.0f un. próximos %d dias (%.2f/dia). "
                       + "Estoque atual: %d. Sugerido pedir: %d (cobertura alvo: %d dias).",
-                  item.getName(), sumPred, horizon, avgDaily, currentStock, recommendedQty, targetDays);
+                  item.getName(),
+                  sumPred,
+                  horizon,
+                  avgDaily,
+                  currentStock,
+                  recommendedQty,
+                  targetDays);
           notificationService.createNotification(
               NotificationType.REORDER_RECOMMENDATION,
               msg,
