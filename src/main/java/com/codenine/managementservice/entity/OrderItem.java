@@ -15,7 +15,7 @@ import lombok.Data;
 public class OrderItem {
   @Id @GeneratedValue private Long id;
 
-  @ManyToOne(cascade = CascadeType.ALL)
+  @ManyToOne
   private Order order;
 
   @ManyToOne

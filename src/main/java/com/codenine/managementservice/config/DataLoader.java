@@ -12,6 +12,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.codenine.managementservice.dto.purchaseOrder.EmailStatus;
+import com.codenine.managementservice.dto.purchaseOrder.Status;
 import com.codenine.managementservice.dto.user.Role;
 import com.codenine.managementservice.entity.*;
 import com.codenine.managementservice.repository.*;
@@ -37,6 +39,12 @@ public class DataLoader implements CommandLineRunner {
   @Autowired private ItemTypeRepository itemTypeRepository;
 
   @Autowired private SupplierCompanyRepository supplierCompanyRepository;
+
+  @Autowired private OrderRepository orderRepository;
+
+  @Autowired private OrderItemRepositorio orderItemRepository;
+
+  @Autowired private PurchaseOrderRepository purchaseOrderRepository;
 
   @Autowired private PasswordEncoder passwordEncoder;
 
@@ -70,6 +78,10 @@ public class DataLoader implements CommandLineRunner {
     // Criar users
     List<User> users = createUsers(sections);
     System.out.println("Users criados com sucesso.");
+
+    // Criar orders e purchase orders (janeiro 2023 até hoje)
+    createOrdersAndPurchaseOrders(users, suppliers, sections);
+    System.out.println("Orders e PurchaseOrders criados com sucesso.");
 
     System.out.println("Inserção de dados concluída!");
   }
@@ -208,5 +220,135 @@ public class DataLoader implements CommandLineRunner {
     }
 
     return userRepository.saveAll(users);
+  }
+
+  private void createOrdersAndPurchaseOrders(
+      List<User> users, List<SupplierCompany> suppliers, List<Section> sections) {
+    LocalDateTime startDate = LocalDateTime.of(2023, 1, 1, 8, 0);
+    LocalDateTime currentDate = LocalDateTime.now();
+    
+    List<Item> allItems = itemRepository.findAll();
+    if (allItems.isEmpty()) {
+      System.out.println("Nenhum item encontrado para criar pedidos.");
+      return;
+    }
+
+    String[] statusOptions = {"PENDING", "APPROVED", "IN_TRANSIT", "DELIVERED", "CANCELLED"};
+    int orderCounter = 1;
+
+    // Percorrer meses de janeiro 2023 até o mês atual
+    LocalDateTime monthStart = startDate;
+    while (monthStart.isBefore(currentDate) || monthStart.isEqual(currentDate)) {
+      int year = monthStart.getYear();
+      int month = monthStart.getMonthValue();
+      int yearMonth = year * 100 + month;
+
+      // Criar 30 pedidos por mês
+      for (int i = 0; i < 30; i++) {
+        // Distribuir os pedidos ao longo do mês
+        int dayOfMonth = (i % 28) + 1; // Evitar dias > 28 para simplificar
+        int hour = 8 + (i % 10); // Horário entre 8h e 17h
+        LocalDateTime orderDate = LocalDateTime.of(year, month, dayOfMonth, hour, 0);
+
+        Section section = sections.get(random.nextInt(sections.size()));
+        
+        User creator = users.get(random.nextInt(users.size()));
+        
+        Order order = new Order();
+        order.setOrderNumber(String.format("ORD-%04d-%05d", year, orderCounter++));
+        order.setCreatedAt(orderDate);
+        order.setLastUpdate(orderDate);
+        order.setWithdrawDay(orderDate.plusDays(random.nextInt(30) + 1));
+        order.setExpireAt(orderDate.plusDays(random.nextInt(60) + 30));
+        order.setStatus(statusOptions[random.nextInt(statusOptions.length)]);
+        order.setCreatedBy(creator);
+        order.setLastUser(creator);
+        order.setSection(section);
+
+        // Criar OrderItems
+        int itemCount = 2 + random.nextInt(7);
+        List<OrderItem> orderItems = new ArrayList<>();
+        List<Item> selectedItems = new ArrayList<>();
+        
+        // Filtrar itens pela seção (usando itemType)
+        List<Item> sectionItems = allItems.stream()
+            .filter(item -> item.getItemType() != null 
+                && item.getItemType().getSection() != null 
+                && item.getItemType().getSection().getId().equals(section.getId()))
+            .toList();
+        
+        if (sectionItems.isEmpty()) {
+          sectionItems = allItems;
+        }
+
+        for (int j = 0; j < itemCount && j < sectionItems.size(); j++) {
+          Item item = sectionItems.get(random.nextInt(sectionItems.size()));
+          
+          if (selectedItems.contains(item)) {
+            continue;
+          }
+          selectedItems.add(item);
+
+          OrderItem orderItem = new OrderItem();
+          orderItem.setItem(item);
+          orderItem.setQuantity(1 + random.nextInt(50));
+          orderItem.setLastUser(creator);
+          orderItem.setOrder(order);
+          orderItems.add(orderItem);
+
+        }
+
+        if (orderItems.isEmpty()) {
+          continue;
+        }
+
+        order.setOrderItems(orderItems);
+        
+        Order savedOrder = orderRepository.save(order);
+
+        if (random.nextDouble() < 0.8) {
+          SupplierCompany supplier = suppliers.get(random.nextInt(suppliers.size()));
+          
+          PurchaseOrder purchaseOrder = new PurchaseOrder();
+          purchaseOrder.setOrder(savedOrder);
+          purchaseOrder.setSupplierCompany(supplier);
+          purchaseOrder.setIssuingBody("Exército Brasileiro - " + section.getTitle());
+          purchaseOrder.setCommitmentNoteNumber(String.format("NC-%04d-%05d", year, random.nextInt(99999)));
+          purchaseOrder.setYear(year);
+          purchaseOrder.setProcessNumber(String.format("PROC-%04d/%05d", year, random.nextInt(99999)));
+          
+          // Verificar se é quantidade ou valor
+          float totalValue = orderItems.stream()
+              .mapToInt(OrderItem::getQuantity)
+              .sum() * (50f + random.nextFloat() * 450f);
+          purchaseOrder.setTotalValue(totalValue);
+          
+          purchaseOrder.setIssueDate(orderDate);
+          purchaseOrder.setCreatedAt(orderDate);
+          purchaseOrder.setLastUpdate(orderDate);
+          
+          if (orderDate.isBefore(currentDate.minusMonths(3))) {
+            purchaseOrder.setStatus(Status.DELIVERY);
+            purchaseOrder.setEmailStatus(EmailStatus.SENT);
+          } else if (orderDate.isBefore(currentDate.minusMonths(1))) {
+            purchaseOrder.setStatus(random.nextBoolean() ? Status.DELIVERY : Status.PENDING_DELIVERY);
+            purchaseOrder.setEmailStatus(EmailStatus.SENT);
+          } else {
+            purchaseOrder.setStatus(Status.PENDING_DELIVERY);
+            purchaseOrder.setEmailStatus(random.nextBoolean() ? EmailStatus.SENT : EmailStatus.NOT_SENT);
+          }
+          
+          purchaseOrder.setCreatedBy(creator);
+          purchaseOrder.setLastUser(creator);
+          purchaseOrder.setSender(creator);
+          
+          purchaseOrderRepository.save(purchaseOrder);
+        }
+      }
+
+      monthStart = monthStart.plusMonths(1);
+    }
+
+    System.out.println("Total de pedidos criados: " + (orderCounter - 1));
   }
 }

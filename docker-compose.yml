@@ -37,6 +37,65 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - management-network
+
+  python-api:
+    build:
+      context: ./ai
+      dockerfile: Dockerfile
+    container_name: prediction_api
+    restart: unless-stopped
+    environment:
+      PGHOST: db
+      PGPORT: 5432
+      PGDATABASE: ${POSTGRES_DB:-teste}
+      PGUSER: ${DB_USER:-postgres}
+      PGPASSWORD: ${DB_PASSWORD:-fatec}
+      API_HOST: 0.0.0.0
+      API_PORT: 8000
+      TZ: America/Sao_Paulo
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./ai/models:/app/models
+      - ./ai/src:/app/src
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - management-network
+
+  java-backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.java
+    container_name: management_backend
+    restart: unless-stopped
+    environment:
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-dev}
+      DB_URL: jdbc:postgresql://db:5432/${POSTGRES_DB:-teste}
+      DB_USER: ${DB_USER:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:-fatec}
+      PREDICTION_API_URL: http://python-api:8000
+      JWT_SECRET: ${JWT_SECRET:-your-secret-key-here-change-this-in-production}
+      CRYPTO_SECRET: ${CRYPTO_SECRET:-your-crypto-secret-here-change-this-in-production}
+      TZ: America/Sao_Paulo
+    ports:
+      - "8080:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+      python-api:
+        condition: service_started
+    networks:
+      - management-network
 
   ai-trainer:
     profiles: ["ai"]
@@ -60,6 +119,12 @@ services:
       db:
         condition: service_healthy
     restart: unless-stopped
+    networks:
+      - management-network
+
+networks:
+  management-network:
+    driver: bridge
 
 volumes:
   db_data:

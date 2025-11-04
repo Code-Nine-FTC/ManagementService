@@ -1,79 +1,343 @@
-# AI Trainer (Python)
+# 🤖 Sistema de Previsão de Demanda com Machine Learning
 
-Este diretório contém o job Python responsável por treinar modelos de previsão por item e gravar as previsões na tabela `model_predictions` no Postgres.
+Sistema de previsão de demanda para gestão inteligente de estoque usando Machine Learning.
 
-## Tecnologias
+## 📋 Visão Geral
 
-- pandas, numpy, SQLAlchemy, psycopg2-binary
-- statsmodels (SARIMAX) com fallback para média móvel
-- APScheduler para execução diária
+Este sistema usa **Gradient Boosting** com dados brutos transacionais para prever:
 
-## Variáveis de ambiente
+- 📦 **Demanda futura** de itens
+- 🔄 **Necessidade de reposição** de estoque
+- 📊 **Quantidade ideal** para pedidos
 
-Veja `.env.example` para referência:
+**Performance atual**: R² = 0.94, MAE = 6.17
 
-- Fonte de dados:
-  - PGHOST, PGPORT, PGDATABASE, PGUSER, PGPASSWORD (quando TRAIN_INPUT_SOURCE=postgres)
-  - TRAIN_INPUT_SOURCE (postgres | csv | parquet)
-  - TRAIN_INPUT_PATH, TRAIN_INPUT_FORMAT, INPUT_COL_ITEM, INPUT_COL_DATE, INPUT_COL_QTY, INPUT_DATE_TZ (para arquivo)
-- Janela/modelo:
-  - TRAIN_WINDOW_DAYS (padrão 120)
-  - FORECAST_HORIZON_DAYS (padrão 14)
-  - MODEL_VERSION (ex.: sarimax_v1)
-- Execução:
-  - MODE (once | schedule | report | evaluate)
-  - TRAIN_FORCE (false por padrão; se true, reprocessa o dia mesmo que já exista previsão)
-  - TZ (ex.: America/Sao_Paulo; controla o fuso do agendamento)
-- Destino das previsões:
-  - TRAIN_TARGET (database | file)
-  - OUTPUT_DIR (quando TRAIN_TARGET=file)
+---
 
-## Execução local (venv)
+## 🏗️ Arquitetura
 
-1. Crie um virtualenv e instale dependências:
-   python -m venv .venv
-   source .venv/bin/activate
-   pip install -r requirements.txt
-2. Configure as variáveis de ambiente (crie `.env` a partir de `.env.example`).
-3. Execute uma vez:
-   python train_forecast.py
-4. Ou rode em modo agendado:
-   MODE=schedule python train_forecast.py
+```
+┌─────────────────────────────────────────────────────────┐
+│                    Java Backend                         │
+│                  (Spring Boot)                          │
+│                   Porta 8080                            │
+└────────────────────┬────────────────────────────────────┘
+                     │ HTTP Request
+                     ▼
+┌─────────────────────────────────────────────────────────┐
+│              Python API (FastAPI)                       │
+│          Serviço de Previsões ML                        │
+│                   Porta 8000                            │
+└────────────────────┬────────────────────────────────────┘
+                     │ SQL Query
+                     ▼
+┌─────────────────────────────────────────────────────────┐
+│              PostgreSQL Database                        │
+│      Tables: items, orders, order_item, etc.           │
+│                   Porta 5433                            │
+└─────────────────────────────────────────────────────────┘
+```
 
-## Docker / docker-compose
+---
 
-- O serviço `ai-trainer` já está definido no `docker-compose.yml` na raiz.
-- Build e subir:
-  docker compose --profile ai up -d --build ai-trainer
+## 📂 Estrutura do Projeto
 
-O container roda continuamente com APScheduler e executa o treinamento diariamente no horário configurado (fuso em TZ). Se previsões do dia já existirem e TRAIN_FORCE=false, ele pula a execução (uma vez por dia).
+```
+ai/
+├── docs/
+│   ├── GUIA_USO_API.md              # 📚 Guia completo de uso
+│
+├── models/                          # 🤖 Modelos treinados
+│   ├── gradient_boosting_v2.pkl
+│   ├── scaler_v2.pkl
+│   ├── feature_columns_v2.pkl
+│   └── model_metadata_v2.pkl
+│
+├── notebooks/
+│   ├── training_ai_v2.ipynb         # ✅ Notebook
+│   
+│
+├── scripts/
+│   ├── start_api.py                 # 🚀 Iniciar API REST
+│   └── test_predictions.py          # 🧪 Testar previsões localmente
+│
+├── src/
+│   ├── api.py                       # 🌐 API REST FastAPI
+│   ├── models/
+│   ├── services/
+│   │   └── prediction_service_v2.py # 🔮 Serviço de previsões
+│   └── utils/
+│       ├── database.py              # 💾 Conexão com banco
+│       └── logger.py
+│
+├── requirements.txt                 # 📦 Dependências Python
+├── Dockerfile                       # 🐳 Container Docker
+└── README.md                        # 📖 Este arquivo
+```
 
-## Avaliação de efetividade (métricas)
+---
 
-- As métricas são calculadas quando o horizonte já “venceu” (quando já é possível comparar previsão vs. realizado).
-- O script mantém duas tabelas de métricas:
-  - `prediction_metrics`: por item (detalhado) com `y_hat`, `y_true`, `abs_error`, `ape`.
-  - `model_prediction_metrics`: agregado por rodada (`ref_date`, `horizon_days`) com `MAE`, `RMSE`, `MAPE`, `sMAPE`, `WAPE`, `pairs`.
-- Como usar:
-  - Executar avaliação manual (detalhada + agregada):
-    MODE=evaluate python train_forecast.py
-  - No modo agendado (`MODE=schedule`), a avaliação também roda na inicialização do container.
-  - Consultas úteis:
-    - Detalhado: SELECT ref_date, horizon_days, COUNT(\*), AVG(abs_error) AS mae, AVG(ape) AS mape FROM prediction_metrics GROUP BY 1,2 ORDER BY 1 DESC;
-    - Agregado: SELECT \* FROM model_prediction_metrics ORDER BY ref_date DESC, horizon_days;
+## 🚀 Quick Start
 
-## Contrato de dados
+### 1️⃣ Instalar Dependências
 
-- Escreve em `model_predictions(item_id, ref_date, horizon_days, y_hat, model_version, created_at)`
-- Se a tabela não existir, o script cria automaticamente.
-- Antes de inserir, remove previsões da mesma `ref_date` e `horizon_days`.
-- Escreve em `prediction_metrics(item_id, ref_date, horizon_days, y_hat, y_true, abs_error, ape, created_at)` quando houver previsões maduras.
-- Quando `TRAIN_TARGET=file`, grava CSV em `OUTPUT_DIR/predictions_<refDate>_h<horizon>.csv` com colunas: `item_id, ref_date, horizon_days, y_hat, model_version`.
-- Quando `TRAIN_INPUT_SOURCE=file`, espera colunas mapeáveis via `INPUT_COL_*` e agrega por dia/item.
+```bash
+cd ai/
+pip install -r requirements.txt
+```
 
-## Observações
+### 2️⃣ Treinar Modelo (se necessário)
 
-- Recomendamos validar a qualidade com um período de testes e ajustar ordem/parametrização do SARIMAX conforme o perfil da sua série.
-- Se preferir Prophet ou outro modelo, basta substituí-lo dentro de `fit_predict_series` e atualizar o `MODEL_VERSION`.
-- As métricas agregadas também são mostradas no `MODE=report` quando disponíveis para a rodada mais recente do horizonte configurado.
-- Observação: `MODE=evaluate` e métricas agregadas dependem do banco (histórico real). Para dataset externo em arquivo, use backtesting offline para avaliação.
+```bash
+# Abrir e executar o notebook
+jupyter notebook notebooks/training_ai_v2.ipynb
+```
+
+### 3️⃣ Iniciar API
+
+```bash
+python scripts/start_api.py
+```
+
+A API estará disponível em:
+
+- 🌐 http://localhost:8000
+- 📚 http://localhost:8000/docs (Swagger)
+
+### 4️⃣ Testar
+
+```bash
+# Health check
+curl http://localhost:8000/health
+
+# Previsão para item 1
+curl http://localhost:8000/predictions/item/1
+```
+
+---
+
+## 📡 Endpoints Principais
+
+| Endpoint                            | Método | Descrição                     |
+| ----------------------------------- | ------ | ----------------------------- |
+| `/health`                           | GET    | Status da API                 |
+| `/model/info`                       | GET    | Informações do modelo         |
+| `/predictions/item/{id}`            | GET    | Previsão para 1 item          |
+| `/predictions/items?item_ids=1,2,3` | GET    | Previsão para múltiplos itens |
+| `/predictions/all`                  | GET    | Previsão para todos os itens  |
+| `/docs`                             | GET    | Documentação Swagger          |
+
+---
+
+
+
+## 🧪 Testes
+
+### Teste Local Python
+
+```bash
+python scripts/test_predictions.py
+```
+
+### Teste API com cURL
+
+```bash
+# Previsão para item 1
+curl http://localhost:8000/predictions/item/1
+
+# Previsão para múltiplos itens
+curl "http://localhost:8000/predictions/items?item_ids=1,2,3"
+
+# Todas as previsões
+curl http://localhost:8000/predictions/all
+```
+
+### Teste Interativo
+
+Acesse: http://localhost:8000/docs
+
+---
+
+### Dados Brutos
+
+✅ Usa dados brutos diretamente das tabelas:
+
+- `items` - Informações dos itens
+- `orders` - Pedidos realizados
+- `order_item` - Itens dos pedidos
+- `purchase_orders` - Ordens de compra
+- `sections` - Seções/categorias
+- `supplier_company` - Fornecedores
+- `item_types` - Tipos de itens
+
+**Vantagens**:
+
+- ✅ Sem data leakage
+- ✅ Maior granularidade
+- ✅ R² realista (0.60-0.95)
+- ✅ Melhor generalização
+
+
+---
+
+## 🤖 Modelos Disponíveis
+
+O sistema testa 3 algoritmos e escolhe o melhor:
+
+1. **Linear Regression** - Baseline simples
+2. **Random Forest** - Ensemble com árvores
+3. **Gradient Boosting** - ⭐ **Melhor performance**
+
+**Resultado atual**:
+
+- Modelo: Gradient Boosting
+- R²: 0.9426
+- MAE: 6.17
+- RMSE: 8.81
+
+---
+
+## 🔧 Features Usadas
+
+Total: **16 features**
+
+### Features Históricas (Lag)
+
+- `prev_total_quantity` - Quantidade do mês anterior
+- `prev_avg_quantity` - Média do mês anterior
+- `prev_num_orders` - Número de pedidos anteriores
+- `prev_stock` - Estoque anterior
+
+### Features de Tendência
+
+- `ma3_quantity` - Média móvel 3 meses (quantidade)
+- `ma3_orders` - Média móvel 3 meses (pedidos)
+- `quantity_growth_rate` - Taxa de crescimento
+
+### Features de Estoque
+
+- `current_stock` - Estoque atual
+- `minimum_stock` - Estoque mínimo
+- `maximum_stock` - Estoque máximo
+- `stock_coverage` - Cobertura de estoque
+
+### Features Temporais
+
+- `year` - Ano
+- `month` - Mês
+- `weekend_orders` - Pedidos em fim de semana
+- `avg_days_to_delivery` - Tempo médio de entrega
+
+### Outras
+
+- `item_id` - ID do item
+- `unique_order_count` - Pedidos únicos
+
+---
+
+## 🐳 Docker
+
+### Build
+
+```bash
+docker build -t prediction-api .
+```
+
+### Run
+
+```bash
+docker run -p 8000:8000 \
+  -e PGHOST=host.docker.internal \
+  -e PGPORT=5433 \
+  -e PGDATABASE=teste \
+  -e PGUSER=postgres \
+  -e PGPASSWORD=fatec \
+  prediction-api
+```
+
+---
+
+## 🔐 Variáveis de Ambiente
+
+Crie `.env` baseado em `.env.example`:
+
+```env
+# Banco de dados
+PGHOST=localhost
+PGPORT=5433
+PGDATABASE=teste
+PGUSER=postgres
+PGPASSWORD=fatec
+
+# API
+API_HOST=0.0.0.0
+API_PORT=8000
+```
+
+---
+
+## 📈 Performance
+
+### Métricas de Avaliação
+
+- **R² (R-squared)**: 0.9426
+
+  - Quanto mais próximo de 1, melhor
+  - Entre 0.6-0.8 é considerado bom para séries temporais
+  - Acima de 0.95 pode indicar overfitting
+
+- **MAE (Mean Absolute Error)**: 6.17
+
+  - Erro médio absoluto
+  - Em unidades do target (quantidade)
+
+- **RMSE (Root Mean Squared Error)**: 8.81
+  - Penaliza erros maiores
+  - Também em unidades do target
+
+### Comparação de Modelos
+
+| Modelo                | R²         | MAE      | RMSE     |
+| --------------------- | ---------- | -------- | -------- |
+| Linear Regression     | 0.6419     | 17.85    | 21.99    |
+| Random Forest         | 0.9128     | 6.17     | 10.85    |
+| **Gradient Boosting** | **0.9426** | **6.17** | **8.81** |
+
+---
+
+## 🚨 Troubleshooting
+
+### Modelo não encontrado
+
+```bash
+# Execute o notebook de treinamento
+jupyter notebook notebooks/training_ai_v2.ipynb
+```
+
+### Erro de conexão com banco
+
+```bash
+# Verifique se PostgreSQL está rodando
+psql -h localhost -p 5433 -U postgres -d teste
+```
+
+### FastAPI não instalado
+
+```bash
+pip install fastapi uvicorn pydantic
+```
+
+### Porta 8000 ocupada
+
+```bash
+# Verificar processo na porta
+lsof -i :8000
+
+# Usar outra porta
+uvicorn src.api:app --port 8001
+```
+---
+
+
+**Última atualização**: 03/11/2024  
+**Versão**: 2.0.0
