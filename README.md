@@ -157,3 +157,9 @@ mvn spotless:check
 
 Se houver problemas de formatação, o comando `spotless:check` irá falhar.  
 Use `spotless:apply` para corrigir automaticamente.
+
+
+## Documentação Swagger
+
+Acesse a documentação da API em:  
+[localhost:8080/swagger-ui.html](http://localhost:8080/swagger-ui.html)
