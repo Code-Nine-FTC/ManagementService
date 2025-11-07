@@ -80,6 +80,46 @@ public class EmailService {
     }
   }
 
+  public void sendChatInvitationEmail(
+      String toEmail, String guestName, String inviterName, String chatLink) {
+    String subject = "Convite para conversar - Sistema de Chat";
+
+    String body =
+        String.format(
+            "<div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;'>"
+                + "<h2 style='color: #0084ff;'>Você recebeu um convite para conversar!</h2>"
+                + "<p>Olá%s,</p>"
+                + "<p><b>%s</b> convidou você para iniciar uma conversa no nosso sistema de chat.</p>"
+                + "<p>Para acessar a conversa, clique no botão abaixo:</p>"
+                + "<div style='text-align: center; margin: 30px 0;'>"
+                + "<a href='%s' style='background-color: #0084ff; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block; font-weight: bold;'>Acessar Conversa</a>"
+                + "</div>"
+                + "<p style='color: #666; font-size: 12px;'>Ou copie e cole este link no seu navegador:</p>"
+                + "<p style='background-color: #f0f2f5; padding: 10px; border-radius: 5px; word-break: break-all; font-size: 12px;'>%s</p>"
+                + "<p style='color: #666; font-size: 12px; margin-top: 30px;'><b>Importante:</b> Este link é válido por 7 dias e pode ser usado apenas uma vez.</p>"
+                + "<p style='color: #666; font-size: 12px;'>Após acessar, você terá acesso apenas a esta conversa específica.</p>"
+                + "<hr style='border: none; border-top: 1px solid #e5e7eb; margin: 30px 0;'>"
+                + "<p style='color: #999; font-size: 11px; text-align: center;'>Este é um email automático, por favor não responda.</p>"
+                + "</div>",
+            guestName != null && !guestName.isEmpty() ? " " + guestName : "",
+            inviterName,
+            chatLink,
+            chatLink);
+
+    try {
+      MimeMessage message = emailSender.createMimeMessage();
+      MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+      helper.setTo(toEmail);
+      helper.setSubject(subject);
+      helper.setText(body, true);
+
+      emailSender.send(message);
+    } catch (MessagingException e) {
+      e.printStackTrace();
+      throw new RuntimeException("Erro ao enviar email de convite: " + e.getMessage());
+    }
+  }
+
   @Scheduled(cron = "0 0 1 * * ?")
   private void checkLateDeliveries() {
     LocalDate thirtyDaysAgo = LocalDate.now().minusDays(30);

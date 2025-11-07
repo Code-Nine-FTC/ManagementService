@@ -41,6 +41,8 @@ public class SecurityConfig {
             auth ->
                 auth.requestMatchers("/login/**")
                     .permitAll()
+                    .requestMatchers("/api/chat/join/**", "/api/chat/guest/**")
+                    .permitAll()
                     .requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**")
                     .permitAll()
                     .anyRequest()
