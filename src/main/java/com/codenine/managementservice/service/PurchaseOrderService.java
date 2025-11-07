@@ -5,6 +5,7 @@ import java.util.List;
 
 import org.springframework.stereotype.Service;
 
+import com.codenine.managementservice.dto.action.ActionType;
 import com.codenine.managementservice.dto.purchaseOrder.EmailStatus;
 import com.codenine.managementservice.dto.purchaseOrder.PurchaseOrderFilterCriteria;
 import com.codenine.managementservice.dto.purchaseOrder.PurchaseOrderRequest;
@@ -41,6 +42,8 @@ public class PurchaseOrderService {
 
   private final EntityManager entityManager;
 
+  private final AuditLogService auditLogService;
+
   public void createPurchaseOrder(PurchaseOrderRequest request, User lastUser) {
     Order order =
         orderRepository
@@ -59,6 +62,12 @@ public class PurchaseOrderService {
     PurchaseOrder purchaseOrder =
         PurchaseOrderMapper.toEntity(request, lastUser, order, supplierCompany);
     purchaseOrderRepository.save(purchaseOrder);
+    auditLogService.logAction(
+        lastUser,
+        ActionType.PURCHASE_ORDER_CREATED,
+        purchaseOrder.getId(),
+        "Purchase Order created with id: " + purchaseOrder.getId(),
+        "PurchaseOrder");
   }
 
   public List<PurchaseOrderResponse> getPurchaseOrders(PurchaseOrderFilterCriteria filterCriteria) {
@@ -172,6 +181,12 @@ public class PurchaseOrderService {
     purchaseOrder.setLastUser(lastUser);
     purchaseOrder.setLastUpdate(LocalDateTime.now());
     purchaseOrderRepository.save(purchaseOrder);
+    auditLogService.logAction(
+        lastUser,
+        ActionType.PURCHASE_ORDER_STATUS_UPDATED,
+        purchaseOrder.getId(),
+        "Purchase Order status updated to: " + status,
+        "PurchaseOrder");
   }
 
   public void updatePurchaseOrder(Long id, PurchaseOrderRequest request, User lastUser) {
@@ -198,6 +213,12 @@ public class PurchaseOrderService {
     }
     PurchaseOrderMapper.updateEntity(purchaseOrder, request, lastUser, order, supplierCompany);
     purchaseOrderRepository.save(purchaseOrder);
+    auditLogService.logAction(
+        lastUser,
+        ActionType.PURCHASE_ORDER_UPDATED,
+        purchaseOrder.getId(),
+        "Purchase Order updated with id: " + purchaseOrder.getId(),
+        "PurchaseOrder");
   }
 
   private PurchaseOrder validateExistence(Long id) {
@@ -217,5 +238,11 @@ public class PurchaseOrderService {
     emailService.sendCommitmentNoteEmail(purchaseOrder, supplier, supplier.getEmail());
     purchaseOrder.setEmailStatus(EmailStatus.SENT);
     purchaseOrderRepository.save(purchaseOrder);
+    auditLogService.logAction(
+        lastUser,
+        ActionType.EMAIL_CHARGE_SENT,
+        purchaseOrder.getId(),
+        "Email sent for Purchase Order id: " + purchaseOrder.getId(),
+        "PurchaseOrder");
   }
 }
