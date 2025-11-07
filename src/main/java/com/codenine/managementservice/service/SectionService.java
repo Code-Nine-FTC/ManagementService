@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.codenine.managementservice.dto.action.ActionType;
 import com.codenine.managementservice.dto.section.SectionFilterCriteria;
 import com.codenine.managementservice.dto.section.SectionRequest;
 import com.codenine.managementservice.dto.section.SectionResponse;
@@ -17,6 +18,7 @@ import com.codenine.managementservice.utils.mapper.SectionMapper;
 public class SectionService {
 
   @Autowired private SectionRepository sectionRepository;
+  @Autowired private AuditLogService auditLogService;
 
   public void createSection(SectionRequest newSection, User lastUser) {
     if (newSection.title() == null || newSection.title().trim().isEmpty()) {
@@ -24,6 +26,12 @@ public class SectionService {
     }
     Section section = SectionMapper.toEntity(newSection, lastUser);
     sectionRepository.save(section);
+    auditLogService.logAction(
+        lastUser,
+        ActionType.SECTION_CREATED,
+        section.getId(),
+        "Section created with title: " + newSection.title(),
+        "Section");
   }
 
   public void updateSection(Long id, SectionRequest updatedSection, User lastUser) {
@@ -33,6 +41,12 @@ public class SectionService {
     }
     SectionMapper.updateEntity(section, updatedSection, lastUser);
     sectionRepository.save(section);
+    auditLogService.logAction(
+        lastUser,
+        ActionType.SECTION_UPDATED,
+        section.getId(),
+        "Section updated with title: " + updatedSection.title(),
+        "Section");
   }
 
   public SectionResponse getSection(Long id) {
