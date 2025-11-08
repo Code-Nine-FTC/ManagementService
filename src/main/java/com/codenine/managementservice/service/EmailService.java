@@ -7,6 +7,7 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.codenine.managementservice.dto.purchaseOrder.EmailStatus;
 import com.codenine.managementservice.dto.purchaseOrder.Status;
@@ -25,7 +26,8 @@ public class EmailService {
   private final JavaMailSender emailSender;
   private final PurchaseOrderRepository purchaseOrderRepository;
 
-  public void sendCommitmentNoteEmail(PurchaseOrder po, SupplierCompany supplier, String toEmail) {
+  public void sendCommitmentNoteEmail(
+      PurchaseOrder po, SupplierCompany supplier, String toEmail, MultipartFile[] files) {
     String subject = "Solicitação de entrega de materiais por Nota de Empenho";
     // guard against null sender (scheduled jobs or older records may not have sender set)
     String senderName = "";
@@ -74,10 +76,25 @@ public class EmailService {
       helper.setSubject(subject);
       helper.setText(body, true);
 
+      // Adicionar arquivos anexos, se fornecidos
+      if (files != null && files.length > 0) {
+        for (MultipartFile file : files) {
+          if (file != null && !file.isEmpty()) {
+            helper.addAttachment(
+                file.getOriginalFilename() != null ? file.getOriginalFilename() : "attachment",
+                () -> file.getInputStream());
+          }
+        }
+      }
+
       emailSender.send(message);
     } catch (MessagingException e) {
       e.printStackTrace();
     }
+  }
+
+  public void sendCommitmentNoteEmail(PurchaseOrder po, SupplierCompany supplier, String toEmail) {
+    sendCommitmentNoteEmail(po, supplier, toEmail, null);
   }
 
   @Scheduled(cron = "0 0 1 * * ?")
@@ -89,7 +106,7 @@ public class EmailService {
     for (PurchaseOrder po : lateOrders) {
       SupplierCompany supplier = po.getSupplierCompany();
       String supplierEmail = supplier.getEmail();
-      this.sendCommitmentNoteEmail(po, supplier, supplierEmail);
+      this.sendCommitmentNoteEmail(po, supplier, supplierEmail, null);
       po.setStatus(Status.LATE);
       po.setEmailStatus(EmailStatus.REMINDER_SENT);
       purchaseOrderRepository.save(po);
