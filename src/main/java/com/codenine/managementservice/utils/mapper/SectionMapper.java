@@ -10,7 +10,6 @@ public class SectionMapper {
   public static Section toEntity(SectionRequest request, User lastUser) {
     Section section = new Section();
     section.setTitle(request.title());
-    section.setRoleAccess(request.roleAccess());
     section.setIsActive(request.isActive() != null ? request.isActive() : true);
     section.setSectionType(
         request.sectionType() != null ? request.sectionType() : SectionType.CONSUMER);
@@ -20,10 +19,9 @@ public class SectionMapper {
 
   public static void updateEntity(Section section, SectionRequest request, User lastUser) {
     if (request.title() != null) section.setTitle(request.title());
-    if (request.roleAccess() != null) section.setRoleAccess(request.roleAccess());
     if (request.isActive() != null) section.setIsActive(request.isActive());
     if (request.sectionType() != null) section.setSectionType(request.sectionType());
-    if (request.title() != null || request.roleAccess() != null || request.isActive() != null) {
+    if (request.title() != null || request.isActive() != null) {
       section.setLastUpdate(java.time.LocalDateTime.now());
       section.setLastUser(lastUser);
     }
@@ -33,7 +31,6 @@ public class SectionMapper {
     return new SectionResponse(
         section.getId(),
         section.getTitle(),
-        section.getRoleAccess(),
         section.getIsActive(),
         section.getSectionType(),
         section.getCreatedAt(),
