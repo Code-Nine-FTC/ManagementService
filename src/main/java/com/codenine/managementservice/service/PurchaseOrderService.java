@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.codenine.managementservice.dto.action.ActionType;
 import com.codenine.managementservice.dto.purchaseOrder.EmailStatus;
@@ -227,7 +228,7 @@ public class PurchaseOrderService {
         .orElseThrow(() -> new IllegalArgumentException("Purchase Order not found with id: " + id));
   }
 
-  public void sendEmail(Long purchaseOrderId, User lastUser) {
+  public void sendEmail(Long purchaseOrderId, MultipartFile[] files, User lastUser) {
     PurchaseOrder purchaseOrder = validateExistence(purchaseOrderId);
     SupplierCompany supplier = purchaseOrder.getSupplierCompany();
     // set sender/lastUser before sending so EmailService can rely on sender info
@@ -235,7 +236,7 @@ public class PurchaseOrderService {
     purchaseOrder.setSender(lastUser);
     purchaseOrder.setLastUpdate(LocalDateTime.now());
     // attempt to send email (EmailService is resilient if some fields are missing)
-    emailService.sendCommitmentNoteEmail(purchaseOrder, supplier, supplier.getEmail());
+    emailService.sendCommitmentNoteEmail(purchaseOrder, supplier, supplier.getEmail(), files);
     purchaseOrder.setEmailStatus(EmailStatus.SENT);
     purchaseOrderRepository.save(purchaseOrder);
     auditLogService.logAction(

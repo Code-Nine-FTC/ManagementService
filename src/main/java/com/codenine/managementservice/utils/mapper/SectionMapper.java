@@ -14,6 +14,8 @@ public class SectionMapper {
     section.setIsActive(request.isActive() != null ? request.isActive() : true);
     section.setSectionType(
         request.sectionType() != null ? request.sectionType() : SectionType.CONSUMER);
+    section.setCreatedAt(java.time.LocalDateTime.now());
+    section.setLastUpdate(java.time.LocalDateTime.now());
     section.setLastUser(lastUser);
     return section;
   }
@@ -23,7 +25,10 @@ public class SectionMapper {
     if (request.roleAccess() != null) section.setRoleAccess(request.roleAccess());
     if (request.isActive() != null) section.setIsActive(request.isActive());
     if (request.sectionType() != null) section.setSectionType(request.sectionType());
-    if (request.title() != null || request.roleAccess() != null || request.isActive() != null) {
+    if (request.title() != null
+        || request.roleAccess() != null
+        || request.isActive() != null
+        || request.sectionType() != null) {
       section.setLastUpdate(java.time.LocalDateTime.now());
       section.setLastUser(lastUser);
     }
