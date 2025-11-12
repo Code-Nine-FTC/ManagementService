@@ -7,10 +7,13 @@ import com.codenine.managementservice.dto.chat.CreateChatRoomRequest;
 import com.codenine.managementservice.dto.chat.InviteGuestRequest;
 import com.codenine.managementservice.dto.chat.JoinChatResponse;
 import com.codenine.managementservice.entity.User;
+import com.codenine.managementservice.security.GuestUserDetails;
 import com.codenine.managementservice.service.ChatService;
+import com.codenine.managementservice.service.GuestUserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -22,9 +25,11 @@ import org.springframework.web.bind.annotation.*;
 public class ChatController {
 
   private final ChatService chatService;
+  private final GuestUserService guestUserService;
 
-  public ChatController(ChatService chatService) {
+  public ChatController(ChatService chatService, GuestUserService guestUserService) {
     this.chatService = chatService;
+    this.guestUserService = guestUserService;
   }
 
   @PostMapping("/rooms")
@@ -56,7 +61,45 @@ public class ChatController {
   @Operation(summary = "Get chat room details")
   public ResponseEntity<ChatRoomDTO> getChatRoom(
       @PathVariable Long chatRoomId, Authentication authentication) {
-    User user = (User) authentication.getPrincipal();
+    
+    System.out.println("=== GET CHAT ROOM ===");
+    System.out.println("chatRoomId solicitado: " + chatRoomId);
+    
+    Object principal = authentication.getPrincipal();
+    System.out.println("Tipo de principal: " + principal.getClass().getName());
+    
+    // Se for guest, verificar se o chatRoomId corresponde ao chat do guest
+    if (principal instanceof com.codenine.managementservice.security.GuestUserDetails) {
+      System.out.println("É um GUEST USER");
+      com.codenine.managementservice.security.GuestUserDetails guestDetails = 
+          (com.codenine.managementservice.security.GuestUserDetails) principal;
+      
+      System.out.println("Email do guest: " + guestDetails.getUsername());
+      
+      // Buscar o guest pelo email para pegar o chat_room_id
+      com.codenine.managementservice.dto.chat.GuestUserDTO guestUser = 
+          guestUserService.getGuestByEmail(guestDetails.getUsername());
+      
+      System.out.println("Guest ID: " + guestUser.getId());
+      System.out.println("Chat Room ID do guest: " + guestUser.getChatRoomId());
+      
+      // Verificar se o guest está tentando acessar seu próprio chat
+      if (!chatRoomId.equals(guestUser.getChatRoomId())) {
+        System.out.println("ACESSO NEGADO - Guest tentando acessar chat de outro usuário");
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+      }
+      
+      System.out.println("Buscando chat room do guest...");
+      // Buscar o chat room
+      com.codenine.managementservice.dto.chat.ChatRoomDTO chatRoom = 
+          guestUserService.getGuestChatRoom(guestUser.getId());
+      
+      System.out.println("Chat room encontrado: " + chatRoom.getName());
+      return ResponseEntity.ok(chatRoom);
+    }
+    
+    // Se for usuário normal
+    User user = (User) principal;
     List<ChatRoomDTO> chatRooms = chatService.getUserChatRooms(user.getId());
     return chatRooms.stream()
         .filter(room -> room.getId().equals(chatRoomId))
@@ -69,7 +112,44 @@ public class ChatController {
   @Operation(summary = "Get all messages from a chat room")
   public ResponseEntity<List<ChatMessageDTO>> getChatRoomMessages(
       @PathVariable Long chatRoomId, Authentication authentication) {
-    User user = (User) authentication.getPrincipal();
+    
+    System.out.println("=== GET CHAT ROOM MESSAGES ===");
+    System.out.println("chatRoomId solicitado: " + chatRoomId);
+    
+    Object principal = authentication.getPrincipal();
+    System.out.println("Tipo de principal: " + principal.getClass().getName());
+    
+    // Se for guest
+    if (principal instanceof com.codenine.managementservice.security.GuestUserDetails) {
+      System.out.println("É um GUEST USER");
+      com.codenine.managementservice.security.GuestUserDetails guestDetails = 
+          (com.codenine.managementservice.security.GuestUserDetails) principal;
+      
+      System.out.println("Email do guest: " + guestDetails.getUsername());
+      
+      // Buscar o guest pelo email para pegar o chat_room_id
+      com.codenine.managementservice.dto.chat.GuestUserDTO guestUser = 
+          guestUserService.getGuestByEmail(guestDetails.getUsername());
+      
+      System.out.println("Guest ID: " + guestUser.getId());
+      System.out.println("Chat Room ID do guest: " + guestUser.getChatRoomId());
+      
+      // Verificar se o guest está tentando acessar seu próprio chat
+      if (!chatRoomId.equals(guestUser.getChatRoomId())) {
+        System.out.println("ACESSO NEGADO - Guest tentando acessar mensagens de outro chat");
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+      }
+      
+      System.out.println("Buscando mensagens do chat...");
+      // Buscar mensagens do chat (passar null como userId já que guest não tem ID de User)
+      List<ChatMessageDTO> messages = chatService.getChatRoomMessages(chatRoomId, null);
+      
+      System.out.println("Mensagens encontradas: " + messages.size());
+      return ResponseEntity.ok(messages);
+    }
+    
+    // Se for usuário normal
+    User user = (User) principal;
     List<ChatMessageDTO> messages = chatService.getChatRoomMessages(chatRoomId, user.getId());
     return ResponseEntity.ok(messages);
   }
@@ -78,7 +158,30 @@ public class ChatController {
   @Operation(summary = "Mark all messages in a chat room as read")
   public ResponseEntity<Void> markMessagesAsRead(
       @PathVariable Long chatRoomId, Authentication authentication) {
-    User user = (User) authentication.getPrincipal();
+    
+    Object principal = authentication.getPrincipal();
+    
+    // Se for guest
+    if (principal instanceof com.codenine.managementservice.security.GuestUserDetails) {
+      com.codenine.managementservice.security.GuestUserDetails guestDetails = 
+          (com.codenine.managementservice.security.GuestUserDetails) principal;
+      
+      // Buscar o guest pelo email para pegar o chat_room_id
+      com.codenine.managementservice.dto.chat.GuestUserDTO guestUser = 
+          guestUserService.getGuestByEmail(guestDetails.getUsername());
+      
+      // Verificar se o guest está tentando acessar seu próprio chat
+      if (!chatRoomId.equals(guestUser.getChatRoomId())) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+      }
+      
+      // Marcar mensagens como lidas (passar null como userId)
+      chatService.markMessagesAsRead(chatRoomId, null);
+      return ResponseEntity.ok().build();
+    }
+    
+    // Se for usuário normal
+    User user = (User) principal;
     chatService.markMessagesAsRead(chatRoomId, user.getId());
     return ResponseEntity.ok().build();
   }
