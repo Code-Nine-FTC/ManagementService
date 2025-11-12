@@ -68,9 +68,6 @@ public class SectionController {
       @Parameter(description = "ID do último usuário", example = "2")
           @RequestParam(required = false)
           Long lastUserId,
-      @Parameter(description = "Nível de acesso por role", example = "1")
-          @RequestParam(required = false)
-          Integer roleAccess,
       @Parameter(description = "Status ativo/inativo", example = "true")
           @RequestParam(required = false)
           Boolean isActive,
@@ -80,7 +77,7 @@ public class SectionController {
     try {
       var sections =
           sectionService.getSectionsByFilter(
-              new SectionFilterCriteria(sectionId, lastUserId, roleAccess, isActive, sectionType));
+              new SectionFilterCriteria(sectionId, lastUserId, isActive, sectionType));
       return ResponseEntity.ok(sections);
     } catch (Exception e) {
       return ResponseEntity.status(500).body("Error retrieving sections: " + e.getMessage());
@@ -94,7 +91,7 @@ public class SectionController {
     try {
       var sections =
           sectionService.getSectionsByFilter(
-              new SectionFilterCriteria(null, null, null, true, SectionType.CONSUMER));
+              new SectionFilterCriteria(null, null, true, SectionType.CONSUMER));
       return ResponseEntity.ok(sections);
     } catch (Exception e) {
       return ResponseEntity.status(500)

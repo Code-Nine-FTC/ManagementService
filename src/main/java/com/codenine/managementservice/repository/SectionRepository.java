@@ -17,7 +17,6 @@ public interface SectionRepository extends JpaRepository<Section, Long> {
             Select new com.codenine.managementservice.dto.section.SectionResponse(
             s.id,
             s.title,
-            s.roleAccess,
             s.isActive,
             s.sectionType,
             s.createdAt,
@@ -28,14 +27,12 @@ public interface SectionRepository extends JpaRepository<Section, Long> {
             left join s.lastUser u
             where (:sectionId IS NULL OR s.id = :sectionId)
             and (:lastUserId IS NULL OR u.id = :lastUserId)
-            and (:roleAccess IS NULL OR s.roleAccess = :roleAccess)
     and (:isActive IS NULL OR s.isActive = :isActive)
     and (:sectionType IS NULL OR s.sectionType = :sectionType)
             """)
   List<SectionResponse> findAllSectionResponses(
       @Param("sectionId") Long sectionId,
       @Param("lastUserId") Long lastUserId,
-      @Param("roleAccess") Integer roleAccess,
       @Param("isActive") Boolean isActive,
       @Param("sectionType") SectionType sectionType);
 }
