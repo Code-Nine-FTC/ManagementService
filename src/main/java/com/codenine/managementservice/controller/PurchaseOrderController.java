@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import org.apache.tomcat.util.http.parser.Authorization;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.codenine.managementservice.dto.purchaseOrder.PurchaseOrderFilterCriteria;
 import com.codenine.managementservice.dto.purchaseOrder.PurchaseOrderRequest;
@@ -117,15 +119,18 @@ public class PurchaseOrderController {
 
   @PostMapping("/{id}/send-email")
   public ResponseEntity<?> sendPurchaseOrderEmail(
-      @PathVariable Long id, Authorization authorization) {
+      @PathVariable Long id, @RequestParam(required = false) MultipartFile[] files) {
     try {
       User lastUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-      purchaseOrderService.sendEmail(id, lastUser);
+      purchaseOrderService.sendEmail(id, files, lastUser);
       return ResponseEntity.ok().build();
     } catch (IllegalArgumentException e) {
       return ResponseEntity.badRequest().body(e.getMessage());
     } catch (EntityNotFoundException e) {
       return ResponseEntity.notFound().build();
+    } catch (Exception e) {
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+          .body("Error sending email: " + e.getMessage());
     }
   }
 }
