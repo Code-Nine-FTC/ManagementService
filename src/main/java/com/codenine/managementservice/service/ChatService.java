@@ -150,7 +150,10 @@ public class ChatService {
 
     List<ChatMessage> messages = chatMessageRepository.findByChatRoomIdOrderBySentAtAsc(chatRoomId);
     for (ChatMessage message : messages) {
-      if (!message.getSender().getId().equals(userId) && !message.getIsRead()) {
+      // Verificar se o sender existe antes de acessar
+      if (message.getSender() != null 
+          && !message.getSender().getId().equals(userId) 
+          && !message.getIsRead()) {
         message.setIsRead(true);
       }
     }
@@ -313,8 +316,17 @@ public class ChatService {
     ChatMessageDTO dto = new ChatMessageDTO();
     dto.setId(message.getId());
     dto.setChatRoomId(message.getChatRoom().getId());
-    dto.setSenderId(message.getSender().getId());
-    dto.setSenderName(message.getSender().getName());
+    
+    // Verificar se o sender existe antes de acessar seus dados
+    if (message.getSender() != null) {
+      dto.setSenderId(message.getSender().getId());
+      dto.setSenderName(message.getSender().getName());
+    } else {
+      // Usar valores padrão se o sender for null
+      dto.setSenderId(null);
+      dto.setSenderName("Usuário Removido");
+    }
+    
     dto.setContent(message.getContent());
     dto.setSentAt(message.getSentAt());
     dto.setIsRead(message.getIsRead());
