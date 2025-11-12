@@ -24,6 +24,7 @@ public class SectionMapper {
     if (request.isActive() != null) section.setIsActive(request.isActive());
     if (request.sectionType() != null) section.setSectionType(request.sectionType());
     if (request.title() != null
+        || request.roleAccess() != null
         || request.isActive() != null
         || request.sectionType() != null) {
       section.setLastUpdate(java.time.LocalDateTime.now());
