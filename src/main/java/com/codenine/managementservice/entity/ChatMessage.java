@@ -18,8 +18,12 @@ public class ChatMessage {
   private ChatRoom chatRoom;
 
   @ManyToOne(fetch = FetchType.EAGER)
-  @JoinColumn(name = "sender_id", nullable = false)
+  @JoinColumn(name = "sender_id")
   private User sender;
+
+  @ManyToOne(fetch = FetchType.EAGER)
+  @JoinColumn(name = "guest_sender_id")
+  private GuestUser guestSender;
 
   @Column(nullable = false, columnDefinition = "TEXT")
   private String content;

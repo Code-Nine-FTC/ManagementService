@@ -1,13 +1,16 @@
 package com.codenine.managementservice.service;
 
+import com.codenine.managementservice.controller.ChatWebSocketController;
 import com.codenine.managementservice.dto.chat.*;
 import com.codenine.managementservice.entity.ChatInvitation;
 import com.codenine.managementservice.entity.ChatMessage;
 import com.codenine.managementservice.entity.ChatRoom;
+import com.codenine.managementservice.entity.GuestUser;
 import com.codenine.managementservice.entity.User;
 import com.codenine.managementservice.repository.ChatInvitationRepository;
 import com.codenine.managementservice.repository.ChatMessageRepository;
 import com.codenine.managementservice.repository.ChatRoomRepository;
+import com.codenine.managementservice.repository.GuestUserRepository;
 import com.codenine.managementservice.repository.UserRepository;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -24,6 +27,7 @@ public class ChatService {
   private final ChatRoomRepository chatRoomRepository;
   private final ChatMessageRepository chatMessageRepository;
   private final UserRepository userRepository;
+  private final GuestUserRepository guestUserRepository;
   private final ChatInvitationRepository chatInvitationRepository;
   private final EmailService emailService;
 
@@ -34,11 +38,13 @@ public class ChatService {
       ChatRoomRepository chatRoomRepository,
       ChatMessageRepository chatMessageRepository,
       UserRepository userRepository,
+      GuestUserRepository guestUserRepository,
       ChatInvitationRepository chatInvitationRepository,
       EmailService emailService) {
     this.chatRoomRepository = chatRoomRepository;
     this.chatMessageRepository = chatMessageRepository;
     this.userRepository = userRepository;
+    this.guestUserRepository = guestUserRepository;
     this.chatInvitationRepository = chatInvitationRepository;
     this.emailService = emailService;
   }
@@ -109,6 +115,61 @@ public class ChatService {
     return convertToMessageDTO(message);
   }
 
+  @Transactional
+  public ChatMessageDTO sendMessageFromAny(SendMessageRequest request, ChatWebSocketController.MessageSender sender) {
+    ChatRoom chatRoom =
+        chatRoomRepository
+            .findById(request.getChatRoomId())
+            .orElseThrow(() -> new RuntimeException("Chat room not found"));
+
+    ChatMessage message = new ChatMessage();
+    message.setChatRoom(chatRoom);
+    message.setContent(request.getContent());
+    message.setSentAt(LocalDateTime.now());
+    message.setType(ChatMessage.MessageType.TEXT);
+
+    // Definir o remetente baseado no tipo
+    if ("USER".equals(sender.type)) {
+      User user = userRepository
+          .findById(sender.id)
+          .orElseThrow(() -> new RuntimeException("User not found"));
+      
+      // Verificar se o usuário é participante da sala
+      boolean isParticipant =
+          chatRoom.getParticipants().stream().anyMatch(p -> p.getId().equals(sender.id));
+      if (!isParticipant) {
+        throw new RuntimeException("User is not a participant of this chat room");
+      }
+      
+      message.setSender(user);
+      message.setGuestSender(null);
+    } else if ("GUEST".equals(sender.type)) {
+      GuestUser guestUser = guestUserRepository
+          .findById(sender.id)
+          .orElseThrow(() -> new RuntimeException("Guest user not found"));
+      
+      // Verificar se o guest está acessando seu próprio chat
+      if (!chatRoom.getId().equals(guestUser.getChatRoom().getId())) {
+        throw new RuntimeException("Guest user is not authorized to send messages to this chat room");
+      }
+      
+      message.setSender(null);
+      message.setGuestSender(guestUser);
+    } else {
+      throw new RuntimeException("Invalid sender type: " + sender.type);
+    }
+
+    System.out.println("=== Saving message from " + sender.type + " to database ===");
+    message = chatMessageRepository.save(message);
+    System.out.println("Message saved! ID: " + message.getId());
+
+    // Atualizar timestamp da última mensagem na sala
+    chatRoom.setLastMessageAt(message.getSentAt());
+    chatRoomRepository.save(chatRoom);
+
+    return convertToMessageDTO(message);
+  }
+
   public List<ChatRoomDTO> getUserChatRooms(Long userId) {
     List<ChatRoom> chatRooms = chatRoomRepository.findByParticipantId(userId);
     return chatRooms.stream().map(this::convertToRoomDTO).collect(Collectors.toList());
@@ -150,11 +211,23 @@ public class ChatService {
 
     List<ChatMessage> messages = chatMessageRepository.findByChatRoomIdOrderBySentAtAsc(chatRoomId);
     for (ChatMessage message : messages) {
-      // Verificar se o sender existe antes de acessar
-      if (message.getSender() != null 
-          && !message.getSender().getId().equals(userId) 
-          && !message.getIsRead()) {
-        message.setIsRead(true);
+      // Se userId for null, é um guest - marcar todas as mensagens de usuários como lidas
+      if (userId == null) {
+        // Guest lendo mensagens - marcar mensagens de usuários como lidas
+        if (message.getSender() != null && !message.getIsRead()) {
+          message.setIsRead(true);
+        }
+      } else {
+        // Usuário normal lendo - marcar mensagens que não são dele como lidas
+        if (message.getSender() != null 
+            && !message.getSender().getId().equals(userId) 
+            && !message.getIsRead()) {
+          message.setIsRead(true);
+        }
+        // Também marcar mensagens de guests como lidas
+        if (message.getGuestSender() != null && !message.getIsRead()) {
+          message.setIsRead(true);
+        }
       }
     }
     chatMessageRepository.saveAll(messages);
@@ -317,12 +390,15 @@ public class ChatService {
     dto.setId(message.getId());
     dto.setChatRoomId(message.getChatRoom().getId());
     
-    // Verificar se o sender existe antes de acessar seus dados
+    // Verificar se é um usuário normal ou guest
     if (message.getSender() != null) {
       dto.setSenderId(message.getSender().getId());
       dto.setSenderName(message.getSender().getName());
+    } else if (message.getGuestSender() != null) {
+      dto.setSenderId(message.getGuestSender().getId());
+      dto.setSenderName(message.getGuestSender().getName() + " (Convidado)");
     } else {
-      // Usar valores padrão se o sender for null
+      // Caso não tenha nenhum remetente (mensagens antigas/órfãs)
       dto.setSenderId(null);
       dto.setSenderName("Usuário Removido");
     }

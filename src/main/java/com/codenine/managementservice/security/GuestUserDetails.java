@@ -57,4 +57,8 @@ public class GuestUserDetails implements UserDetails {
   public Long getGuestId() {
     return guestUser.getId();
   }
+
+  public String getGuestName() {
+    return guestUser.getName();
+  }
 }

@@ -7,7 +7,6 @@ import com.codenine.managementservice.dto.chat.CreateChatRoomRequest;
 import com.codenine.managementservice.dto.chat.InviteGuestRequest;
 import com.codenine.managementservice.dto.chat.JoinChatResponse;
 import com.codenine.managementservice.entity.User;
-import com.codenine.managementservice.security.GuestUserDetails;
 import com.codenine.managementservice.service.ChatService;
 import com.codenine.managementservice.service.GuestUserService;
 import io.swagger.v3.oas.annotations.Operation;
