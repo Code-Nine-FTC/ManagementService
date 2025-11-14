@@ -393,14 +393,20 @@ public class ChatService {
     // Verificar se é um usuário normal ou guest
     if (message.getSender() != null) {
       dto.setSenderId(message.getSender().getId());
+      dto.setGuestSenderId(null);
       dto.setSenderName(message.getSender().getName());
+      dto.setSenderType("USER");
     } else if (message.getGuestSender() != null) {
-      dto.setSenderId(message.getGuestSender().getId());
-      dto.setSenderName(message.getGuestSender().getName() + " (Convidado)");
+      dto.setSenderId(null);
+      dto.setGuestSenderId(message.getGuestSender().getId());
+      dto.setSenderName(message.getGuestSender().getName());
+      dto.setSenderType("GUEST");
     } else {
       // Caso não tenha nenhum remetente (mensagens antigas/órfãs)
       dto.setSenderId(null);
-      dto.setSenderName("Usuário Removido");
+      dto.setGuestSenderId(null);
+      dto.setSenderName("Usuario Removido");
+      dto.setSenderType("UNKNOWN");
     }
     
     dto.setContent(message.getContent());

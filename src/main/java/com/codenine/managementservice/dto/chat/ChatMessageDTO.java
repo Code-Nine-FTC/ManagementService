@@ -12,7 +12,9 @@ public class ChatMessageDTO {
   private Long id;
   private Long chatRoomId;
   private Long senderId;
+  private Long guestSenderId;
   private String senderName;
+  private String senderType;
   private String content;
   private LocalDateTime sentAt;
   private Boolean isRead;
