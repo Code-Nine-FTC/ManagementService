@@ -37,7 +37,6 @@ public class LotController {
   }
 
   @Operation(summary = "Ajusta a quantidade de um lote")
-  @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
   @PatchMapping("/{id}/adjust")
   public ResponseEntity<LotResponse> adjust(
       @PathVariable Long id, @RequestBody LotAdjustRequest request) {

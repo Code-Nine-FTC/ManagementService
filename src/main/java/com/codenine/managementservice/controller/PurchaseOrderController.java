@@ -6,6 +6,7 @@ import java.util.List;
 import org.apache.tomcat.util.http.parser.Authorization;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -39,6 +40,7 @@ public class PurchaseOrderController {
   public final EmailService emailService;
 
   @PostMapping("/")
+  @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
   public ResponseEntity<?> createPurchaseOrder(
       @RequestBody PurchaseOrderRequest request, Authorization authorization) {
     try {
