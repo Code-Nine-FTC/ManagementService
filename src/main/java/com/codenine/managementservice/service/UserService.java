@@ -9,6 +9,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import com.codenine.managementservice.dto.action.ActionType;
 import com.codenine.managementservice.dto.user.Role;
 import com.codenine.managementservice.dto.user.UserRequest;
 import com.codenine.managementservice.dto.user.UserResponse;
@@ -29,6 +30,7 @@ public class UserService {
   @Autowired private SectionRepository sectionRepository;
 
   @Autowired private PasswordEncoder passwordEncoder;
+  @Autowired private AuditLogService auditLogService;
 
   public void createUser(UserRequest userRequest) {
     String email = NormalizeEmail.normalize(userRequest.email());
@@ -43,6 +45,8 @@ public class UserService {
     User user = UserMapper.toEntity(userRequest, encodedPassword, email);
     user.setSections(sections);
     userRepository.save(user);
+    auditLogService.logAction(
+        user, ActionType.USER_CREATED, user.getId(), "User created with email: " + email, "User");
   }
 
   public UserResponse getUser(Long id) {
@@ -80,6 +84,12 @@ public class UserService {
     user.setIsActive(!user.getIsActive());
     user.setLastUpdate(LocalDateTime.now());
     userRepository.save(user);
+    auditLogService.logAction(
+        user,
+        ActionType.USER_ENABLED_CHANGED,
+        user.getId(),
+        "User active status changed to: " + user.getIsActive(),
+        "User");
   }
 
   public void updateUser(Long id, UserRequest userRequest) {
@@ -91,6 +101,12 @@ public class UserService {
     user = UserMapper.toUpdate(user, userRequest);
     user.setLastUpdate(LocalDateTime.now());
     userRepository.save(user);
+    auditLogService.logAction(
+        user,
+        ActionType.USER_UPDATED,
+        user.getId(),
+        "User updated with email: " + user.getEmail(),
+        "User");
   }
 
   private User getUserById(Long id) {

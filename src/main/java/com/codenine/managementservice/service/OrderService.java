@@ -6,9 +6,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.codenine.managementservice.dto.action.ActionType;
 import com.codenine.managementservice.dto.notification.NotificationSeverity;
 import com.codenine.managementservice.dto.notification.NotificationType;
 import com.codenine.managementservice.dto.order.OrderFilterCriteria;
@@ -26,17 +26,21 @@ import com.codenine.managementservice.repository.SectionRepository;
 import com.codenine.managementservice.utils.mapper.OrderMapper;
 
 import jakarta.persistence.EntityNotFoundException;
+import lombok.RequiredArgsConstructor;
 
 @Service
+@RequiredArgsConstructor
 public class OrderService {
 
-  @Autowired private OrderRepository orderRepository;
+  private final OrderRepository orderRepository;
 
-  @Autowired private ItemRepository itemRepository;
+  private final ItemRepository itemRepository;
 
-  @Autowired private SectionRepository sectionRepository;
+  private final SectionRepository sectionRepository;
 
-  @Autowired private NotificationService notificationService;
+  private final NotificationService notificationService;
+
+  private final AuditLogService auditLogService;
 
   // SupplierCompany linkage removed
 
@@ -98,6 +102,13 @@ public class OrderService {
           saved,
           7776000L);
     }
+
+    auditLogService.logAction(
+        lastUser,
+        ActionType.ORDER_CREATED,
+        saved.getId(),
+        "Pedido criado " + saved.getOrderNumber(),
+        "Order");
     return saved.getId();
   }
 
@@ -145,7 +156,12 @@ public class OrderService {
       order.setLastUser(lastUser);
       order.setLastUpdate(LocalDateTime.now());
     }
-
+    auditLogService.logAction(
+        lastUser,
+        ActionType.ORDER_UPDATED,
+        order.getId(),
+        "Pedido atualizado " + order.getOrderNumber(),
+        "Order");
     orderRepository.save(order);
   }
 
@@ -156,6 +172,12 @@ public class OrderService {
     order.setLastUpdate(LocalDateTime.now());
     orderRepository.save(order);
 
+    auditLogService.logAction(
+        lastUser,
+        ActionType.ORDER_CANCELLED,
+        order.getId(),
+        "Pedido cancelado " + order.getOrderNumber(),
+        "Order");
     notificationService.createNotification(
         NotificationType.ORDER_CANCELLED,
         "Pedido #" + orderId + " foi cancelado",
@@ -191,6 +213,13 @@ public class OrderService {
     order.setLastUpdate(LocalDateTime.now());
     orderRepository.save(order);
 
+    auditLogService.logAction(
+        lastUser,
+        ActionType.ORDER_STATUS_CHANGED,
+        order.getId(),
+        "Pedido aprovado " + order.getOrderNumber(),
+        "Order");
+
     notificationService.createNotification(
         NotificationType.ORDER_APPROVED,
         "Pedido #" + orderId + " foi aprovado",
@@ -206,6 +235,12 @@ public class OrderService {
     order.setLastUser(lastUser);
     order.setLastUpdate(LocalDateTime.now());
     orderRepository.save(order);
+    auditLogService.logAction(
+        lastUser,
+        ActionType.ORDER_STATUS_CHANGED,
+        order.getId(),
+        "Pedido em processamento " + order.getOrderNumber(),
+        "Order");
 
     notificationService.createNotification(
         NotificationType.ORDER_PROCESSING,
@@ -223,7 +258,12 @@ public class OrderService {
     order.setLastUser(lastUser);
     order.setLastUpdate(LocalDateTime.now());
     orderRepository.save(order);
-
+    auditLogService.logAction(
+        lastUser,
+        ActionType.ORDER_STATUS_CHANGED,
+        order.getId(),
+        "Pedido concluído " + order.getOrderNumber(),
+        "Order");
     notificationService.createNotification(
         NotificationType.ORDER_COMPLETED,
         "Pedido #" + orderId + " foi concluído",

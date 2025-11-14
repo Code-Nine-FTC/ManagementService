@@ -74,14 +74,27 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
   }
 
   @Query(
-      """
-      SELECT o.status as status, COUNT(o) as total
-      FROM Order o
-      LEFT JOIN o.section sec
-      WHERE (:sectionId IS NULL OR sec.id = :sectionId)
-      GROUP BY o.status
-      """)
-  List<OrderStatusCount> countByStatus(@Param("sectionId") Long sectionId);
+      value =
+          """
+      WITH counts AS (
+        SELECT sec.id    AS section_id,
+               sec.title AS section_name,
+               SUM(CASE WHEN o.status = 'PENDING'    THEN 1 ELSE 0 END) AS pending,
+               SUM(CASE WHEN o.status = 'APPROVED'   THEN 1 ELSE 0 END) AS approved,
+               SUM(CASE WHEN o.status = 'PROCESSING' THEN 1 ELSE 0 END) AS processing,
+               SUM(CASE WHEN o.status = 'COMPLETED'  THEN 1 ELSE 0 END) AS completed,
+               SUM(CASE WHEN o.status = 'CANCELLED'  THEN 1 ELSE 0 END) AS cancelled,
+               COUNT(*)                                         AS total
+        FROM orders o
+        LEFT JOIN sections sec ON o.section_id = sec.id
+        GROUP BY sec.id, sec.title
+      )
+      SELECT section_id, section_name, pending, approved, processing, completed, cancelled, total
+      FROM counts
+      ORDER BY section_name
+      """,
+      nativeQuery = true)
+  List<Object[]> sectionOrderStatusCountsNative();
 
   @Query(
       """
