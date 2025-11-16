@@ -44,4 +44,29 @@ public class ReportController {
         .contentLength(data.length)
         .body(resource);
   }
+
+  @GetMapping("/orders")
+  public ResponseEntity<?> getOrdersReport(@RequestParam(defaultValue = "pdf") String format)
+      throws Exception {
+    String lower = format == null ? "pdf" : format.toLowerCase();
+    if ("excel".equals(lower) || "xlsx".equals(lower)) {
+      byte[] data = reportService.generateOrdersReportExcel();
+      ByteArrayResource resource = new ByteArrayResource(data);
+      String filename = "orders-report.xlsx";
+      return ResponseEntity.ok()
+          .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")
+          .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+          .contentLength(data.length)
+          .body(resource);
+    }
+
+    byte[] data = reportService.generateOrdersReportPdf();
+    ByteArrayResource resource = new ByteArrayResource(data);
+    String filename = "orders-report.pdf";
+    return ResponseEntity.ok()
+        .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")
+        .contentType(MediaType.APPLICATION_PDF)
+        .contentLength(data.length)
+        .body(resource);
+  }
 }
