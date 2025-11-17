@@ -4,7 +4,9 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import com.codenine.managementservice.dto.action.ActionType;
 import com.codenine.managementservice.dto.purchaseOrder.EmailStatus;
 import com.codenine.managementservice.dto.purchaseOrder.PurchaseOrderFilterCriteria;
 import com.codenine.managementservice.dto.purchaseOrder.PurchaseOrderRequest;
@@ -41,6 +43,8 @@ public class PurchaseOrderService {
 
   private final EntityManager entityManager;
 
+  private final AuditLogService auditLogService;
+
   public void createPurchaseOrder(PurchaseOrderRequest request, User lastUser) {
     Order order =
         orderRepository
@@ -59,6 +63,12 @@ public class PurchaseOrderService {
     PurchaseOrder purchaseOrder =
         PurchaseOrderMapper.toEntity(request, lastUser, order, supplierCompany);
     purchaseOrderRepository.save(purchaseOrder);
+    auditLogService.logAction(
+        lastUser,
+        ActionType.PURCHASE_ORDER_CREATED,
+        purchaseOrder.getId(),
+        "Purchase Order created with id: " + purchaseOrder.getId(),
+        "PurchaseOrder");
   }
 
   public List<PurchaseOrderResponse> getPurchaseOrders(PurchaseOrderFilterCriteria filterCriteria) {
@@ -172,6 +182,12 @@ public class PurchaseOrderService {
     purchaseOrder.setLastUser(lastUser);
     purchaseOrder.setLastUpdate(LocalDateTime.now());
     purchaseOrderRepository.save(purchaseOrder);
+    auditLogService.logAction(
+        lastUser,
+        ActionType.PURCHASE_ORDER_STATUS_UPDATED,
+        purchaseOrder.getId(),
+        "Purchase Order status updated to: " + status,
+        "PurchaseOrder");
   }
 
   public void updatePurchaseOrder(Long id, PurchaseOrderRequest request, User lastUser) {
@@ -198,6 +214,12 @@ public class PurchaseOrderService {
     }
     PurchaseOrderMapper.updateEntity(purchaseOrder, request, lastUser, order, supplierCompany);
     purchaseOrderRepository.save(purchaseOrder);
+    auditLogService.logAction(
+        lastUser,
+        ActionType.PURCHASE_ORDER_UPDATED,
+        purchaseOrder.getId(),
+        "Purchase Order updated with id: " + purchaseOrder.getId(),
+        "PurchaseOrder");
   }
 
   private PurchaseOrder validateExistence(Long id) {
@@ -206,7 +228,7 @@ public class PurchaseOrderService {
         .orElseThrow(() -> new IllegalArgumentException("Purchase Order not found with id: " + id));
   }
 
-  public void sendEmail(Long purchaseOrderId, User lastUser) {
+  public void sendEmail(Long purchaseOrderId, MultipartFile[] files, User lastUser) {
     PurchaseOrder purchaseOrder = validateExistence(purchaseOrderId);
     SupplierCompany supplier = purchaseOrder.getSupplierCompany();
     // set sender/lastUser before sending so EmailService can rely on sender info
@@ -214,8 +236,14 @@ public class PurchaseOrderService {
     purchaseOrder.setSender(lastUser);
     purchaseOrder.setLastUpdate(LocalDateTime.now());
     // attempt to send email (EmailService is resilient if some fields are missing)
-    emailService.sendCommitmentNoteEmail(purchaseOrder, supplier, supplier.getEmail());
+    emailService.sendCommitmentNoteEmail(purchaseOrder, supplier, supplier.getEmail(), files);
     purchaseOrder.setEmailStatus(EmailStatus.SENT);
     purchaseOrderRepository.save(purchaseOrder);
+    auditLogService.logAction(
+        lastUser,
+        ActionType.EMAIL_CHARGE_SENT,
+        purchaseOrder.getId(),
+        "Email sent for Purchase Order id: " + purchaseOrder.getId(),
+        "PurchaseOrder");
   }
 }
