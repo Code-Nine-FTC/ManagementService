@@ -1,62 +1,66 @@
 import pickle
-import pandas as pd
-import numpy as np
+import logging
 from pathlib import Path
 from typing import Dict, List, Optional
 from datetime import datetime, timedelta
-import logging
+import pandas as pd
+from prophet import Prophet
 
 from src.utils.database import DatabaseConnector
 
 logger = logging.getLogger(__name__)
 
 
-class PredictionService:    
+class PredictionService:
+    """
+    Serviço de previsão baseado em consumo diário.
+    
+    Os modelos preveem o consumo diário de cada item.
+    O serviço calcula o estoque futuro subtraindo o consumo previsto do estoque atual.
+    """
     def __init__(self, model_dir: str = None):
         if model_dir is None:
-            model_dir = Path(__file__).parent.parent.parent / 'models'
+            # O diretório de modelos agora está em 'ai/models'
+            model_dir = Path(__file__).parent.parent / 'models'
         else:
             model_dir = Path(model_dir)
         
         self.model_dir = model_dir
-        self.model = None
-        self.scaler = None
-        self.feature_columns = None
+        self.models: Dict[int, Prophet] = {}  # Dicionário para guardar {item_id: model}
         self.metadata = None
         self.db = None
         
         self._load_artifacts()
     
     def _load_artifacts(self):
+        """
+        Carrega todos os modelos Prophet de consumo diário do diretório de modelos.
+        """
         try:
-            model_files = list(self.model_dir.glob('*_v2.pkl'))
+            self.models = {}
+            model_files = list(self.model_dir.glob('prophet_daily_consumption_*.pkl'))
+            
             if not model_files:
-                raise FileNotFoundError(f"Nenhum modelo _v2.pkl encontrado em {self.model_dir}")
+                raise FileNotFoundError(f"Nenhum modelo 'prophet_daily_consumption_*.pkl' encontrado em {self.model_dir}")
+
+            for model_path in model_files:
+                try:
+                    # Extrai o item_id do nome do arquivo
+                    item_id = int(model_path.stem.split('_')[-1])
+                    with open(model_path, 'rb') as f:
+                        self.models[item_id] = pickle.load(f)
+                except (IndexError, ValueError):
+                    logger.warning(f"⚠️ Não foi possível extrair item_id do arquivo: {model_path.name}")
+                    continue
+
+            logger.info(f"✅ {len(self.models)} modelos Prophet carregados.")
             
-            model_path = [f for f in model_files if 'gradient_boosting' in f.name or 'random_forest' in f.name or 'linear' in f.name][0]
-            
-            with open(model_path, 'rb') as f:
-                self.model = pickle.load(f)
-            logger.info(f"✅ Modelo carregado: {model_path.name}")
-            
-            # Carregar scaler
-            scaler_path = self.model_dir / 'scaler_v2.pkl'
-            with open(scaler_path, 'rb') as f:
-                self.scaler = pickle.load(f)
-            logger.info(f"✅ Scaler carregado")
-            
-            # Carregar feature columns
-            features_path = self.model_dir / 'feature_columns_v2.pkl'
-            with open(features_path, 'rb') as f:
-                self.feature_columns = pickle.load(f)
-            logger.info(f"✅ Features carregadas: {len(self.feature_columns)} colunas")
-            
-            # Carregar metadata
-            metadata_path = self.model_dir / 'model_metadata_v2.pkl'
+            # Carregar metadados
+            metadata_path = self.model_dir / 'prophet_daily_metadata.pkl'
             if metadata_path.exists():
                 with open(metadata_path, 'rb') as f:
                     self.metadata = pickle.load(f)
-                logger.info(f"✅ Metadata carregada - R²: {self.metadata.get('r2_score', 'N/A'):.4f}")
+                logger.info(f"✅ Metadados carregados. Tipo: {self.metadata.get('model_type', 'N/A')}")
             
         except Exception as e:
             logger.error(f"❌ Erro ao carregar artefatos: {e}")
@@ -66,114 +70,105 @@ class PredictionService:
         self.db = DatabaseConnector(connection_string)
         logger.info("✅ Conectado ao banco de dados")
     
-    # prepara as previsões pro proximo mês
-    def _prepare_features_for_prediction(self, historical_data: pd.DataFrame, item_id: int) -> pd.DataFrame:
-        item_data = historical_data[historical_data['item_id'] == item_id].copy()
+    def predict_daily_consumption(self, item_id: int, forecast_days: int = 30) -> Dict:
+        """
+        Prevê o consumo diário de um item para os próximos N dias.
         
-        if len(item_data) == 0:
-            raise ValueError(f"Nenhum dado histórico encontrado para item_id={item_id}")
+        Args:
+            item_id: ID do item
+            forecast_days: Número de dias para prever (padrão: 30)
         
-        item_data = item_data.sort_values('year_month')
-        
-        latest = item_data.iloc[-1].copy()
-        
-        next_month_features = {}
-        
-        next_month_features['item_id'] = item_id
-        
-        current_year = int(latest['year'])
-        current_month = int(latest['month'])
-        
-        if current_month == 12:
-            next_month_features['year'] = current_year + 1
-            next_month_features['month'] = 1
-        else:
-            next_month_features['year'] = current_year
-            next_month_features['month'] = current_month + 1
-        
-        # Features de lag
-        next_month_features['prev_total_quantity'] = latest['total_quantity']
-        next_month_features['prev_avg_quantity'] = latest['avg_quantity']
-        next_month_features['prev_num_orders'] = latest['num_orders']
-        next_month_features['prev_stock'] = latest['current_stock']
-        
-        # Médias móveis
-        if len(item_data) >= 3:
-            next_month_features['ma3_quantity'] = item_data['total_quantity'].tail(3).mean()
-            next_month_features['ma3_orders'] = item_data['num_orders'].tail(3).mean()
-        else:
-            next_month_features['ma3_quantity'] = latest['total_quantity']
-            next_month_features['ma3_orders'] = latest['num_orders']
-        
-        # Taxa de crescimento
-        if len(item_data) >= 2:
-            prev_quantity = item_data['total_quantity'].iloc[-2]
-            if prev_quantity > 0:
-                next_month_features['quantity_growth_rate'] = (latest['total_quantity'] - prev_quantity) / prev_quantity
-            else:
-                next_month_features['quantity_growth_rate'] = 0
-        else:
-            next_month_features['quantity_growth_rate'] = 0
-        
-        # Features de estoque
-        next_month_features['minimum_stock'] = latest['minimum_stock']
-        next_month_features['maximum_stock'] = latest['maximum_stock']
-        
-        # Features temporais
-        next_month_features['weekend_orders'] = latest.get('weekend_orders', 0)
-        next_month_features['avg_days_to_delivery'] = latest.get('avg_days_to_delivery', 0)
-        
-        # Stock coverage
-        if latest['total_quantity'] > 0:
-            next_month_features['stock_coverage'] = latest['current_stock'] / latest['total_quantity']
-        else:
-            next_month_features['stock_coverage'] = 0
-        
-        # Unique order count
-        next_month_features['unique_order_count'] = latest.get('unique_order_count', 0)
-        
-        # Converter para DataFrame
-        features_df = pd.DataFrame([next_month_features])
-        
-        # Garantir que todas as features necessárias existem
-        for col in self.feature_columns:
-            if col not in features_df.columns:
-                features_df[col] = 0
-        
-        # Ordenar colunas na mesma ordem do treinamento
-        features_df = features_df[self.feature_columns]
-        
-        return features_df
-    
-    def predict_next_month(self, item_id: int, historical_data: pd.DataFrame) -> Dict:
+        Returns:
+            Dict com previsões diárias e métricas calculadas
+        """
         try:
-            # Preparar features
-            features = self._prepare_features_for_prediction(historical_data, item_id)
+            if item_id not in self.models:
+                raise ValueError(f"Modelo não encontrado para item_id={item_id}")
             
-            # Normalizar
-            features_scaled = self.scaler.transform(features)
+            model = self.models[item_id]
+            
+            # Carregar dados históricos para pegar informações do item
+            if self.db is None:
+                self.connect_database()
+            
+            raw_data = self.db.load_raw_data()
+            item_data = raw_data[raw_data['item_id'] == item_id]
+            
+            if item_data.empty:
+                raise ValueError(f"Nenhum dado histórico encontrado para item_id={item_id}")
+            
+            # Informações do item
+            current_stock = float(item_data['current_stock'].iloc[-1])
+            minimum_stock = float(item_data['minimum_stock'].iloc[-1])
+            maximum_stock = float(item_data['maximum_stock'].iloc[-1])
+            item_name = item_data['item_name'].iloc[-1] if 'item_name' in item_data.columns else f"Item {item_id}"
+            
+            # Criar dataframe futuro
+            future = model.make_future_dataframe(periods=forecast_days, freq='D')
+            
+            # Preencher regressores
+            future['day_of_week'] = future['ds'].dt.dayofweek
+            future['is_weekend'] = (future['day_of_week'] >= 5).astype(int)
+            
+            # Para ma_7, usar último valor conhecido do histórico
+            if len(model.history) > 0:
+                last_ma7 = model.history['y'].tail(7).mean()
+                future['ma_7'] = last_ma7
+            else:
+                future['ma_7'] = 0
             
             # Fazer previsão
-            prediction = self.model.predict(features_scaled)[0]
+            forecast = model.predict(future)
+            forecast['yhat'] = forecast['yhat'].clip(lower=0)  # Consumo não pode ser negativo
             
-            # Garantir que não seja negativo
-            prediction = max(0, prediction)
+            # Pegar apenas previsões futuras
+            future_forecast = forecast[forecast['ds'] > model.history['ds'].max()].copy()
             
-            # Pegar informações adicionais do item
-            item_info = historical_data[historical_data['item_id'] == item_id].iloc[-1]
+            # Calcular consumo total previsto
+            total_consumption = float(future_forecast['yhat'].sum())
+            avg_daily_consumption = float(future_forecast['yhat'].mean())
+            
+            # Calcular estoque futuro (estoque atual - consumo acumulado)
+            future_forecast['cumulative_consumption'] = future_forecast['yhat'].cumsum()
+            future_forecast['predicted_stock'] = current_stock - future_forecast['cumulative_consumption']
+            
+            # Detectar quando o estoque atinge o mínimo
+            days_to_minimum = None
+            restock_needed = False
+            restock_quantity = 0
+            
+            below_minimum = future_forecast[future_forecast['predicted_stock'] < minimum_stock]
+            if not below_minimum.empty:
+                days_to_minimum = int((below_minimum.iloc[0]['ds'] - datetime.now()).days)
+                restock_needed = True
+                # Calcular quanto precisa repor (diferença entre máximo e estoque previsto no final)
+                final_stock = float(future_forecast['predicted_stock'].iloc[-1])
+                restock_quantity = max(0, maximum_stock - final_stock)
             
             result = {
                 'item_id': int(item_id),
-                'predicted_quantity': round(float(prediction), 2),
-                'current_stock': float(item_info['current_stock']),
-                'minimum_stock': float(item_info['minimum_stock']),
-                'maximum_stock': float(item_info['maximum_stock']),
-                'prediction_month': int(features['month'].values[0]),
-                'prediction_year': int(features['year'].values[0]),
-                'needs_restock': prediction > item_info['current_stock'],
-                'restock_quantity': max(0, round(float(prediction - item_info['current_stock']), 2)),
-                'confidence_score': float(self.metadata.get('r2_score', 0)) if self.metadata else 0.0,
-                'model_used': self.metadata.get('model_name', 'unknown') if self.metadata else 'unknown',
+                'item_name': item_name,
+                'current_stock': current_stock,
+                'minimum_stock': minimum_stock,
+                'maximum_stock': maximum_stock,
+                'forecast_days': forecast_days,
+                'predicted_daily_consumption': round(avg_daily_consumption, 2),
+                'predicted_total_consumption': round(total_consumption, 2),
+                'predicted_final_stock': round(float(future_forecast['predicted_stock'].iloc[-1]), 2),
+                'needs_restock': restock_needed,
+                'days_until_minimum_stock': days_to_minimum,
+                'recommended_restock_quantity': round(restock_quantity, 2),
+                'daily_predictions': [
+                    {
+                        'date': row['ds'].strftime('%Y-%m-%d'),
+                        'predicted_consumption': round(float(row['yhat']), 2),
+                        'predicted_stock': round(float(row['predicted_stock']), 2),
+                        'lower_bound': round(float(row['yhat_lower']), 2),
+                        'upper_bound': round(float(row['yhat_upper']), 2)
+                    }
+                    for _, row in future_forecast.iterrows()
+                ],
+                'model_used': 'prophet_daily_consumption',
                 'timestamp': datetime.now().isoformat()
             }
             
@@ -183,26 +178,48 @@ class PredictionService:
             logger.error(f"❌ Erro ao prever item {item_id}: {e}")
             raise
     
-    def predict_all_items(self, connection_string: str = None) -> List[Dict]:
+    def predict_all_items(self, connection_string: str = None, forecast_days: int = 30) -> List[Dict]:
+        """
+        Gera previsões de consumo diário para todos os itens com modelos treinados.
+        
+        Args:
+            connection_string: String de conexão do banco (opcional)
+            forecast_days: Número de dias para prever (padrão: 30)
+        
+        Returns:
+            Lista de dicionários com previsões resumidas para cada item
+        """
         if self.db is None:
             self.connect_database(connection_string)
         
-        logger.info("📊 Carregando dados do banco...")
-        raw_data = self.db.load_raw_data()
+        logger.info(f"🚀 Gerando previsões para {len(self.models)} itens...")
         
-        logger.info("🔧 Criando features agregadas...")
-        historical_data = self._create_monthly_features(raw_data)
-        
-        # Gerar previsões para cada item
-        item_ids = historical_data['item_id'].unique()
         predictions = []
         
-        logger.info(f"🚀 Gerando previsões para {len(item_ids)} itens...")
-        
-        for item_id in item_ids:
+        for item_id in self.models.keys():
             try:
-                pred = self.predict_next_month(item_id, historical_data)
-                predictions.append(pred)
+                pred = self.predict_daily_consumption(item_id, forecast_days)
+                
+                # Versão resumida para a lista (sem daily_predictions detalhadas)
+                summary = {
+                    'item_id': pred['item_id'],
+                    'item_name': pred['item_name'],
+                    'current_stock': pred['current_stock'],
+                    'minimum_stock': pred['minimum_stock'],
+                    'maximum_stock': pred['maximum_stock'],
+                    'predicted_daily_consumption': pred['predicted_daily_consumption'],
+                    'predicted_total_consumption': pred['predicted_total_consumption'],
+                    'predicted_final_stock': pred['predicted_final_stock'],
+                    'needs_restock': pred['needs_restock'],
+                    'days_until_minimum_stock': pred['days_until_minimum_stock'],
+                    'recommended_restock_quantity': pred['recommended_restock_quantity'],
+                    'forecast_days': forecast_days,
+                    'model_used': pred['model_used'],
+                    'timestamp': pred['timestamp']
+                }
+                
+                predictions.append(summary)
+                
             except Exception as e:
                 logger.warning(f"⚠️ Erro ao prever item {item_id}: {e}")
                 continue
@@ -212,55 +229,18 @@ class PredictionService:
     
     def _create_monthly_features(self, data: pd.DataFrame) -> pd.DataFrame:
         """
-        Cria features mensais agregadas a partir dos dados brutos
-        (Mesmo processo do notebook de treinamento)
+        DEPRECATED: Este método não é mais usado com o novo modelo de consumo diário.
+        Mantido por compatibilidade.
         """
-        df = data.copy()
-        df['year_month'] = df['year'] * 100 + df['month']
-        
-        # Agregações por item e mês
-        monthly_features = df.groupby(['item_id', 'year_month']).agg({
-            'quantity': ['sum', 'mean', 'count', 'std'],
-            'order_id': 'nunique',
-            'current_stock': 'last',
-            'minimum_stock': 'first',
-            'maximum_stock': 'first',
-            'is_weekend': 'sum',
-            'days_to_delivery': ['mean', 'std'],
-            'supplier_id': lambda x: x.mode()[0] if len(x.mode()) > 0 else None,
-            'section_id': lambda x: x.mode()[0] if len(x.mode()) > 0 else None,
-        }).reset_index()
-        
-        # Renomear colunas
-        monthly_features.columns = [
-            'item_id', 'year_month',
-            'total_quantity', 'avg_quantity', 'num_orders', 'std_quantity',
-            'unique_order_count',
-            'current_stock', 'minimum_stock', 'maximum_stock',
-            'weekend_orders',
-            'avg_days_to_delivery', 'std_days_to_delivery',
-            'main_supplier_id',
-            'main_section_id'
-        ]
-        
-        # Preencher NaN
-        monthly_features['std_quantity'] = monthly_features['std_quantity'].fillna(0)
-        monthly_features['std_days_to_delivery'] = monthly_features['std_days_to_delivery'].fillna(0)
-        
-        # Ordenar
-        monthly_features = monthly_features.sort_values(['item_id', 'year_month']).reset_index(drop=True)
-        
-        # Adicionar year e month separados
-        monthly_features['year'] = monthly_features['year_month'] // 100
-        monthly_features['month'] = monthly_features['year_month'] % 100
-        
-        return monthly_features
+        logger.warning("⚠️ _create_monthly_features está deprecated. Use dados diários.")
+        return pd.DataFrame()
     
     def get_model_info(self) -> Dict:
-        """Retorna informações sobre o modelo carregado"""
+        """Retorna informações sobre os modelos carregados"""
         return {
-            'model_loaded': self.model is not None,
-            'model_type': type(self.model).__name__ if self.model else None,
-            'num_features': len(self.feature_columns) if self.feature_columns else 0,
+            'models_loaded': len(self.models) > 0,
+            'num_models': len(self.models),
+            'model_type': 'Prophet - Daily Consumption Forecast',
+            'item_ids': list(self.models.keys()),
             'metadata': self.metadata if self.metadata else {}
         }

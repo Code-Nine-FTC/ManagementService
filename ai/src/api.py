@@ -14,9 +14,9 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 app = FastAPI(
-    title="API de Previsão de Demanda",
-    description="API para prever demanda futura de itens usando Machine Learning",
-    version="2.0.0"
+    title="API de Previsão de Consumo Diário",
+    description="API para prever consumo diário de itens e calcular necessidades de reposição usando Prophet",
+    version="3.0.0"
 )
 
 # CORS
@@ -31,18 +31,30 @@ app.add_middleware(
 prediction_service = None
 
 
+class DailyPrediction(BaseModel):
+    """Previsão para um dia específico"""
+    date: str = Field(..., description="Data da previsão (YYYY-MM-DD)")
+    predicted_consumption: float = Field(..., description="Consumo previsto para este dia")
+    predicted_stock: float = Field(..., description="Estoque previsto após o consumo deste dia")
+    lower_bound: float = Field(..., description="Limite inferior da previsão")
+    upper_bound: float = Field(..., description="Limite superior da previsão")
+
+
 class PredictionResponse(BaseModel):
-    """Resposta de previsão para um item"""
+    """Resposta de previsão completa para um item"""
     item_id: int
-    predicted_quantity: float = Field(..., description="Quantidade prevista para o próximo mês")
+    item_name: str = Field(..., description="Nome do item")
     current_stock: float = Field(..., description="Estoque atual")
     minimum_stock: float = Field(..., description="Estoque mínimo")
     maximum_stock: float = Field(..., description="Estoque máximo")
-    prediction_month: int = Field(..., description="Mês da previsão (1-12)")
-    prediction_year: int = Field(..., description="Ano da previsão")
+    forecast_days: int = Field(..., description="Número de dias previstos")
+    predicted_daily_consumption: float = Field(..., description="Consumo médio diário previsto")
+    predicted_total_consumption: float = Field(..., description="Consumo total previsto no período")
+    predicted_final_stock: float = Field(..., description="Estoque previsto ao final do período")
     needs_restock: bool = Field(..., description="Se precisa repor estoque")
-    restock_quantity: float = Field(..., description="Quantidade a repor")
-    confidence_score: float = Field(..., description="Score de confiança do modelo (R²)")
+    days_until_minimum_stock: Optional[int] = Field(None, description="Dias até atingir estoque mínimo")
+    recommended_restock_quantity: float = Field(..., description="Quantidade recomendada para reposição")
+    daily_predictions: List[DailyPrediction] = Field(..., description="Previsões detalhadas por dia")
     model_used: str = Field(..., description="Nome do modelo usado")
     timestamp: str = Field(..., description="Timestamp da previsão")
     
@@ -50,32 +62,63 @@ class PredictionResponse(BaseModel):
         json_schema_extra = {
             "example": {
                 "item_id": 1,
-                "predicted_quantity": 150.5,
-                "current_stock": 100.0,
-                "minimum_stock": 50.0,
-                "maximum_stock": 300.0,
-                "prediction_month": 12,
-                "prediction_year": 2024,
+                "item_name": "Caneta Azul",
+                "current_stock": 500.0,
+                "minimum_stock": 100.0,
+                "maximum_stock": 1000.0,
+                "forecast_days": 30,
+                "predicted_daily_consumption": 15.5,
+                "predicted_total_consumption": 465.0,
+                "predicted_final_stock": 35.0,
                 "needs_restock": True,
-                "restock_quantity": 50.5,
-                "confidence_score": 0.94,
-                "model_used": "gradient_boosting",
-                "timestamp": "2024-11-03T10:30:00"
+                "days_until_minimum_stock": 25,
+                "recommended_restock_quantity": 965.0,
+                "daily_predictions": [
+                    {
+                        "date": "2024-11-18",
+                        "predicted_consumption": 15.2,
+                        "predicted_stock": 484.8,
+                        "lower_bound": 10.5,
+                        "upper_bound": 20.0
+                    }
+                ],
+                "model_used": "prophet_daily_consumption",
+                "timestamp": "2024-11-17T10:30:00"
             }
         }
 
 
+class PredictionSummary(BaseModel):
+    """Resumo de previsão para um item (sem detalhes diários)"""
+    item_id: int
+    item_name: str
+    current_stock: float
+    minimum_stock: float
+    maximum_stock: float
+    predicted_daily_consumption: float
+    predicted_total_consumption: float
+    predicted_final_stock: float
+    needs_restock: bool
+    days_until_minimum_stock: Optional[int]
+    recommended_restock_quantity: float
+    forecast_days: int
+    model_used: str
+    timestamp: str
+
+
 class ModelInfo(BaseModel):
-    model_loaded: bool
-    model_type: Optional[str]
-    num_features: int
+    models_loaded: bool
+    num_models: int
+    model_type: str
+    item_ids: List[int]
     metadata: dict
 
 
 class HealthResponse(BaseModel):
     status: str
     timestamp: str
-    model_loaded: bool
+    models_loaded: bool
+    num_models: int
     database_connected: bool
 
 
@@ -113,10 +156,12 @@ async def root():
 
 @app.get("/health", response_model=HealthResponse, tags=["Health"])
 async def health_check():
+    num_models = len(prediction_service.models) if prediction_service else 0
     return HealthResponse(
-        status="healthy" if prediction_service else "unhealthy",
+        status="healthy" if prediction_service and num_models > 0 else "unhealthy",
         timestamp=datetime.now().isoformat(),
-        model_loaded=prediction_service is not None and prediction_service.model is not None,
+        models_loaded=num_models > 0,
+        num_models=num_models,
         database_connected=prediction_service is not None and prediction_service.db is not None
     )
 
@@ -129,60 +174,72 @@ async def get_model_info():
     return prediction_service.get_model_info()
 
 # previsão pra todos os itens
-@app.get("/predictions/all", response_model=List[PredictionResponse], tags=["Predictions"])
+@app.get("/predictions/all", response_model=List[PredictionSummary], tags=["Predictions"])
 async def get_all_predictions(
+    forecast_days: int = Query(30, description="Número de dias para prever"),
     db_url: Optional[str] = Query(None, description="String de conexão do banco (opcional)")
 ):
+    """
+    Gera previsões de consumo diário para todos os itens disponíveis.
+    Retorna um resumo sem as previsões detalhadas dia a dia.
+    """
     if prediction_service is None:
         raise HTTPException(status_code=503, detail="Serviço de previsão não inicializado")
     
     try:
-        logger.info("📊 Gerando previsões para todos os itens...")
-        predictions = prediction_service.predict_all_items(connection_string=db_url)
+        logger.info(f"📊 Gerando previsões para todos os itens ({forecast_days} dias)...")
+        predictions = prediction_service.predict_all_items(
+            connection_string=db_url,
+            forecast_days=forecast_days
+        )
         logger.info(f"✅ {len(predictions)} previsões geradas")
         return predictions
     except Exception as e:
         logger.error(f"❌ Erro ao gerar previsões: {e}")
         raise HTTPException(status_code=500, detail=f"Erro ao gerar previsões: {str(e)}")
 
-# previsão pra 1 item especifico
+# previsão pra 1 item especifico (com detalhes diários)
 @app.get("/predictions/item/{item_id}", response_model=PredictionResponse, tags=["Predictions"])
 async def get_item_prediction(
     item_id: int,
+    forecast_days: int = Query(30, description="Número de dias para prever"),
     db_url: Optional[str] = Query(None, description="String de conexão do banco (opcional)")
 ):
+    """
+    Gera previsão detalhada de consumo diário para um item específico.
+    Inclui previsões dia a dia e cálculo de estoque futuro.
+    """
     if prediction_service is None:
         raise HTTPException(status_code=503, detail="Serviço de previsão não inicializado")
     
     try:
-        logger.info(f"📊 Gerando previsão para item {item_id}...")
+        logger.info(f"📊 Gerando previsão para item {item_id} ({forecast_days} dias)...")
         
         if prediction_service.db is None:
             prediction_service.connect_database(db_url)
         
-        raw_data = prediction_service.db.load_raw_data()
-        historical_data = prediction_service._create_monthly_features(raw_data)
-        
-        if item_id not in historical_data['item_id'].values:
-            raise HTTPException(status_code=404, detail=f"Item {item_id} não encontrado no banco")
-        
-        prediction = prediction_service.predict_next_month(item_id, historical_data)
+        prediction = prediction_service.predict_daily_consumption(item_id, forecast_days)
         
         logger.info(f"✅ Previsão gerada para item {item_id}")
         return prediction
         
-    except HTTPException:
-        raise
+    except ValueError as ve:
+        raise HTTPException(status_code=404, detail=str(ve))
     except Exception as e:
         logger.error(f"Erro ao gerar previsão: {e}")
         raise HTTPException(status_code=500, detail=f"Erro ao gerar previsão: {str(e)}")
 
-# previsão pra múltiplos itens
-@app.get("/predictions/items", response_model=List[PredictionResponse], tags=["Predictions"])
+# previsão pra múltiplos itens (resumo)
+@app.get("/predictions/items", response_model=List[PredictionSummary], tags=["Predictions"])
 async def get_multiple_items_predictions(
     item_ids: str = Query(..., description="IDs dos itens separados por vírgula (ex: 1,2,3,4)"),
+    forecast_days: int = Query(30, description="Número de dias para prever"),
     db_url: Optional[str] = Query(None, description="String de conexão do banco (opcional)")
 ):
+    """
+    Gera previsões de consumo diário para múltiplos itens específicos.
+    Retorna resumos sem as previsões detalhadas dia a dia.
+    """
     if prediction_service is None:
         raise HTTPException(status_code=503, detail="Serviço de previsão não inicializado")
     
@@ -192,23 +249,34 @@ async def get_multiple_items_predictions(
         except ValueError:
             raise HTTPException(status_code=400, detail="IDs inválidos. Use formato: 1,2,3")
         
-        logger.info(f"📊 Gerando previsões para {len(ids)} itens...")
+        logger.info(f"📊 Gerando previsões para {len(ids)} itens ({forecast_days} dias)...")
         
         if prediction_service.db is None:
             prediction_service.connect_database(db_url)
         
-        raw_data = prediction_service.db.load_raw_data()
-        historical_data = prediction_service._create_monthly_features(raw_data)
-        
         predictions = []
         for item_id in ids:
             try:
-                if item_id not in historical_data['item_id'].values:
-                    logger.warning(f"⚠️ Item {item_id} não encontrado")
-                    continue
+                pred = prediction_service.predict_daily_consumption(item_id, forecast_days)
                 
-                pred = prediction_service.predict_next_month(item_id, historical_data)
-                predictions.append(pred)
+                # Criar resumo sem daily_predictions
+                summary = {
+                    'item_id': pred['item_id'],
+                    'item_name': pred['item_name'],
+                    'current_stock': pred['current_stock'],
+                    'minimum_stock': pred['minimum_stock'],
+                    'maximum_stock': pred['maximum_stock'],
+                    'predicted_daily_consumption': pred['predicted_daily_consumption'],
+                    'predicted_total_consumption': pred['predicted_total_consumption'],
+                    'predicted_final_stock': pred['predicted_final_stock'],
+                    'needs_restock': pred['needs_restock'],
+                    'days_until_minimum_stock': pred['days_until_minimum_stock'],
+                    'recommended_restock_quantity': pred['recommended_restock_quantity'],
+                    'forecast_days': forecast_days,
+                    'model_used': pred['model_used'],
+                    'timestamp': pred['timestamp']
+                }
+                predictions.append(summary)
             except Exception as e:
                 logger.warning(f"⚠️ Erro ao prever item {item_id}: {e}")
                 continue
@@ -225,20 +293,23 @@ async def get_multiple_items_predictions(
 
 # Rota de Teste
 
-@app.get("/test/demo", tags=["Test"])
+@app.get("/test/demo", response_model=PredictionSummary, tags=["Test"])
 async def demo_prediction():
-    return PredictionResponse(
+    """Retorna uma previsão de exemplo para testes"""
+    return PredictionSummary(
         item_id=999,
-        predicted_quantity=123.45,
-        current_stock=80.0,
-        minimum_stock=50.0,
-        maximum_stock=200.0,
-        prediction_month=12,
-        prediction_year=2024,
+        item_name="Item de Teste",
+        current_stock=500.0,
+        minimum_stock=100.0,
+        maximum_stock=1000.0,
+        predicted_daily_consumption=15.5,
+        predicted_total_consumption=465.0,
+        predicted_final_stock=35.0,
         needs_restock=True,
-        restock_quantity=43.45,
-        confidence_score=0.94,
-        model_used="gradient_boosting",
+        days_until_minimum_stock=25,
+        recommended_restock_quantity=965.0,
+        forecast_days=30,
+        model_used="prophet_daily_consumption",
         timestamp=datetime.now().isoformat()
     )
 
