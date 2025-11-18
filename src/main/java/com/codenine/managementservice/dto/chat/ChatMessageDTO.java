@@ -19,4 +19,5 @@ public class ChatMessageDTO {
   private LocalDateTime sentAt;
   private Boolean isRead;
   private String type;
+  private Boolean isFromCurrentUser;
 }

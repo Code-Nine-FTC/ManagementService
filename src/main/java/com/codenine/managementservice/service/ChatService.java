@@ -112,7 +112,7 @@ public class ChatService {
     chatRoom.setLastMessageAt(message.getSentAt());
     chatRoomRepository.save(chatRoom);
 
-    return convertToMessageDTO(message);
+    return convertToMessageDTO(message, senderId, null);
   }
 
   @Transactional
@@ -127,6 +127,9 @@ public class ChatService {
     message.setContent(request.getContent());
     message.setSentAt(LocalDateTime.now());
     message.setType(ChatMessage.MessageType.TEXT);
+
+    Long currentUserId = null;
+    Long currentGuestId = null;
 
     // Definir o remetente baseado no tipo
     if ("USER".equals(sender.type)) {
@@ -143,6 +146,7 @@ public class ChatService {
       
       message.setSender(user);
       message.setGuestSender(null);
+      currentUserId = sender.id;
     } else if ("GUEST".equals(sender.type)) {
       GuestUser guestUser = guestUserRepository
           .findById(sender.id)
@@ -155,6 +159,7 @@ public class ChatService {
       
       message.setSender(null);
       message.setGuestSender(guestUser);
+      currentGuestId = sender.id;
     } else {
       throw new RuntimeException("Invalid sender type: " + sender.type);
     }
@@ -167,7 +172,7 @@ public class ChatService {
     chatRoom.setLastMessageAt(message.getSentAt());
     chatRoomRepository.save(chatRoom);
 
-    return convertToMessageDTO(message);
+    return convertToMessageDTO(message, currentUserId, currentGuestId);
   }
 
   public List<ChatRoomDTO> getUserChatRooms(Long userId) {
@@ -200,7 +205,21 @@ public class ChatService {
     }
 
     List<ChatMessage> messages = chatMessageRepository.findByChatRoomIdOrderBySentAtAsc(chatRoomId);
-    return messages.stream().map(this::convertToMessageDTO).collect(Collectors.toList());
+    return messages.stream()
+        .map(msg -> convertToMessageDTO(msg, userId, null))
+        .collect(Collectors.toList());
+  }
+
+  public List<ChatMessageDTO> getChatRoomMessagesForGuest(Long chatRoomId, Long guestUserId) {
+    ChatRoom chatRoom =
+        chatRoomRepository
+            .findById(chatRoomId)
+            .orElseThrow(() -> new RuntimeException("Chat room not found"));
+
+    List<ChatMessage> messages = chatMessageRepository.findByChatRoomIdOrderBySentAtAsc(chatRoomId);
+    return messages.stream()
+        .map(msg -> convertToMessageDTO(msg, null, guestUserId))
+        .collect(Collectors.toList());
   }
 
   @Transactional
@@ -386,6 +405,10 @@ public class ChatService {
   }
 
   private ChatMessageDTO convertToMessageDTO(ChatMessage message) {
+    return convertToMessageDTO(message, null, null);
+  }
+
+  private ChatMessageDTO convertToMessageDTO(ChatMessage message, Long currentUserId, Long currentGuestId) {
     ChatMessageDTO dto = new ChatMessageDTO();
     dto.setId(message.getId());
     dto.setChatRoomId(message.getChatRoom().getId());
@@ -396,17 +419,22 @@ public class ChatService {
       dto.setGuestSenderId(null);
       dto.setSenderName(message.getSender().getName());
       dto.setSenderType("USER");
+      // Verificar se a mensagem é do usuário atual
+      dto.setIsFromCurrentUser(currentUserId != null && message.getSender().getId().equals(currentUserId));
     } else if (message.getGuestSender() != null) {
       dto.setSenderId(null);
       dto.setGuestSenderId(message.getGuestSender().getId());
       dto.setSenderName(message.getGuestSender().getName());
       dto.setSenderType("GUEST");
+      // Verificar se a mensagem é do guest atual
+      dto.setIsFromCurrentUser(currentGuestId != null && message.getGuestSender().getId().equals(currentGuestId));
     } else {
       // Caso não tenha nenhum remetente (mensagens antigas/órfãs)
       dto.setSenderId(null);
       dto.setGuestSenderId(null);
       dto.setSenderName("Usuario Removido");
       dto.setSenderType("UNKNOWN");
+      dto.setIsFromCurrentUser(false);
     }
     
     dto.setContent(message.getContent());

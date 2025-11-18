@@ -140,8 +140,8 @@ public class ChatController {
       }
       
       System.out.println("Buscando mensagens do chat...");
-      // Buscar mensagens do chat (passar null como userId já que guest não tem ID de User)
-      List<ChatMessageDTO> messages = chatService.getChatRoomMessages(chatRoomId, null);
+      // Buscar mensagens do chat passando o ID do guest
+      List<ChatMessageDTO> messages = chatService.getChatRoomMessagesForGuest(chatRoomId, guestUser.getId());
       
       System.out.println("Mensagens encontradas: " + messages.size());
       return ResponseEntity.ok(messages);
