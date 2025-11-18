@@ -14,6 +14,7 @@ import com.codenine.managementservice.dto.analytics.GroupDemandSeriesResponse;
 import com.codenine.managementservice.dto.analytics.SectionConsumptionResponse;
 import com.codenine.managementservice.dto.analytics.SectionDemandSeriesResponse;
 import com.codenine.managementservice.dto.analytics.TopMaterialResponse;
+import com.codenine.managementservice.dto.order.SectionOrderStatusCount;
 import com.codenine.managementservice.service.AnalyticsService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -113,5 +114,17 @@ public class AnalyticsController {
     return ResponseEntity.ok(
         analyticsService.getSectionDemandSeries(
             startDate, endDate, step, onlyCompleted, onlyConsumers, onlyActiveConsumers));
+  }
+
+  @Operation(summary = "Contagem de pedidos por status e seção")
+  @GetMapping("/analytics/orders-by-section")
+  // @PreAuthorize("isAuthenticated()")
+  public ResponseEntity<List<SectionOrderStatusCount>> getSectionOrderStatusCount() {
+    try {
+      List<SectionOrderStatusCount> counts = analyticsService.getSectionOrderStatusCount();
+      return ResponseEntity.ok(counts);
+    } catch (Exception e) {
+      return ResponseEntity.status(500).build();
+    }
   }
 }

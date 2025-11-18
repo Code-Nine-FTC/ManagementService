@@ -19,9 +19,6 @@ public class Section {
   @Column(nullable = false)
   private String title;
 
-  @Column(name = "role_access")
-  private Integer roleAccess;
-
   private Boolean isActive = true;
 
   @Enumerated(EnumType.STRING)

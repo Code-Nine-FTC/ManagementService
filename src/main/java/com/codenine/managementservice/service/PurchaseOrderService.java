@@ -4,13 +4,9 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.criteria.CriteriaBuilder;
-import jakarta.persistence.criteria.CriteriaQuery;
-import jakarta.persistence.criteria.Join;
-import jakarta.persistence.criteria.Predicate;
-import jakarta.persistence.criteria.Root;
+import org.springframework.web.multipart.MultipartFile;
 
+import com.codenine.managementservice.dto.action.ActionType;
 import com.codenine.managementservice.dto.purchaseOrder.EmailStatus;
 import com.codenine.managementservice.dto.purchaseOrder.PurchaseOrderFilterCriteria;
 import com.codenine.managementservice.dto.purchaseOrder.PurchaseOrderRequest;
@@ -25,6 +21,12 @@ import com.codenine.managementservice.repository.PurchaseOrderRepository;
 import com.codenine.managementservice.repository.SupplierCompanyRepository;
 import com.codenine.managementservice.utils.mapper.PurchaseOrderMapper;
 
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Join;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -38,8 +40,10 @@ public class PurchaseOrderService {
   private final SupplierCompanyRepository supplierCompanyRepository;
 
   private final EmailService emailService;
-  
+
   private final EntityManager entityManager;
+
+  private final AuditLogService auditLogService;
 
   public void createPurchaseOrder(PurchaseOrderRequest request, User lastUser) {
     Order order =
@@ -59,6 +63,12 @@ public class PurchaseOrderService {
     PurchaseOrder purchaseOrder =
         PurchaseOrderMapper.toEntity(request, lastUser, order, supplierCompany);
     purchaseOrderRepository.save(purchaseOrder);
+    auditLogService.logAction(
+        lastUser,
+        ActionType.PURCHASE_ORDER_CREATED,
+        purchaseOrder.getId(),
+        "Purchase Order created with id: " + purchaseOrder.getId(),
+        "PurchaseOrder");
   }
 
   public List<PurchaseOrderResponse> getPurchaseOrders(PurchaseOrderFilterCriteria filterCriteria) {
@@ -74,7 +84,8 @@ public class PurchaseOrderService {
     Predicate predicate = cb.conjunction();
 
     if (filterCriteria.supplierCompanyId() != null) {
-      predicate = cb.and(predicate, cb.equal(supplierJoin.get("id"), filterCriteria.supplierCompanyId()));
+      predicate =
+          cb.and(predicate, cb.equal(supplierJoin.get("id"), filterCriteria.supplierCompanyId()));
     }
     if (filterCriteria.orderId() != null) {
       predicate = cb.and(predicate, cb.equal(orderJoin.get("id"), filterCriteria.orderId()));
@@ -83,13 +94,20 @@ public class PurchaseOrderService {
       predicate = cb.and(predicate, cb.equal(root.get("status"), filterCriteria.status()));
     }
     if (filterCriteria.emailStatus() != null) {
-      predicate = cb.and(predicate, cb.equal(root.get("emailStatus"), filterCriteria.emailStatus()));
+      predicate =
+          cb.and(predicate, cb.equal(root.get("emailStatus"), filterCriteria.emailStatus()));
     }
     if (filterCriteria.createdAfter() != null) {
-      predicate = cb.and(predicate, cb.greaterThanOrEqualTo(root.get("createdAt"), filterCriteria.createdAfter()));
+      predicate =
+          cb.and(
+              predicate,
+              cb.greaterThanOrEqualTo(root.get("createdAt"), filterCriteria.createdAfter()));
     }
     if (filterCriteria.createdBefore() != null) {
-      predicate = cb.and(predicate, cb.lessThanOrEqualTo(root.get("createdAt"), filterCriteria.createdBefore()));
+      predicate =
+          cb.and(
+              predicate,
+              cb.lessThanOrEqualTo(root.get("createdAt"), filterCriteria.createdBefore()));
     }
     if (filterCriteria.year() != null) {
       predicate = cb.and(predicate, cb.equal(root.get("year"), filterCriteria.year()));
@@ -99,62 +117,62 @@ public class PurchaseOrderService {
 
     List<PurchaseOrder> results = entityManager.createQuery(cq).getResultList();
 
-  // Map entities to DTO responses (include sender info)
-  return results.stream()
-    .map(po ->
-      new PurchaseOrderResponse(
-        po.getId(),
-        po.getIssuingBody(),
-        po.getCommitmentNoteNumber(),
-        po.getYear(),
-        po.getProcessNumber(),
-        po.getTotalValue(),
-        po.getIssueDate(),
-        po.getStatus(),
-        po.getEmailStatus(),
-        po.getCreatedAt(),
-        po.getLastUpdate(),
-        po.getOrder() != null ? po.getOrder().getId() : null,
-        po.getOrder() != null ? po.getOrder().getStatus() : null,
-        po.getSupplierCompany() != null ? po.getSupplierCompany().getId() : null,
-        po.getSupplierCompany() != null ? po.getSupplierCompany().getName() : null,
-        po.getSupplierCompany() != null ? po.getSupplierCompany().getEmail() : null,
-        po.getSender() != null ? po.getSender().getId() : null,
-        po.getSender() != null ? po.getSender().getName() : null,
-        po.getLastUser() != null ? po.getLastUser().getId() : null,
-        po.getLastUser() != null ? po.getLastUser().getName() : null,
-        po.getCreatedBy() != null ? po.getCreatedBy().getId() : null,
-        po.getCreatedBy() != null ? po.getCreatedBy().getName() : null
-      ))
-    .toList();
+    // Map entities to DTO responses (include sender info)
+    return results.stream()
+        .map(
+            po ->
+                new PurchaseOrderResponse(
+                    po.getId(),
+                    po.getIssuingBody(),
+                    po.getCommitmentNoteNumber(),
+                    po.getYear(),
+                    po.getProcessNumber(),
+                    po.getTotalValue(),
+                    po.getIssueDate(),
+                    po.getStatus(),
+                    po.getEmailStatus(),
+                    po.getCreatedAt(),
+                    po.getLastUpdate(),
+                    po.getOrder() != null ? po.getOrder().getId() : null,
+                    po.getOrder() != null ? po.getOrder().getStatus() : null,
+                    po.getSupplierCompany() != null ? po.getSupplierCompany().getId() : null,
+                    po.getSupplierCompany() != null ? po.getSupplierCompany().getName() : null,
+                    po.getSupplierCompany() != null ? po.getSupplierCompany().getEmail() : null,
+                    po.getSender() != null ? po.getSender().getId() : null,
+                    po.getSender() != null ? po.getSender().getName() : null,
+                    po.getLastUser() != null ? po.getLastUser().getId() : null,
+                    po.getLastUser() != null ? po.getLastUser().getName() : null,
+                    po.getCreatedBy() != null ? po.getCreatedBy().getId() : null,
+                    po.getCreatedBy() != null ? po.getCreatedBy().getName() : null))
+        .toList();
   }
 
   public PurchaseOrderResponse getPurchaseOrderById(Long id) {
     PurchaseOrder po = validateExistence(id);
-  PurchaseOrderResponse purchaseOrderResponse =
-    new PurchaseOrderResponse(
-      po.getId(),
-      po.getIssuingBody(),
-      po.getCommitmentNoteNumber(),
-      po.getYear(),
-      po.getProcessNumber(),
-      po.getTotalValue(),
-      po.getIssueDate(),
-      po.getStatus(),
-      po.getEmailStatus(),
-      po.getCreatedAt(),
-      po.getLastUpdate(),
-      po.getOrder() != null ? po.getOrder().getId() : null,
-      po.getOrder() != null ? po.getOrder().getStatus() : null,
-      po.getSupplierCompany() != null ? po.getSupplierCompany().getId() : null,
-      po.getSupplierCompany() != null ? po.getSupplierCompany().getName() : null,
-      po.getSupplierCompany() != null ? po.getSupplierCompany().getEmail() : null,
-      po.getSender() != null ? po.getSender().getId() : null,
-      po.getSender() != null ? po.getSender().getName() : null,
-      po.getLastUser() != null ? po.getLastUser().getId() : null,
-      po.getLastUser() != null ? po.getLastUser().getName() : null,
-      po.getCreatedBy() != null ? po.getCreatedBy().getId() : null,
-      po.getCreatedBy() != null ? po.getCreatedBy().getName() : null);
+    PurchaseOrderResponse purchaseOrderResponse =
+        new PurchaseOrderResponse(
+            po.getId(),
+            po.getIssuingBody(),
+            po.getCommitmentNoteNumber(),
+            po.getYear(),
+            po.getProcessNumber(),
+            po.getTotalValue(),
+            po.getIssueDate(),
+            po.getStatus(),
+            po.getEmailStatus(),
+            po.getCreatedAt(),
+            po.getLastUpdate(),
+            po.getOrder() != null ? po.getOrder().getId() : null,
+            po.getOrder() != null ? po.getOrder().getStatus() : null,
+            po.getSupplierCompany() != null ? po.getSupplierCompany().getId() : null,
+            po.getSupplierCompany() != null ? po.getSupplierCompany().getName() : null,
+            po.getSupplierCompany() != null ? po.getSupplierCompany().getEmail() : null,
+            po.getSender() != null ? po.getSender().getId() : null,
+            po.getSender() != null ? po.getSender().getName() : null,
+            po.getLastUser() != null ? po.getLastUser().getId() : null,
+            po.getLastUser() != null ? po.getLastUser().getName() : null,
+            po.getCreatedBy() != null ? po.getCreatedBy().getId() : null,
+            po.getCreatedBy() != null ? po.getCreatedBy().getName() : null);
     return purchaseOrderResponse;
   }
 
@@ -164,6 +182,12 @@ public class PurchaseOrderService {
     purchaseOrder.setLastUser(lastUser);
     purchaseOrder.setLastUpdate(LocalDateTime.now());
     purchaseOrderRepository.save(purchaseOrder);
+    auditLogService.logAction(
+        lastUser,
+        ActionType.PURCHASE_ORDER_STATUS_UPDATED,
+        purchaseOrder.getId(),
+        "Purchase Order status updated to: " + status,
+        "PurchaseOrder");
   }
 
   public void updatePurchaseOrder(Long id, PurchaseOrderRequest request, User lastUser) {
@@ -190,6 +214,12 @@ public class PurchaseOrderService {
     }
     PurchaseOrderMapper.updateEntity(purchaseOrder, request, lastUser, order, supplierCompany);
     purchaseOrderRepository.save(purchaseOrder);
+    auditLogService.logAction(
+        lastUser,
+        ActionType.PURCHASE_ORDER_UPDATED,
+        purchaseOrder.getId(),
+        "Purchase Order updated with id: " + purchaseOrder.getId(),
+        "PurchaseOrder");
   }
 
   private PurchaseOrder validateExistence(Long id) {
@@ -198,7 +228,7 @@ public class PurchaseOrderService {
         .orElseThrow(() -> new IllegalArgumentException("Purchase Order not found with id: " + id));
   }
 
-  public void sendEmail(Long purchaseOrderId, User lastUser) {
+  public void sendEmail(Long purchaseOrderId, MultipartFile[] files, User lastUser) {
     PurchaseOrder purchaseOrder = validateExistence(purchaseOrderId);
     SupplierCompany supplier = purchaseOrder.getSupplierCompany();
     // set sender/lastUser before sending so EmailService can rely on sender info
@@ -206,8 +236,14 @@ public class PurchaseOrderService {
     purchaseOrder.setSender(lastUser);
     purchaseOrder.setLastUpdate(LocalDateTime.now());
     // attempt to send email (EmailService is resilient if some fields are missing)
-    emailService.sendCommitmentNoteEmail(purchaseOrder, supplier, supplier.getEmail());
+    emailService.sendCommitmentNoteEmail(purchaseOrder, supplier, supplier.getEmail(), files);
     purchaseOrder.setEmailStatus(EmailStatus.SENT);
     purchaseOrderRepository.save(purchaseOrder);
+    auditLogService.logAction(
+        lastUser,
+        ActionType.EMAIL_CHARGE_SENT,
+        purchaseOrder.getId(),
+        "Email sent for Purchase Order id: " + purchaseOrder.getId(),
+        "PurchaseOrder");
   }
 }
