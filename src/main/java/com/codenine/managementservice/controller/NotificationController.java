@@ -20,7 +20,7 @@ public class NotificationController {
   @Autowired private NotificationService notificationService;
 
   @Operation(description = "Lista todas as notificações não reconhecidas")
-  @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'USER')")
+  @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'ASSISTANT')")
   @GetMapping("/unacknowledged")
   public ResponseEntity<List<NotificationResponse>> getUnacknowledgedNotifications() {
     try {
@@ -33,7 +33,7 @@ public class NotificationController {
   }
 
   @Operation(description = "Marca uma notificação como reconhecida")
-  @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'USER')")
+  @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'ASSISTANT')")
   @PatchMapping("/{id}/acknowledge")
   public ResponseEntity<Void> acknowledgeNotification(
       @Parameter(description = "ID da notificação", example = "1") @PathVariable Long id) {
@@ -46,7 +46,7 @@ public class NotificationController {
   }
 
   @Operation(description = "Marca todas as notificações como reconhecidas")
-  @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'USER')")
+  @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'ASSISTANT')")
   @PatchMapping("/acknowledge-all")
   public ResponseEntity<Void> acknowledgeAllNotifications() {
     try {
