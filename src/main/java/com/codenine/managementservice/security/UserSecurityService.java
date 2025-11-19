@@ -19,7 +19,14 @@ public class UserSecurityService {
 
   public boolean hasUserManagementPermission(Authentication authentication, Long userId)
       throws UserManagementException {
-    User user = (User) authentication.getPrincipal();
+    Object principal = authentication.getPrincipal();
+    
+    // Se for um guest, não tem permissão para gerenciar users
+    if (principal instanceof GuestUserDetails) {
+      throw new UserManagementException("Usuário guest não possui permissão para gerenciar usuários");
+    }
+    
+    User user = (User) principal;
     Role role = user.getRole();
 
     User targetUser = userRepository.findById(userId).orElse(null);
@@ -60,7 +67,14 @@ public class UserSecurityService {
   }
 
   public boolean hasUserRegisterPermission(Authentication authentication, UserRequest userRequest) {
-    User user = (User) authentication.getPrincipal();
+    Object principal = authentication.getPrincipal();
+    
+    // Se for um guest, não tem permissão para registrar users
+    if (principal instanceof GuestUserDetails) {
+      throw new UserManagementException("Usuário guest não possui permissão para registrar usuários");
+    }
+    
+    User user = (User) principal;
     Role role = user.getRole();
     switch (role) {
       case ADMIN:
@@ -89,7 +103,14 @@ public class UserSecurityService {
   }
 
   public boolean hasUserViewPermission(Authentication authentication, Long userId) {
-    User user = (User) authentication.getPrincipal();
+    Object principal = authentication.getPrincipal();
+    
+    // Se for um guest, não tem permissão para visualizar users normais
+    if (principal instanceof GuestUserDetails) {
+      return false;
+    }
+    
+    User user = (User) principal;
     Role role = user.getRole();
 
     User targetUser = userRepository.findById(userId).orElse(null);

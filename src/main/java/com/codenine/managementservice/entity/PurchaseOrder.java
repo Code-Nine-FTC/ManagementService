@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import com.codenine.managementservice.dto.purchaseOrder.EmailStatus;
 import com.codenine.managementservice.dto.purchaseOrder.Status;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -13,7 +14,6 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.Data;
 
@@ -25,6 +25,9 @@ public class PurchaseOrder {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
+
+  @Column(unique = true, nullable = false)
+  private String purchaseOrderNumber;
 
   private String issuingBody;
   private String commitmentNoteNumber;
@@ -45,8 +48,6 @@ public class PurchaseOrder {
   @ManyToOne
   @JoinColumn(name = "user_id", nullable = true)
   private User sender;
-
-  @OneToOne private Order order;
 
   @ManyToOne
   @JoinColumn(name = "supplier_company_id")

@@ -15,9 +15,9 @@ import com.codenine.managementservice.dto.analytics.ItemPredictionResponse;
 import com.codenine.managementservice.dto.analytics.SectionConsumptionResponse;
 import com.codenine.managementservice.dto.analytics.SectionDemandSeriesResponse;
 import com.codenine.managementservice.dto.analytics.TopMaterialResponse;
+import com.codenine.managementservice.dto.order.SectionOrderStatusCount;
 import com.codenine.managementservice.entity.ModelPrediction;
 import com.codenine.managementservice.repository.ModelPredictionRepository;
-import com.codenine.managementservice.dto.order.SectionOrderStatusCount;
 import com.codenine.managementservice.service.AnalyticsService;
 
 import io.swagger.v3.oas.annotations.Operation;

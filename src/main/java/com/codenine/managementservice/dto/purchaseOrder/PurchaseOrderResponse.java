@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 
 public record PurchaseOrderResponse(
     Long id,
+    String purchaseOrderNumber,
     String issuingBody,
     String commitmentNoteNumber,
     Integer year,
@@ -14,8 +15,6 @@ public record PurchaseOrderResponse(
     EmailStatus emailStatus,
     LocalDateTime createdAt,
     LocalDateTime lastUpdate,
-    Long orderId,
-    String orderStatus,
     Long supplierCompanyId,
     String supplierCompanyName,
     String supplierCompanyEmail,
