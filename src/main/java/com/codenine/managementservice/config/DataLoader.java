@@ -310,7 +310,10 @@ public class DataLoader implements CommandLineRunner {
           SupplierCompany supplier = suppliers.get(random.nextInt(suppliers.size()));
           
           PurchaseOrder purchaseOrder = new PurchaseOrder();
-          purchaseOrder.setOrder(savedOrder);
+          String poNumber = String.format("OC-%04d-%04d", 
+              orderDate.getYear(), 
+              1000 + random.nextInt(9000));
+          purchaseOrder.setPurchaseOrderNumber(poNumber);
           purchaseOrder.setSupplierCompany(supplier);
           purchaseOrder.setIssuingBody("Exército Brasileiro - " + section.getTitle());
           purchaseOrder.setCommitmentNoteNumber(String.format("NC-%04d-%05d", year, random.nextInt(99999)));

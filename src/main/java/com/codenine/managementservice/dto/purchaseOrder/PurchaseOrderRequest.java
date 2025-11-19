@@ -9,5 +9,4 @@ public record PurchaseOrderRequest(
     String processNumber,
     Float totalValue,
     LocalDateTime issueDate,
-    Long orderId,
     Long supplierCompanyId) {}
