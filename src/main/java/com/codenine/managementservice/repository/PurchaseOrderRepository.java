@@ -17,6 +17,7 @@ public interface PurchaseOrderRepository extends JpaRepository<PurchaseOrder, Lo
       """
         SELECT new com.codenine.managementservice.dto.purchaseOrder.PurchaseOrderResponse(
             po.id,
+            po.purchaseOrderNumber,
             po.issuingBody,
             po.commitmentNoteNumber,
             po.year,
@@ -27,25 +28,21 @@ public interface PurchaseOrderRepository extends JpaRepository<PurchaseOrder, Lo
             po.emailStatus,
             po.createdAt,
             po.lastUpdate,
-            o.id,
-            o.status,
             sc.id,
             sc.name,
             sc.email,
-      po.sender.id,
-      po.sender.name,
+            po.sender.id,
+            po.sender.name,
             lu.id,
             lu.name,
             cb.id,
             cb.name
         )
         FROM PurchaseOrder po
-        JOIN po.order o
         JOIN po.supplierCompany sc
         JOIN po.lastUser lu
         JOIN po.createdBy cb
         where (:supplierCompanyId is null or sc.id = :supplierCompanyId)
-        and (:orderId is null or o.id = :orderId)
         and (:status is null or po.status = :status)
         and (:emailStatus is null or po.emailStatus = :emailStatus)
         and (:createdAfter is null or po.createdAt >= :createdAfter)
@@ -54,7 +51,6 @@ public interface PurchaseOrderRepository extends JpaRepository<PurchaseOrder, Lo
         """)
   List<PurchaseOrderResponse> findAllPurchaseOrders(
       @Param("supplierCompanyId") Long supplierCompanyId,
-      @Param("orderId") Long orderId,
       @Param("status") String status,
       @Param("emailStatus") String emailStatus,
       @Param("createdAfter") LocalDateTime createdAfter,
