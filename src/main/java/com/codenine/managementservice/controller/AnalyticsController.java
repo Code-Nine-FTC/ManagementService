@@ -11,10 +11,13 @@ import org.springframework.web.bind.annotation.*;
 
 import com.codenine.managementservice.dto.analytics.GroupDemandResponse;
 import com.codenine.managementservice.dto.analytics.GroupDemandSeriesResponse;
+import com.codenine.managementservice.dto.analytics.ItemPredictionResponse;
 import com.codenine.managementservice.dto.analytics.SectionConsumptionResponse;
 import com.codenine.managementservice.dto.analytics.SectionDemandSeriesResponse;
 import com.codenine.managementservice.dto.analytics.TopMaterialResponse;
 import com.codenine.managementservice.dto.order.SectionOrderStatusCount;
+import com.codenine.managementservice.entity.ModelPrediction;
+import com.codenine.managementservice.repository.ModelPredictionRepository;
 import com.codenine.managementservice.service.AnalyticsService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -25,6 +28,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 public class AnalyticsController {
 
   @Autowired private AnalyticsService analyticsService;
+  @Autowired private ModelPredictionRepository predictionRepository;
 
   @Operation(summary = "Top materiais")
   @GetMapping("/materiais/top")
@@ -47,6 +51,30 @@ public class AnalyticsController {
     if (endDate.isBefore(startDate)) return ResponseEntity.badRequest().build();
     return ResponseEntity.ok(
         analyticsService.getTopMaterials(startDate, endDate, limit, onlyCompleted));
+  }
+
+  // Previsões por item (última referência disponível)
+  @GetMapping("/item-predictions")
+  @PreAuthorize("isAuthenticated()")
+  public ResponseEntity<List<ItemPredictionResponse>> getItemPredictions(
+      @RequestParam(name = "horizonDays", defaultValue = "14") int horizonDays) {
+    var refDate = predictionRepository.findMaxRefDateByHorizon(horizonDays);
+    if (refDate == null) return ResponseEntity.ok(List.of());
+    List<ModelPrediction> preds =
+        predictionRepository.findByRefDateAndHorizonDays(refDate, horizonDays);
+    List<ItemPredictionResponse> out =
+        preds.stream()
+            .map(
+                p ->
+                    new ItemPredictionResponse(
+                        p.getItem().getId(),
+                        p.getItem().getName(),
+                        p.getRefDate(),
+                        p.getHorizonDays(),
+                        p.getYHat(),
+                        p.getModelVersion()))
+            .toList();
+    return ResponseEntity.ok(out);
   }
 
   @Operation(summary = "Demanda agregada por grupo")

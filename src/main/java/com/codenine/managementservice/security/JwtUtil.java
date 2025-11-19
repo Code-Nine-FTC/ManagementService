@@ -65,4 +65,35 @@ public class JwtUtil {
   public String extractUserEmail(String token) {
     return extractClaims(token).getSubject();
   }
+
+  // Método específico para gerar token de guest user
+  public String generateGuestToken(String email, Long guestId) {
+    return Jwts.builder()
+        .setSubject(email)
+        .claim("role", "GUEST")
+        .claim("guestId", guestId)
+        .claim("isGuest", true)
+        .setIssuedAt(new Date())
+        .setExpiration(new Date(System.currentTimeMillis() + expiration))
+        .signWith(key)
+        .compact();
+  }
+
+  // Método para extrair ID do guest do token
+  public Long extractGuestId(String token) {
+    Object guestIdClaim = extractClaims(token).get("guestId");
+    if (guestIdClaim instanceof Integer) {
+      return ((Integer) guestIdClaim).longValue();
+    }
+    return (Long) guestIdClaim;
+  }
+
+  // Método para verificar se o token é de um guest
+  public boolean isGuestToken(String token) {
+    try {
+      return extractClaims(token).get("isGuest", Boolean.class) == Boolean.TRUE;
+    } catch (Exception e) {
+      return false;
+    }
+  }
 }
