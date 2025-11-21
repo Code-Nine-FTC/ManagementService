@@ -2,7 +2,10 @@ import uvicorn
 import sys
 import os
 
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+SRC_DIR = os.path.join(ROOT_DIR, 'src')
+if SRC_DIR not in sys.path:
+    sys.path.insert(0, SRC_DIR)
 
 if __name__ == "__main__":
     print("="*80)
@@ -18,9 +21,10 @@ if __name__ == "__main__":
     print()
     
     uvicorn.run(
-        "src.api:app",
+        "api:app",
         host="0.0.0.0",
         port=8000,
         reload=True,
-        log_level="info"
+        log_level="info",
+        app_dir=SRC_DIR
     )

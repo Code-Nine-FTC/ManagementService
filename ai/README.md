@@ -53,10 +53,14 @@ ai/
 │   ├── feature_columns_v2.pkl
 │   └── model_metadata_v2.pkl
 │
-├── notebooks/
-│   ├── training_ai_v2.ipynb         # ✅ Notebook
-│   
-│
+├── src/training/
+│   ├── notebooks/
+│   │   └── consumo_items.ipynb      # Notebook demonstrativo (pipeline consumo)
+│   ├── data_extraction.py           # Extração de consumo mensal (orders COMPLETED)
+│   ├── forecast.py                  # Lógica de previsão SARIMAX / fallback média
+│   ├── train_item_model.py          # Treina modelo individual por item
+│   ├── batch_train.py               # Treino em lote de todos os itens
+│   └── model_registry.py            # Registro e carregamento de modelos por item
 ├── scripts/
 │   ├── start_api.py                 # 🚀 Iniciar API REST
 │   └── test_predictions.py          # 🧪 Testar previsões localmente
@@ -86,17 +90,40 @@ cd ai/
 pip install -r requirements.txt
 ```
 
-### 2️⃣ Treinar Modelo (se necessário)
+### 2️⃣ Treinar Modelos de Consumo (Novo Fluxo)
+
+Agora o foco é consumo mensal por item a partir de `orders` com status **COMPLETED**.
+
+Treinar todos os itens:
 
 ```bash
-# Abrir e executar o notebook
-jupyter notebook notebooks/training_ai_v2.ipynb
+python -m src.training.batch_train
+```
+
+Treinar um item específico (ex: item 42):
+
+```bash
+python -m src.training.train_item_model 42 --forecast_periods 3
+```
+
+Notebook demonstrativo:
+
+Notebook demonstrativo:
+
+```bash
+jupyter notebook src/training/notebooks/consumo_items.ipynb
 ```
 
 ### 3️⃣ Iniciar API
 
 ```bash
 python scripts/start_api.py
+```
+
+Se ocorrer erro de módulo não encontrado, exporte `PYTHONPATH`:
+
+```bash
+export PYTHONPATH="$(pwd)/src:$PYTHONPATH"
 ```
 
 A API estará disponível em:
@@ -123,13 +150,12 @@ curl http://localhost:8000/predictions/item/1
 | `/health`                           | GET    | Status da API                 |
 | `/model/info`                       | GET    | Informações do modelo         |
 | `/predictions/item/{id}`            | GET    | Previsão para 1 item          |
+| `/items/{id}/consumption`           | GET    | Histórico + forecast consumo  |
 | `/predictions/items?item_ids=1,2,3` | GET    | Previsão para múltiplos itens |
 | `/predictions/all`                  | GET    | Previsão para todos os itens  |
 | `/docs`                             | GET    | Documentação Swagger          |
 
 ---
-
-
 
 ## 🧪 Testes
 
@@ -158,42 +184,35 @@ Acesse: http://localhost:8000/docs
 
 ---
 
-### Dados Brutos
+### Base de Consumo
 
-✅ Usa dados brutos diretamente das tabelas:
+O consumo é calculado a partir de:
 
-- `items` - Informações dos itens
-- `orders` - Pedidos realizados
-- `order_item` - Itens dos pedidos
-- `purchase_orders` - Ordens de compra
-- `sections` - Seções/categorias
-- `supplier_company` - Fornecedores
-- `item_types` - Tipos de itens
+```sql
+SELECT oi.item_id,
+       DATE_TRUNC('month', o.created_at) AS month,
+       SUM(oi.quantity) AS consumed_quantity
+FROM order_items oi
+JOIN orders o ON o.id = oi.order_id
+WHERE o.status = 'COMPLETED'
+GROUP BY oi.item_id, DATE_TRUNC('month', o.created_at)
+ORDER BY oi.item_id, month;
+```
 
-**Vantagens**:
+Cada série mensal é usada para treinar um modelo SARIMAX simples. Se a série for muito curta (<4 pontos) usa-se média como fallback.
 
-- ✅ Sem data leakage
-- ✅ Maior granularidade
-- ✅ R² realista (0.60-0.95)
-- ✅ Melhor generalização
-
+Modelos são persistidos em `ai/models/item_<id>.pkl` com metadata (histórico, último mês, métrica AIC/BIC quando disponível).
 
 ---
 
 ## 🤖 Modelos Disponíveis
 
-O sistema testa 3 algoritmos e escolhe o melhor:
+Para consumo mensal por item:
 
-1. **Linear Regression** - Baseline simples
-2. **Random Forest** - Ensemble com árvores
-3. **Gradient Boosting** - ⭐ **Melhor performance**
+1. **SARIMAX (1,1,1)** quando há histórico suficiente.
+2. **Fallback Média Simples** quando pouca informação (<4 meses).
 
-**Resultado atual**:
-
-- Modelo: Gradient Boosting
-- R²: 0.9426
-- MAE: 6.17
-- RMSE: 8.81
+O modelo preditivo original (Gradient Boosting) permanece para rotas `/predictions/*` enquanto a nova rota usa abordagem por série temporal.
 
 ---
 
@@ -336,8 +355,8 @@ lsof -i :8000
 # Usar outra porta
 uvicorn src.api:app --port 8001
 ```
----
 
+---
 
 **Última atualização**: 03/11/2024  
 **Versão**: 2.0.0

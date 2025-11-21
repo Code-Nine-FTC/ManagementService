@@ -1,3 +1,3 @@
-from .prediction_service_v2 import PredictionService
+from .prediction_service import PredictionService
 
 __all__ = ['PredictionService']

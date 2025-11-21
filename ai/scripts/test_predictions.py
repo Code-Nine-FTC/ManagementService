@@ -5,7 +5,7 @@ from pathlib import Path
 root_dir = Path(__file__).parent.parent
 sys.path.insert(0, str(root_dir))
 
-from src.services.prediction_service_v2 import PredictionServiceV2
+from ai.src.services.prediction_service import PredictionService
 
 
 def main():
@@ -15,7 +15,7 @@ def main():
     
     # Inicializar serviço
     print("\n1️⃣ Carregando modelo...")
-    service = PredictionServiceV2()
+    service = PredictionService()
     
     # Mostrar info do modelo
     print("\n2️⃣ Informações do modelo:")

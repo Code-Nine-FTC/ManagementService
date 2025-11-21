@@ -1,4 +1,3 @@
-
 # ManagementService
 
 Instruções rápidas para rodar localmente usando Docker Compose para o Database (PostgreSQL 15).
@@ -66,7 +65,6 @@ setx DB_PASSWORD "dbpassword"
 setx SPRING_PROFILES_ACTIVE "prod"
 ```
 
-
 ### macOS
 
 No macOS exporte as variáveis no shell (zsh/bash) e rode o jar:
@@ -99,6 +97,7 @@ Parâmetros de runtime passados via `command` (sintaxe `postgres -c chave=valor`
 - `log_min_duration_statement` — controla o log de queries lentas em ms; `10000` significa logar queries que demoram >= 10s.
 
 Boas práticas rápidas:
+
 - Se mudar `POSTGRES_INITDB_ARGS`, recrie o volume (`docker compose down -v`) para que `initdb` seja re-executado.
 - Ajuste `shared_buffers`/`effective_cache_size` conforme memória disponível no host.
 - Em produção, considere usar um arquivo `postgresql.conf` versionado ou uma solução de tuning mais avançada.
@@ -110,19 +109,25 @@ Este projeto utiliza o [PMD](https://pmd.github.io/) para análise estática de 
 ### Como rodar o PMD
 
 **Verificar problemas de boas práticas:**
+
 ```bash
 ./mvnw pmd:check
 ```
+
 Ou:
+
 ```bash
 mvn pmd:check
 ```
 
 **Gerar relatório HTML:**
+
 ```bash
 ./mvnw pmd:pmd
 ```
+
 Ou:
+
 ```bash
 mvn pmd:pmd
 ```
@@ -130,6 +135,26 @@ mvn pmd:pmd
 O relatório estará em `target/site/pmd.html`.  
 Abra esse arquivo no navegador para visualizar os detalhes das violações encontradas.
 
+## Carga Inicial de Dados (Profile `dev`)
+
+Desde a refatoração do antigo `DataLoader` monolítico, a carga de dados de desenvolvimento foi modularizada no pacote `inject`:
+
+- `SectionInitializer` cria as seções e o usuário administrador.
+- `ExcelItemBootstrap` importa tipos e itens dos arquivos Excel.
+- `SupplierInitializer` registra empresas fornecedoras.
+- `UserInitializer` cria usuários de teste.
+- `OrderPurchaseOrderGenerator` gera pedidos e ordens de compra, enriquecendo novos campos com dados fictícios via biblioteca Faker (se existirem na entidade `PurchaseOrder`).
+- `InitialDataInjector` orquestra tudo e substitui o antigo `DataLoader` (executa apenas em `dev`).
+
+Se você adicionar novas colunas à entidade `PurchaseOrder`, a geração tentará preenchê-las automaticamente caso os nomes dos campos coincidam com os candidatos em `OrderPurchaseOrderGenerator.enrichOptionalFields`.
+
+Para executar a aplicação com carga inicial:
+
+```bash
+SPRING_PROFILES_ACTIVE=dev ./mvnw spring-boot:run
+```
+
+Se a base já conter dados, a carga é ignorada.
 
 ## Linter (Spotless)
 
@@ -138,26 +163,31 @@ Este projeto utiliza o [Spotless](https://github.com/diffplug/spotless) para gar
 ### Como rodar o linter
 
 **Corrigir automaticamente o código:**
+
 ```bash
 ./mvnw spotless:apply
 ```
+
 Ou, se estiver usando Maven instalado:
+
 ```bash
 mvn spotless:apply
 ```
 
 **Verificar se o código está formatado:**
+
 ```bash
 ./mvnw spotless:check
 ```
+
 Ou:
+
 ```bash
 mvn spotless:check
 ```
 
 Se houver problemas de formatação, o comando `spotless:check` irá falhar.  
 Use `spotless:apply` para corrigir automaticamente.
-
 
 ## Documentação Swagger
 

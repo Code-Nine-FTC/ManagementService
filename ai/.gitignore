@@ -44,3 +44,5 @@ Thumbs.db
 output/
 temp/
 tmp/
+
+models/

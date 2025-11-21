@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.codenine.managementservice.dto.purchaseOrder.EmailStatus;
 import com.codenine.managementservice.dto.purchaseOrder.Status;
+import com.codenine.managementservice.dto.order.OrderStatus;
 import com.codenine.managementservice.entity.Item;
 import com.codenine.managementservice.entity.Order;
 import com.codenine.managementservice.entity.OrderItem;
@@ -57,7 +58,6 @@ public class OrderPurchaseOrderGenerator {
       return;
     }
 
-    String[] statusOptions = {"PENDING", "APPROVED", "IN_TRANSIT", "DELIVERED", "CANCELLED"};
     int orderCounter = 1;
     long purchaseOrderCounter = 1; // garante unicidade dos números de OC
 
@@ -80,7 +80,9 @@ public class OrderPurchaseOrderGenerator {
         order.setLastUpdate(orderDate);
         order.setWithdrawDay(orderDate.plusDays(random.nextInt(30) + 1));
         order.setExpireAt(orderDate.plusDays(random.nextInt(60) + 30));
-        order.setStatus(statusOptions[random.nextInt(statusOptions.length)]);
+        // Lógica temporal para status: mais antigos tendem a COMPLETED
+        String computedStatus = computeOrderStatus(orderDate, currentDate);
+        order.setStatus(computedStatus);
         order.setCreatedBy(creator);
         order.setLastUser(creator);
         order.setSection(section);
@@ -127,6 +129,27 @@ public class OrderPurchaseOrderGenerator {
       monthStart = monthStart.plusMonths(1);
     }
     System.out.println("Geração concluída.");
+  }
+
+  private String computeOrderStatus(LocalDateTime orderDate, LocalDateTime now) {
+    // Antigos (> 5 meses) quase sempre COMPLETED (90%) ou CANCELLED (10%)
+    if (orderDate.isBefore(now.minusMonths(5))) {
+      return random.nextDouble() < 0.9 ? OrderStatus.COMPLETED.name() : OrderStatus.CANCELLED.name();
+    }
+    // Médio prazo (2-5 meses) distribuído entre PROCESSING (50%), APPROVED (30%), COMPLETED (15%), CANCELLED (5%)
+    if (orderDate.isBefore(now.minusMonths(2))) {
+      double p = random.nextDouble();
+      if (p < 0.50) return OrderStatus.PROCESSING.name();
+      if (p < 0.80) return OrderStatus.APPROVED.name();
+      if (p < 0.95) return OrderStatus.COMPLETED.name();
+      return OrderStatus.CANCELLED.name();
+    }
+    // Recentes (< 2 meses) PENDING (60%), APPROVED (25%), PROCESSING (10%), CANCELLED (5%)
+    double p = random.nextDouble();
+    if (p < 0.60) return OrderStatus.PENDING.name();
+    if (p < 0.85) return OrderStatus.APPROVED.name();
+    if (p < 0.95) return OrderStatus.PROCESSING.name();
+    return OrderStatus.CANCELLED.name();
   }
 
   private PurchaseOrder buildPurchaseOrder(
