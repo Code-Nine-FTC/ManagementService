@@ -1,6 +1,3 @@
-import pandas as pd
-from dotenv import load_dotenv
-load_dotenv()
 from .data_extraction import load_monthly_consumption, get_item_series
 from .forecast import train_forecast
 from .model_registry import save_model

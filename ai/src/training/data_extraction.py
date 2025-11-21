@@ -15,7 +15,6 @@ GROUP BY oi.item_id, DATE_TRUNC('month', o.created_at)
 ORDER BY oi.item_id, month;
 """
 
-
 def get_engine(connection_string: Optional[str] = None):
     if connection_string:
         return create_engine(connection_string)

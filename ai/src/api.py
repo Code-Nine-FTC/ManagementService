@@ -2,12 +2,10 @@ import logging
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from src.training.batch_train import train_all
 
-from src.controllers.item_controller import router as item_router
-from src.services.prediction_service import PredictionService
-
+import src.controllers.config_controller as config_controller
 import src.controllers.item_controller as item_controller
-import src.services.item_service as item_service
 
 
 logging.basicConfig(
@@ -37,10 +35,11 @@ prediction_service = None
 async def startup_event():
     global prediction_service
     try:
+        logger.info("🔄 Treinando modelos de todos os itens...")
+        train_all()
+        logger.info("✅ Modelos treinados com sucesso!")
         logger.info("🚀 Inicializando serviço de previsão...")
-        prediction_service = PredictionService()
-        item_controller.prediction_service = prediction_service
-        item_service.prediction_service = prediction_service
+        config_controller.prediction_service = prediction_service
         logger.info("✅ Serviço de previsão inicializado com sucesso!")
     except Exception as e:
         logger.error(f"❌ Erro ao inicializar serviço: {e}")
@@ -59,4 +58,5 @@ async def root():
         "health": "/health"
     }
 
-app.include_router(item_router)
+app.include_router(config_controller.router)
+app.include_router(item_controller.router)
