@@ -12,7 +12,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -24,13 +23,19 @@ import com.codenine.managementservice.dto.analytics.SectionConsumptionResponse;
 import com.codenine.managementservice.dto.analytics.SectionDemandSeriesResponse;
 import com.codenine.managementservice.dto.analytics.SectionSeriesData;
 import com.codenine.managementservice.dto.analytics.TopMaterialResponse;
+import com.codenine.managementservice.dto.order.SectionOrderStatusCount;
 import com.codenine.managementservice.entity.SectionType;
 import com.codenine.managementservice.repository.AnalyticsRepository;
+import com.codenine.managementservice.repository.OrderRepository;
+
+import lombok.RequiredArgsConstructor;
 
 @Service
+@RequiredArgsConstructor
 public class AnalyticsService {
 
-  @Autowired private AnalyticsRepository analyticsRepository;
+  private final OrderRepository orderRepository;
+  private final AnalyticsRepository analyticsRepository;
 
   public List<TopMaterialResponse> getTopMaterials(
       LocalDate startDate, LocalDate endDate, int limit, boolean onlyCompleted) {
@@ -159,6 +164,26 @@ public class AnalyticsService {
     }
     series.sort(Comparator.comparing(SectionSeriesData::nome, String.CASE_INSENSITIVE_ORDER));
     return new SectionDemandSeriesResponse(categories, series);
+  }
+
+  public List<SectionOrderStatusCount> getSectionOrderStatusCount() {
+    List<Object[]> rows = orderRepository.sectionOrderStatusCountsNative();
+    List<SectionOrderStatusCount> out = new ArrayList<>(rows.size());
+    for (Object[] r : rows) {
+      Long sectionId = r[0] == null ? null : ((Number) r[0]).longValue();
+      String sectionName = r[1] == null ? null : r[1].toString();
+      Long pending = r[2] == null ? 0L : ((Number) r[2]).longValue();
+      Long approved = r[3] == null ? 0L : ((Number) r[3]).longValue();
+      Long processing = r[4] == null ? 0L : ((Number) r[4]).longValue();
+      Long completed = r[5] == null ? 0L : ((Number) r[5]).longValue();
+      Long cancelled = r[6] == null ? 0L : ((Number) r[6]).longValue();
+      Long total = r[7] == null ? 0L : ((Number) r[7]).longValue();
+
+      out.add(
+          new SectionOrderStatusCount(
+              sectionId, sectionName, pending, approved, processing, completed, cancelled, total));
+    }
+    return out;
   }
 
   private String normalizeStep(String raw) {

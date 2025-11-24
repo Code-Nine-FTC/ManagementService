@@ -4,7 +4,7 @@ import java.io.IOException;
 
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -18,11 +18,11 @@ import jakarta.servlet.http.HttpServletResponse;
 public class JwtFilter extends OncePerRequestFilter {
 
   private final JwtUtil jwtUtil;
-  private final UserDetailsService userDetailsService;
+  private final CustomUserDetailsService customUserDetailsService;
 
-  public JwtFilter(JwtUtil jwtUtil, UserDetailsService userDetailsService) {
+  public JwtFilter(JwtUtil jwtUtil, CustomUserDetailsService customUserDetailsService) {
     this.jwtUtil = jwtUtil;
-    this.userDetailsService = userDetailsService;
+    this.customUserDetailsService = customUserDetailsService;
   }
 
   @Override
@@ -43,9 +43,15 @@ public class JwtFilter extends OncePerRequestFilter {
     if (token != null && jwtUtil.isTokenValid(token)) {
       Claims claims = jwtUtil.extractClaims(token);
       String email = claims.getSubject();
-      // request.setAttribute("claims", claims);
 
-      var userDetails = userDetailsService.loadUserByUsername(email);
+      UserDetails userDetails;
+      
+      // Verifica se é um token de guest
+      if (jwtUtil.isGuestToken(token)) {
+        userDetails = customUserDetailsService.loadGuestUserByEmail(email);
+      } else {
+        userDetails = customUserDetailsService.loadUserByUsername(email);
+      }
 
       var authToken =
           new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());

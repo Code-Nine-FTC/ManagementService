@@ -259,6 +259,5 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
       @Param("now") LocalDateTime now,
       @Param("futureDate") LocalDateTime futureDate);
 
-  Optional<Item> findByNameAndItemTypeSectionId(String name, Long  sectionId);
-
+  Optional<Item> findByNameAndItemTypeSectionId(String name, Long sectionId);
 }

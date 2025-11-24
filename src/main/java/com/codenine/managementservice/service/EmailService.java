@@ -7,6 +7,7 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.codenine.managementservice.dto.purchaseOrder.EmailStatus;
 import com.codenine.managementservice.dto.purchaseOrder.Status;
@@ -25,7 +26,8 @@ public class EmailService {
   private final JavaMailSender emailSender;
   private final PurchaseOrderRepository purchaseOrderRepository;
 
-  public void sendCommitmentNoteEmail(PurchaseOrder po, SupplierCompany supplier, String toEmail) {
+  public void sendCommitmentNoteEmail(
+      PurchaseOrder po, SupplierCompany supplier, String toEmail, MultipartFile[] files) {
     String subject = "Solicitação de entrega de materiais por Nota de Empenho";
     // guard against null sender (scheduled jobs or older records may not have sender set)
     String senderName = "";
@@ -74,9 +76,137 @@ public class EmailService {
       helper.setSubject(subject);
       helper.setText(body, true);
 
+      // Adicionar arquivos anexos, se fornecidos
+      if (files != null && files.length > 0) {
+        for (MultipartFile file : files) {
+          if (file != null && !file.isEmpty()) {
+            helper.addAttachment(
+                file.getOriginalFilename() != null ? file.getOriginalFilename() : "attachment",
+                () -> file.getInputStream());
+          }
+        }
+      }
+
       emailSender.send(message);
     } catch (MessagingException e) {
       e.printStackTrace();
+    }
+  }
+
+  public void sendCommitmentNoteEmail(PurchaseOrder po, SupplierCompany supplier, String toEmail) {
+    sendCommitmentNoteEmail(po, supplier, toEmail, null);
+  }
+
+  public void sendChatInvitationEmail(
+      String toEmail, String guestName, String inviterName, String chatLink) {
+    String subject = "Convite para conversar - Sistema de Chat";
+
+    String body =
+        String.format(
+            "<div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;'>"
+                + "<h2 style='color: #0084ff;'>Voce recebeu um convite para conversar!</h2>"
+                + "<p>Ola%s,</p>"
+                + "<p><b>%s</b> convidou voce para iniciar uma conversa no nosso sistema de chat.</p>"
+                + "<p>Para acessar a conversa, clique no botao abaixo:</p>"
+                + "<div style='text-align: center; margin: 30px 0;'>"
+                + "<a href='%s' style='background-color: #0084ff; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block; font-weight: bold;'>Acessar Conversa</a>"
+                + "</div>"
+                + "<p style='color: #666; font-size: 12px;'>Ou copie e cole este link no seu navegador:</p>"
+                + "<p style='background-color: #f0f2f5; padding: 10px; border-radius: 5px; word-break: break-all; font-size: 12px;'>%s</p>"
+                + "<p style='color: #666; font-size: 12px; margin-top: 30px;'><b>Importante:</b> Este link e valido por 7 dias e pode ser usado apenas uma vez.</p>"
+                + "<p style='color: #666; font-size: 12px;'>Apos acessar, voce tera acesso apenas a esta conversa especifica.</p>"
+                + "<hr style='border: none; border-top: 1px solid #e5e7eb; margin: 30px 0;'>"
+                + "<p style='color: #999; font-size: 11px; text-align: center;'>Este e um email automatico, por favor nao responda.</p>"
+                + "</div>",
+            guestName != null && !guestName.isEmpty() ? " " + guestName : "",
+            inviterName,
+            chatLink,
+            chatLink);
+
+    try {
+      MimeMessage message = emailSender.createMimeMessage();
+      MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+      helper.setTo(toEmail);
+      helper.setSubject(subject);
+      helper.setText(body, true);
+
+      emailSender.send(message);
+    } catch (MessagingException e) {
+      e.printStackTrace();
+      throw new RuntimeException("Erro ao enviar email de convite: " + e.getMessage());
+    }
+  }
+
+  public void sendGuestCredentialsEmail(
+      String toEmail, String guestName, String email, String password, String loginUrl) {
+    System.out.println("=== INICIANDO ENVIO DE EMAIL DE CREDENCIAIS ===");
+    System.out.println("Para: " + toEmail);
+    System.out.println("Nome: " + guestName);
+    System.out.println("Email de login: " + email);
+    System.out.println("URL de login: " + loginUrl);
+    
+    String subject = "Bem-vindo(a)! Suas credenciais de acesso ao sistema";
+
+    String body =
+        String.format(
+            "<div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;'>"
+                + "<h2 style='color: #0084ff;'>Bem-vindo(a) ao nosso sistema!</h2>"
+                + "<p>Ola <b>%s</b>,</p>"
+                + "<p>Seu cadastro foi realizado com sucesso! Voce ja pode acessar o sistema e conversar com nossa equipe atraves do chat.</p>"
+                + "<div style='background-color: #f0f2f5; padding: 20px; border-radius: 8px; margin: 20px 0;'>"
+                + "<h3 style='margin-top: 0; color: #333;'>Suas credenciais de acesso:</h3>"
+                + "<p style='margin: 10px 0;'><b>E-mail:</b> <span style='background-color: white; padding: 5px 10px; border-radius: 4px; font-family: monospace;'>%s</span></p>"
+                + "<p style='margin: 10px 0;'><b>Senha:</b> <span style='background-color: white; padding: 5px 10px; border-radius: 4px; font-family: monospace;'>%s</span></p>"
+                + "</div>"
+                + "<p style='color: #d93025; font-size: 14px;'><b>Importante:</b> Guarde suas credenciais em um local seguro. Recomendamos que voce altere sua senha no primeiro acesso.</p>"
+                + "<div style='text-align: center; margin: 30px 0;'>"
+                + "<a href='%s' style='background-color: #0084ff; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block; font-weight: bold;'>Acessar Sistema</a>"
+                + "</div>"
+                + "<p style='color: #666; font-size: 12px;'>Ou copie e cole este link no seu navegador:</p>"
+                + "<p style='background-color: #f0f2f5; padding: 10px; border-radius: 5px; word-break: break-all; font-size: 12px;'>%s</p>"
+                + "<div style='background-color: #e8f4fd; border-left: 4px solid #0084ff; padding: 15px; margin: 20px 0;'>"
+                + "<h4 style='margin-top: 0; color: #0084ff;'>O que voce pode fazer:</h4>"
+                + "<ul style='margin: 10px 0; padding-left: 20px;'>"
+                + "<li>Conversar em tempo real com nossa equipe</li>"
+                + "<li>Receber informacoes importantes sobre seus atendimentos</li>"
+                + "<li>Tirar duvidas de forma rapida e pratica</li>"
+                + "</ul>"
+                + "</div>"
+                + "<hr style='border: none; border-top: 1px solid #e5e7eb; margin: 30px 0;'>"
+                + "<p style='color: #999; font-size: 11px; text-align: center;'>Este e um email automatico, por favor nao responda.<br>Se tiver duvidas, entre em contato atraves do chat apos fazer login.</p>"
+                + "</div>",
+            guestName,
+            email,
+            password,
+            loginUrl,
+            loginUrl);
+
+    try {
+      System.out.println("Criando mensagem de email...");
+      MimeMessage message = emailSender.createMimeMessage();
+      MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+      
+      System.out.println("Configurando destinatario...");
+      helper.setTo(toEmail);
+      helper.setFrom("nine.codek9@gmail.com");
+      helper.setSubject(subject);
+      helper.setText(body, true);
+
+      System.out.println("Enviando email...");
+      emailSender.send(message);
+      System.out.println("EMAIL ENVIADO COM SUCESSO para: " + toEmail);
+    } catch (MessagingException e) {
+      System.err.println("ERRO ao enviar email de credenciais!");
+      System.err.println("Tipo de erro: " + e.getClass().getName());
+      System.err.println("Mensagem: " + e.getMessage());
+      e.printStackTrace();
+      throw new RuntimeException("Erro ao enviar email de credenciais: " + e.getMessage(), e);
+    } catch (Exception e) {
+      System.err.println("ERRO INESPERADO ao enviar email!");
+      System.err.println("Tipo: " + e.getClass().getName());
+      System.err.println("Mensagem: " + e.getMessage());
+      e.printStackTrace();
+      throw new RuntimeException("Erro inesperado ao enviar email: " + e.getMessage(), e);
     }
   }
 
@@ -89,7 +219,7 @@ public class EmailService {
     for (PurchaseOrder po : lateOrders) {
       SupplierCompany supplier = po.getSupplierCompany();
       String supplierEmail = supplier.getEmail();
-      this.sendCommitmentNoteEmail(po, supplier, supplierEmail);
+      this.sendCommitmentNoteEmail(po, supplier, supplierEmail, null);
       po.setStatus(Status.LATE);
       po.setEmailStatus(EmailStatus.REMINDER_SENT);
       purchaseOrderRepository.save(po);
