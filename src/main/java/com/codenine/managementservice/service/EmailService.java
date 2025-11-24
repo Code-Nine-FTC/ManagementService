@@ -72,6 +72,7 @@ public class EmailService {
     try {
       MimeMessage message = emailSender.createMimeMessage();
       MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+      helper.setFrom("nine.codek9@gmail.com");
       helper.setTo(toEmail);
       helper.setSubject(subject);
       helper.setText(body, true);
@@ -90,6 +91,10 @@ public class EmailService {
       emailSender.send(message);
     } catch (MessagingException e) {
       e.printStackTrace();
+      throw new RuntimeException("Erro ao enviar email de nota de empenho: " + e.getMessage(), e);
+    } catch (Exception e) {
+      e.printStackTrace();
+      throw new RuntimeException("Erro inesperado ao enviar email: " + e.getMessage(), e);
     }
   }
 
@@ -126,6 +131,7 @@ public class EmailService {
     try {
       MimeMessage message = emailSender.createMimeMessage();
       MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+      helper.setFrom("nine.codek9@gmail.com");
       helper.setTo(toEmail);
       helper.setSubject(subject);
       helper.setText(body, true);
