@@ -12,11 +12,9 @@ import com.codenine.managementservice.dto.purchaseOrder.PurchaseOrderFilterCrite
 import com.codenine.managementservice.dto.purchaseOrder.PurchaseOrderRequest;
 import com.codenine.managementservice.dto.purchaseOrder.PurchaseOrderResponse;
 import com.codenine.managementservice.dto.purchaseOrder.Status;
-import com.codenine.managementservice.entity.Order;
 import com.codenine.managementservice.entity.PurchaseOrder;
 import com.codenine.managementservice.entity.SupplierCompany;
 import com.codenine.managementservice.entity.User;
-import com.codenine.managementservice.repository.OrderRepository;
 import com.codenine.managementservice.repository.PurchaseOrderRepository;
 import com.codenine.managementservice.repository.SupplierCompanyRepository;
 import com.codenine.managementservice.utils.mapper.PurchaseOrderMapper;
@@ -35,8 +33,6 @@ public class PurchaseOrderService {
 
   private final PurchaseOrderRepository purchaseOrderRepository;
 
-  private final OrderRepository orderRepository;
-
   private final SupplierCompanyRepository supplierCompanyRepository;
 
   private final EmailService emailService;
@@ -46,12 +42,6 @@ public class PurchaseOrderService {
   private final AuditLogService auditLogService;
 
   public void createPurchaseOrder(PurchaseOrderRequest request, User lastUser) {
-    Order order =
-        orderRepository
-            .findById(request.orderId())
-            .orElseThrow(
-                () ->
-                    new IllegalArgumentException("Order not found with id: " + request.orderId()));
     SupplierCompany supplierCompany =
         supplierCompanyRepository
             .findById(request.supplierCompanyId())
@@ -61,13 +51,13 @@ public class PurchaseOrderService {
                         "Supplier Company not found with id: " + request.supplierCompanyId()));
 
     PurchaseOrder purchaseOrder =
-        PurchaseOrderMapper.toEntity(request, lastUser, order, supplierCompany);
+        PurchaseOrderMapper.toEntity(request, lastUser, supplierCompany);
     purchaseOrderRepository.save(purchaseOrder);
     auditLogService.logAction(
         lastUser,
         ActionType.PURCHASE_ORDER_CREATED,
         purchaseOrder.getId(),
-        "Purchase Order created with id: " + purchaseOrder.getId(),
+        "Purchase Order created with number: " + purchaseOrder.getPurchaseOrderNumber(),
         "PurchaseOrder");
   }
 
@@ -76,19 +66,13 @@ public class PurchaseOrderService {
     CriteriaBuilder cb = entityManager.getCriteriaBuilder();
     CriteriaQuery<PurchaseOrder> cq = cb.createQuery(PurchaseOrder.class);
     Root<PurchaseOrder> root = cq.from(PurchaseOrder.class);
-    Join<Object, Object> orderJoin = root.join("order");
     Join<Object, Object> supplierJoin = root.join("supplierCompany");
-    Join<Object, Object> lastUserJoin = root.join("lastUser");
-    Join<Object, Object> createdByJoin = root.join("createdBy");
 
     Predicate predicate = cb.conjunction();
 
     if (filterCriteria.supplierCompanyId() != null) {
       predicate =
           cb.and(predicate, cb.equal(supplierJoin.get("id"), filterCriteria.supplierCompanyId()));
-    }
-    if (filterCriteria.orderId() != null) {
-      predicate = cb.and(predicate, cb.equal(orderJoin.get("id"), filterCriteria.orderId()));
     }
     if (filterCriteria.status() != null) {
       predicate = cb.and(predicate, cb.equal(root.get("status"), filterCriteria.status()));
@@ -123,6 +107,7 @@ public class PurchaseOrderService {
             po ->
                 new PurchaseOrderResponse(
                     po.getId(),
+                    po.getPurchaseOrderNumber(),
                     po.getIssuingBody(),
                     po.getCommitmentNoteNumber(),
                     po.getYear(),
@@ -133,8 +118,6 @@ public class PurchaseOrderService {
                     po.getEmailStatus(),
                     po.getCreatedAt(),
                     po.getLastUpdate(),
-                    po.getOrder() != null ? po.getOrder().getId() : null,
-                    po.getOrder() != null ? po.getOrder().getStatus() : null,
                     po.getSupplierCompany() != null ? po.getSupplierCompany().getId() : null,
                     po.getSupplierCompany() != null ? po.getSupplierCompany().getName() : null,
                     po.getSupplierCompany() != null ? po.getSupplierCompany().getEmail() : null,
@@ -152,6 +135,7 @@ public class PurchaseOrderService {
     PurchaseOrderResponse purchaseOrderResponse =
         new PurchaseOrderResponse(
             po.getId(),
+            po.getPurchaseOrderNumber(),
             po.getIssuingBody(),
             po.getCommitmentNoteNumber(),
             po.getYear(),
@@ -162,8 +146,6 @@ public class PurchaseOrderService {
             po.getEmailStatus(),
             po.getCreatedAt(),
             po.getLastUpdate(),
-            po.getOrder() != null ? po.getOrder().getId() : null,
-            po.getOrder() != null ? po.getOrder().getStatus() : null,
             po.getSupplierCompany() != null ? po.getSupplierCompany().getId() : null,
             po.getSupplierCompany() != null ? po.getSupplierCompany().getName() : null,
             po.getSupplierCompany() != null ? po.getSupplierCompany().getEmail() : null,
@@ -192,17 +174,7 @@ public class PurchaseOrderService {
 
   public void updatePurchaseOrder(Long id, PurchaseOrderRequest request, User lastUser) {
     PurchaseOrder purchaseOrder = validateExistence(id);
-    Order order = purchaseOrder.getOrder();
     SupplierCompany supplierCompany = purchaseOrder.getSupplierCompany();
-    if (request.orderId() != null) {
-      order =
-          orderRepository
-              .findById(request.orderId())
-              .orElseThrow(
-                  () ->
-                      new IllegalArgumentException(
-                          "Order not found with id: " + request.orderId()));
-    }
     if (request.supplierCompanyId() != null) {
       supplierCompany =
           supplierCompanyRepository
@@ -212,13 +184,13 @@ public class PurchaseOrderService {
                       new IllegalArgumentException(
                           "Supplier Company not found with id: " + request.supplierCompanyId()));
     }
-    PurchaseOrderMapper.updateEntity(purchaseOrder, request, lastUser, order, supplierCompany);
+    PurchaseOrderMapper.updateEntity(purchaseOrder, request, lastUser, supplierCompany);
     purchaseOrderRepository.save(purchaseOrder);
     auditLogService.logAction(
         lastUser,
         ActionType.PURCHASE_ORDER_UPDATED,
         purchaseOrder.getId(),
-        "Purchase Order updated with id: " + purchaseOrder.getId(),
+        "Purchase Order updated with number: " + purchaseOrder.getPurchaseOrderNumber(),
         "PurchaseOrder");
   }
 

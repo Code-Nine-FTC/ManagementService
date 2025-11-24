@@ -66,7 +66,6 @@ public class PurchaseOrderController {
   public ResponseEntity<?> getAllPurchaseOrders(
       @Parameter(description = "Filter by supplier company ID") @RequestParam(required = false)
           Long supplierCompanyId,
-      @Parameter(description = "Filter by order ID") @RequestParam(required = false) Long orderId,
       @Parameter(description = "Filter by status") @RequestParam(required = false) String status,
       @Parameter(description = "Filter by email status") @RequestParam(required = false)
           String emailStatus,
@@ -81,7 +80,6 @@ public class PurchaseOrderController {
           purchaseOrderService.getPurchaseOrders(
               new PurchaseOrderFilterCriteria(
                   supplierCompanyId,
-                  orderId,
                   status,
                   emailStatus,
                   createdAfter,
